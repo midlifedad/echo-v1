@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
+import Highcharts from 'highcharts';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 import { TileData } from '@/lib/types';
@@ -13,6 +14,7 @@ interface TileProps {
   isDragging?: boolean;
   onDragStart?: () => void;
   onDragEnd?: () => void;
+  onExpand?: () => void;
 }
 
 export default function Tile({ 
@@ -20,8 +22,15 @@ export default function Tile({
   className,
   isDragging = false,
   onDragStart,
-  onDragEnd 
+  onDragEnd,
+  onExpand 
 }: TileProps) {
+  const [chartInstance, setChartInstance] = useState<Highcharts.Chart | null>(null);
+
+  const handleChartReady = (chart: Highcharts.Chart | null) => {
+    setChartInstance(chart);
+  };
+
   return (
     <Card 
       draggable
@@ -40,8 +49,8 @@ export default function Tile({
         className
       )}
     >
-      <TileHeader tile={tile} />
-      <TileContent tile={tile} />
+      <TileHeader tile={tile} onExpand={onExpand} chartInstance={chartInstance} />
+      <TileContent tile={tile} onChartReady={handleChartReady} />
     </Card>
   );
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Highcharts from 'highcharts';
 import { cn } from '@/lib/utils';
 import { ChartType, ChartConfig } from '@/lib/types';
 import { generateMockData } from '@/lib/mockData';
@@ -11,13 +12,15 @@ interface ChartWrapperProps {
   config: ChartConfig;
   data?: Record<string, unknown>;
   className?: string;
+  onChartReady?: (chart: Highcharts.Chart | null) => void;
 }
 
 export default function ChartWrapper({ 
   type, 
   config, 
   data, 
-  className 
+  className,
+  onChartReady 
 }: ChartWrapperProps) {
   const [chartData, setChartData] = useState<Record<string, unknown> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -82,7 +85,8 @@ export default function ChartWrapper({
       <HighchartsWrapper
         type={type}
         config={config}
-        data={chartData}
+        data={chartData || {}}
+        onChartReady={onChartReady}
       />
     </div>
   );

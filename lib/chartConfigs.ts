@@ -16,6 +16,14 @@ export function getChartOptions(type: ChartType, config: ChartConfig, data: Reco
       spacing: [5, 5, 5, 5],
       reflow: true
     },
+    exporting: {
+      enabled: true,
+      buttons: {
+        contextButton: {
+          enabled: false // Disable default context menu since we have our own export button
+        }
+      }
+    },
     responsive: {
       rules: [
         {

@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { GripHorizontal, MoreHorizontal, RefreshCw, Maximize2, X } from 'lucide-react';
+import { GripHorizontal, MoreHorizontal, RefreshCw, Maximize2, X, Download } from 'lucide-react';
+import Highcharts from 'highcharts';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -9,15 +10,18 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { TileData } from '@/lib/types';
 import { useTiles } from '@/contexts/TileContext';
 
 interface TileHeaderProps {
   tile: TileData;
+  onExpand?: () => void;
+  chartInstance?: Highcharts.Chart | null;
 }
 
-export default function TileHeader({ tile }: TileHeaderProps) {
+export default function TileHeader({ tile, onExpand, chartInstance }: TileHeaderProps) {
   const { removeTile } = useTiles();
 
   const handleRefresh = () => {
@@ -26,12 +30,33 @@ export default function TileHeader({ tile }: TileHeaderProps) {
   };
 
   const handleMaximize = () => {
-    // Open tile in fullscreen modal
-    console.log('Maximizing tile:', tile.id);
+    if (onExpand) {
+      onExpand();
+    }
   };
 
   const handleRemove = () => {
     removeTile(tile.id);
+  };
+
+  const handleExport = (type: string) => {
+    if (!chartInstance) {
+      console.warn('Chart is not ready for export');
+      return;
+    }
+
+    try {
+      // @ts-ignore - exportChart is added by the exporting module
+      if (chartInstance.exportChart) {
+        // @ts-ignore
+        chartInstance.exportChart({
+          type: type,
+          filename: tile.title.replace(/\s+/g, '-').toLowerCase()
+        });
+      }
+    } catch (error) {
+      console.error('Export failed:', error);
+    }
   };
 
   return (
@@ -58,6 +83,42 @@ export default function TileHeader({ tile }: TileHeaderProps) {
           >
             <RefreshCw size={14} />
           </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleMaximize}
+            className="h-6 w-6 text-muted-foreground hover:text-foreground/70 hover:bg-primary/5"
+          >
+            <Maximize2 size={14} />
+          </Button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 text-muted-foreground hover:text-foreground/70 hover:bg-primary/5"
+                disabled={!chartInstance}
+              >
+                <Download size={14} />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuItem onClick={() => handleExport('image/png')} className="gap-2">
+                <span>Export as PNG</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('image/jpeg')} className="gap-2">
+                <span>Export as JPEG</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('image/svg+xml')} className="gap-2">
+                <span>Export as SVG</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('application/pdf')} className="gap-2">
+                <span>Export as PDF</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

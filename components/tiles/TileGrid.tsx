@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { useTiles } from '@/contexts/TileContext';
 import { TileData } from '@/lib/types';
 import Tile from './Tile';
+import TileFullscreen from './TileFullscreen';
 
 interface TileGridProps {
   className?: string;
@@ -14,6 +15,7 @@ export default function TileGrid({ className }: TileGridProps) {
   const { tiles, reorderTiles } = useTiles();
   const [draggedTile, setDraggedTile] = useState<TileData | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [expandedTile, setExpandedTile] = useState<TileData | null>(null);
 
   const handleDragStart = (tile: TileData) => {
     setDraggedTile(tile);
@@ -46,10 +48,19 @@ export default function TileGrid({ className }: TileGridProps) {
     setDragOverIndex(null);
   };
 
+  const handleExpand = (tile: TileData) => {
+    setExpandedTile(tile);
+  };
+
+  const handleCloseExpanded = () => {
+    setExpandedTile(null);
+  };
+
   const sortedTiles = tiles.sort((a, b) => a.position - b.position);
 
   return (
-    <div className={cn(
+    <>
+      <div className={cn(
       'grid gap-4',
       'grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4',
       'auto-rows-fr', // Equal height rows
@@ -70,9 +81,19 @@ export default function TileGrid({ className }: TileGridProps) {
             isDragging={draggedTile?.id === tile.id}
             onDragStart={() => handleDragStart(tile)}
             onDragEnd={handleDragEnd}
+            onExpand={() => handleExpand(tile)}
           />
         </div>
       ))}
-    </div>
+      </div>
+
+      {expandedTile && (
+        <TileFullscreen
+          tile={expandedTile}
+          isOpen={!!expandedTile}
+          onClose={handleCloseExpanded}
+        />
+      )}
+    </>
   );
 }
