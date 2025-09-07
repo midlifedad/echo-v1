@@ -160,6 +160,9 @@ export default function GridLayoutWrapper({ className }: GridLayoutWrapperProps)
         if (!layoutItem) {
           layoutItem = generateDefaultLayoutForBreakpoint(breakpoint, tile.id, index);
         }
+        
+        // Explicitly mark non-locked tiles as not static for drag/resize
+        layoutItem = { ...layoutItem, static: false };
       }
       
       return layoutItem;
@@ -297,12 +300,13 @@ export default function GridLayoutWrapper({ className }: GridLayoutWrapperProps)
             isBounded={true} // Keep tiles within bounds
           >
             {gridItems.map((tile) => (
-              <LayoutTile 
-                key={`tile-${tile.id}`}
-                tile={tile}
-                onExpand={() => handleExpand(tile)}
-                className="grid-item-content"
-              />
+              <div key={`tile-${tile.id}`}>
+                <LayoutTile 
+                  tile={tile}
+                  onExpand={() => handleExpand(tile)}
+                  className="grid-item-content"
+                />
+              </div>
             ))}
           </ResponsiveGridLayout>
         </div>
@@ -340,12 +344,13 @@ export default function GridLayoutWrapper({ className }: GridLayoutWrapperProps)
           cols={editingCols}
         >
           {gridItems.map((tile) => (
-            <LayoutTile 
-              key={`tile-${tile.id}`}
-              tile={tile}
-              onExpand={() => handleExpand(tile)}
-              className="grid-item-content"
-            />
+            <div key={`tile-${tile.id}`}>
+              <LayoutTile 
+                tile={tile}
+                onExpand={() => handleExpand(tile)}
+                className="grid-item-content"
+              />
+            </div>
           ))}
         </GridLayoutWithProvider>
       </div>
