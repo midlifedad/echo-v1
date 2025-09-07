@@ -16,9 +16,10 @@ interface PageHeaderProps {
   title: string;
   subtitle?: string;
   onAddTile?: (type: ChartType) => void;
+  actions?: React.ReactNode;
 }
 
-export default function PageHeader({ title, subtitle, onAddTile }: PageHeaderProps) {
+export default function PageHeader({ title, subtitle, onAddTile, actions }: PageHeaderProps) {
   return (
     <div className="flex items-center justify-between mb-6">
       <div>
@@ -28,7 +29,9 @@ export default function PageHeader({ title, subtitle, onAddTile }: PageHeaderPro
         )}
       </div>
       
-      {onAddTile && (
+      <div className="flex items-center gap-2">
+        {actions}
+        {onAddTile && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button 
@@ -52,7 +55,8 @@ export default function PageHeader({ title, subtitle, onAddTile }: PageHeaderPro
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
-      )}
+        )}
+      </div>
     </div>
   );
 }

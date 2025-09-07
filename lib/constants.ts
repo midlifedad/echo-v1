@@ -51,6 +51,12 @@ export const NAV_ITEMS: NavItem[] = [
     label: 'Editor',
     icon: 'Edit3',
     href: '/editor'
+  },
+  {
+    id: 'layout',
+    label: 'Layout',
+    icon: 'Layout',
+    href: '/layout-editor'
   }
 ];
 
@@ -69,3 +75,40 @@ export const CHART_TYPES = [
   { id: 'gauge', name: 'Gauge Chart', icon: 'Gauge' },
   { id: 'waterfall', name: 'Waterfall Chart', icon: 'BarChart4' }
 ] as const;
+
+// Layout system constants
+export const BREAKPOINTS = {
+  lg: 1200,
+  md: 996,
+  sm: 768,
+  xs: 480
+} as const;
+
+export const BREAKPOINT_COLUMNS = {
+  lg: 12,
+  md: 10,
+  sm: 6,
+  xs: 4
+} as const;
+
+export const BREAKPOINT_ORDER = ['lg', 'md', 'sm', 'xs'] as const;
+
+export const GRID_CONFIG = {
+  ROW_HEIGHT: 80,
+  MARGIN: [16, 16] as [number, number],
+  CONTAINER_PADDING: [0, 0] as [number, number],
+  RESIZE_HANDLES: ['se', 'sw', 'ne', 'nw'] as const,
+  MIN_WIDTH: 2,
+  MIN_HEIGHT: 2,
+  DEFAULT_HEIGHT: 4
+} as const;
+
+// Storage keys for persistence
+export const STORAGE_KEYS = {
+  TILES: 'dashboard-tiles',
+  LAYOUTS: 'dashboard-grid-layouts',
+  INHERITANCE: 'dashboard-layout-inheritance',
+  CUSTOM_LAYOUTS: 'dashboard-custom-layouts',
+  LOCKED_TILES: 'dashboard-locked-tiles',
+  LOCKED_POSITIONS: 'dashboard-locked-positions'
+} as const;

@@ -8,7 +8,8 @@ import {
   Database, 
   BarChart3, 
   Zap, 
-  Edit3 
+  Edit3,
+  Layout 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSidebar } from '@/contexts/SidebarContext';
@@ -22,6 +23,7 @@ const iconMap = {
   BarChart3,
   Zap,
   Edit3,
+  Layout,
 };
 
 export default function SidebarNav() {
