@@ -6,6 +6,12 @@ export const layouts = sqliteTable('layouts', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   description: text('description'),
+  config: text('config', { mode: 'json' }).$type<{
+    cols?: { lg: number; md: number; sm: number; xs: number };
+    rowHeight?: number;
+    compactType?: 'vertical' | 'horizontal' | null;
+    preventCollision?: boolean;
+  }>(),
   isDefault: integer('is_default', { mode: 'boolean' }).default(false),
   isShared: integer('is_shared', { mode: 'boolean' }).default(false),
   ownerId: text('owner_id'),
@@ -24,6 +30,15 @@ export const tiles = sqliteTable('tiles', {
   id: text('id').primaryKey(),
   type: text('type').notNull(), // Chart type: line, bar, pie, etc.
   title: text('title').notNull(),
+  name: text('name'), // User-friendly name for tile library
+  description: text('description'), // What this tile shows
+  category: text('category'), // e.g., 'sales', 'marketing', 'performance'
+  tags: text('tags', { mode: 'json' }).$type<string[]>(), // For searching/filtering
+  isTemplate: integer('is_template', { mode: 'boolean' }).default(false), // Pre-built vs user-created
+  thumbnail: text('thumbnail'), // Base64 preview image or URL
+  ownerId: text('owner_id'), // Who created it
+  isPublic: integer('is_public', { mode: 'boolean' }).default(false), // Shared across users
+  usageCount: integer('usage_count').default(0), // Track popularity
   config: text('config', { mode: 'json' }).notNull().$type<{
     type: string;
     title: string;
@@ -65,6 +80,17 @@ export const layoutTiles = sqliteTable('layout_tiles', {
   };
 });
 
+// User Tile Favorites table - stores user's favorite tiles
+export const userTileFavorites = sqliteTable('user_tile_favorites', {
+  userId: text('user_id').notNull(),
+  tileId: text('tile_id').notNull().references(() => tiles.id, { onDelete: 'cascade' }),
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
+}, (table) => {
+  return {
+    pk: primaryKey({ columns: [table.userId, table.tileId] }),
+  };
+});
+
 // Pages table - stores dashboard pages that reference layouts
 export const pages = sqliteTable('pages', {
   id: text('id').primaryKey(),
@@ -93,5 +119,7 @@ export type Tile = typeof tiles.$inferSelect;
 export type NewTile = typeof tiles.$inferInsert;
 export type LayoutTile = typeof layoutTiles.$inferSelect;
 export type NewLayoutTile = typeof layoutTiles.$inferInsert;
+export type UserTileFavorite = typeof userTileFavorites.$inferSelect;
+export type NewUserTileFavorite = typeof userTileFavorites.$inferInsert;
 export type Page = typeof pages.$inferSelect;
 export type NewPage = typeof pages.$inferInsert;

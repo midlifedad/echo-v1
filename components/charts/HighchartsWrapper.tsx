@@ -9,8 +9,11 @@ import { getChartOptions } from '@/lib/chartConfigs';
 // For Highcharts v12+, modules auto-initialize when imported
 // Use dynamic import to avoid SSR issues
 if (typeof window !== 'undefined') {
-  // Just import the module, it will auto-attach to Highcharts
-  import('highcharts/modules/exporting');
+  // Import required modules in the correct order - they will auto-attach to Highcharts
+  Promise.resolve()
+    .then(() => import('highcharts/modules/exporting'))
+    .then(() => import('highcharts/highcharts-more')) // Required for gauge charts
+    .then(() => import('highcharts/modules/solid-gauge')); // For solid gauge charts (must be after highcharts-more)
 }
 
 interface HighchartsWrapperProps {

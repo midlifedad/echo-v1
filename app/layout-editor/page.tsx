@@ -5,13 +5,18 @@ import PageHeader from '@/components/layout/PageHeader';
 import GridLayoutWrapper from '@/components/layout-tiles/GridLayoutWrapper';
 import BreakpointSelector from '@/components/layout-tiles/BreakpointSelector';
 import ViewportIndicator from '@/components/layout-tiles/ViewportIndicator';
+import { LayoutList } from '@/components/layouts/LayoutList';
+import { LayoutForm } from '@/components/layouts/LayoutForm';
+import { TileEditor } from '@/components/tiles/TileEditor';
+import TileSelector from '@/components/tiles/TileSelector';
 import { useTiles } from '@/contexts/TileContext';
 import { LayoutProvider, useLayout } from '@/contexts/LayoutContext';
 import { Button } from '@/components/ui/button';
-import { Edit, Save, X, RotateCcw } from 'lucide-react';
+import { Edit, Save, X, RotateCcw, List, Grid3X3, Plus } from 'lucide-react';
+import type { Layout, CreateLayoutRequest, UpdateLayoutRequest, TileWithPositions, Tile } from '@/lib/types/database';
 
 function LayoutEditorContent() {
-  const { addTile } = useTiles();
+  const { addTile, reorderTiles } = useTiles();
   const { 
     isEditMode, 
     setEditMode, 
@@ -27,6 +32,14 @@ function LayoutEditorContent() {
   } = useLayout();
   
   const [viewportWidth, setViewportWidth] = useState(0);
+  const [showLayoutList, setShowLayoutList] = useState(false);
+  const [selectedLayout, setSelectedLayout] = useState<Layout | null>(null);
+  const [showLayoutForm, setShowLayoutForm] = useState(false);
+  const [editingLayout, setEditingLayout] = useState<Layout | null>(null);
+  const [layoutTiles, setLayoutTiles] = useState<TileWithPositions[]>([]);
+  const [showTileEditor, setShowTileEditor] = useState(false);
+  const [editingTile, setEditingTile] = useState<Tile | null>(null);
+  const [showTileSelector, setShowTileSelector] = useState(false);
 
   useEffect(() => {
     const updateViewport = () => {
@@ -37,6 +50,34 @@ function LayoutEditorContent() {
     window.addEventListener('resize', updateViewport);
     return () => window.removeEventListener('resize', updateViewport);
   }, []);
+
+  useEffect(() => {
+    if (selectedLayout) {
+      fetchLayoutTiles(selectedLayout.id);
+    }
+  }, [selectedLayout]);
+
+  const fetchLayoutTiles = async (layoutId: string) => {
+    try {
+      const response = await fetch(`/api/layouts/${layoutId}/tiles`);
+      if (!response.ok) throw new Error('Failed to fetch layout tiles');
+      const tiles = await response.json();
+      setLayoutTiles(tiles);
+      
+      // Update the TileContext with the new tiles
+      const formattedTiles = tiles.map((tile: TileWithPositions) => ({
+        id: tile.id,
+        type: tile.type,
+        title: tile.title,
+        position: 0, // Will be determined by grid position
+        config: tile.config,
+        data: tile.data,
+      }));
+      reorderTiles(formattedTiles);
+    } catch (error) {
+      console.error('Error fetching layout tiles:', error);
+    }
+  };
 
   const handleEditToggle = () => {
     if (isEditMode) {
@@ -51,78 +92,311 @@ function LayoutEditorContent() {
     }
   };
 
+  const handleSelectLayout = async (layout: Layout) => {
+    setSelectedLayout(layout);
+    setShowLayoutList(false);
+  };
+
+  const handleCreateLayout = () => {
+    setEditingLayout(null);
+    setShowLayoutForm(true);
+  };
+
+  const handleEditLayout = (layout: Layout) => {
+    setEditingLayout(layout);
+    setShowLayoutForm(true);
+  };
+
+  const handleDeleteLayout = async (layout: Layout) => {
+    if (!confirm(`Are you sure you want to delete "${layout.name}"?`)) return;
+    
+    try {
+      const response = await fetch(`/api/layouts/${layout.id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) throw new Error('Failed to delete layout');
+      
+      if (selectedLayout?.id === layout.id) {
+        setSelectedLayout(null);
+        setLayoutTiles([]);
+      }
+      
+      // Refresh the layout list
+      setShowLayoutList(true);
+    } catch (error) {
+      console.error('Error deleting layout:', error);
+    }
+  };
+
+  const handleDuplicateLayout = async (layout: Layout) => {
+    try {
+      const response = await fetch('/api/layouts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: `${layout.name} (Copy)`,
+          description: layout.description,
+          config: layout.config,
+          isShared: layout.isShared,
+        }),
+      });
+      
+      if (!response.ok) throw new Error('Failed to duplicate layout');
+      
+      const newLayout = await response.json();
+      
+      // Copy tiles to new layout
+      if (layout.id) {
+        const tilesResponse = await fetch(`/api/layouts/${layout.id}/tiles`);
+        const tiles = await tilesResponse.json();
+        
+        for (const tile of tiles) {
+          await fetch(`/api/layouts/${newLayout.id}/tiles`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              tileId: tile.id,
+              positions: tile.positions,
+            }),
+          });
+        }
+      }
+      
+      // Refresh the layout list
+      setShowLayoutList(true);
+    } catch (error) {
+      console.error('Error duplicating layout:', error);
+    }
+  };
+
+  const handleSubmitLayout = async (data: CreateLayoutRequest | UpdateLayoutRequest) => {
+    try {
+      const url = editingLayout 
+        ? `/api/layouts/${editingLayout.id}`
+        : '/api/layouts';
+      
+      const response = await fetch(url, {
+        method: editingLayout ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) throw new Error('Failed to save layout');
+      
+      const layout = await response.json();
+      setSelectedLayout(layout);
+      setShowLayoutForm(false);
+      
+      // Refresh the layout list if it's visible
+      if (showLayoutList) {
+        setShowLayoutList(false);
+        setShowLayoutList(true);
+      }
+    } catch (error) {
+      console.error('Error saving layout:', error);
+      throw error;
+    }
+  };
+
+  const handleCreateTile = () => {
+    // Show tile selector instead of directly creating
+    setShowTileSelector(true);
+  };
+  
+  const handleSelectTile = async (tile: Tile) => {
+    if (!selectedLayout) return;
+    
+    try {
+      // Add the selected tile to the layout
+      const positions = {
+        lg: { x: 0, y: 0, w: 4, h: 3 },
+        md: { x: 0, y: 0, w: 4, h: 3 },
+        sm: { x: 0, y: 0, w: 3, h: 3 },
+        xs: { x: 0, y: 0, w: 2, h: 3 },
+      };
+      
+      // Map positions to array format for the API
+      const positionsArray = Object.entries(positions).map(([breakpoint, position]) => ({
+        breakpoint,
+        position
+      }));
+      
+      const response = await fetch(`/api/layouts/${selectedLayout.id}/tiles`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tileId: tile.id,
+          positions: positionsArray,
+        }),
+      });
+      
+      if (!response.ok) throw new Error('Failed to add tile to layout');
+      
+      // Refresh the layout tiles
+      await fetchLayoutTiles(selectedLayout.id);
+      setShowTileSelector(false);
+    } catch (error) {
+      console.error('Error adding tile to layout:', error);
+    }
+  };
+  
+  const handleCreateNewTile = () => {
+    setShowTileSelector(false);
+    setEditingTile(null);
+    setShowTileEditor(true);
+  };
+
+  const handleSaveTile = async (tile: Tile, layoutId?: string) => {
+    // Refresh the layout tiles
+    if (selectedLayout) {
+      await fetchLayoutTiles(selectedLayout.id);
+    }
+    setShowTileEditor(false);
+  };
+
   return (
     <div className="flex flex-col gap-4">
       <PageHeader 
-        title="Layout"
-        subtitle="Advanced layout and positioning for dashboard tiles"
-        onAddTile={addTile}
+        title="Layout Editor"
+        subtitle={selectedLayout ? `Editing: ${selectedLayout.name}` : "Select or create a layout to get started"}
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            {isEditMode ? (
+            <Button
+              onClick={() => setShowLayoutList(!showLayoutList)}
+              variant="outline"
+              size="sm"
+              className="gap-1 sm:gap-2"
+            >
+              {showLayoutList ? <Grid3X3 className="h-4 w-4" /> : <List className="h-4 w-4" />}
+              <span className="hidden sm:inline">{showLayoutList ? 'Hide Layouts' : 'Manage Layouts'}</span>
+              <span className="sm:hidden">{showLayoutList ? 'Hide' : 'Layouts'}</span>
+            </Button>
+            
+            {selectedLayout && !showLayoutList && (
               <>
                 <Button
-                  onClick={resetToDefault}
-                  variant="outline"
+                  onClick={handleCreateTile}
                   size="sm"
+                  variant="default"
                   className="gap-1 sm:gap-2"
                 >
-                  <RotateCcw className="h-4 w-4" />
-                  <span className="hidden sm:inline">Reset All</span>
-                  <span className="sm:hidden">Reset</span>
+                  <Plus className="h-4 w-4" />
+                  <span className="hidden sm:inline">Add Tile</span>
+                  <span className="sm:hidden">Add</span>
                 </Button>
-                <Button
-                  onClick={cancelEdit}
-                  variant="outline"
-                  size="sm"
-                  className="gap-1 sm:gap-2"
-                >
-                  <X className="h-4 w-4" />
-                  Cancel
-                </Button>
-                <Button
-                  onClick={saveLayouts}
-                  size="sm"
-                  className="gap-1 sm:gap-2 bg-primary hover:bg-primary/90"
-                >
-                  <Save className="h-4 w-4" />
-                  <span className="hidden sm:inline">Save Changes</span>
-                  <span className="sm:hidden">Save</span>
-                </Button>
+                
+                {isEditMode ? (
+                  <>
+                    <Button
+                      onClick={resetToDefault}
+                      variant="outline"
+                      size="sm"
+                      className="gap-1 sm:gap-2"
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                      <span className="hidden sm:inline">Reset All</span>
+                      <span className="sm:hidden">Reset</span>
+                    </Button>
+                    <Button
+                      onClick={cancelEdit}
+                      variant="outline"
+                      size="sm"
+                      className="gap-1 sm:gap-2"
+                    >
+                      <X className="h-4 w-4" />
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={saveLayouts}
+                      size="sm"
+                      className="gap-1 sm:gap-2 bg-primary hover:bg-primary/90"
+                    >
+                      <Save className="h-4 w-4" />
+                      <span className="hidden sm:inline">Save Changes</span>
+                      <span className="sm:hidden">Save</span>
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    onClick={handleEditToggle}
+                    size="sm"
+                    className="gap-1 sm:gap-2"
+                  >
+                    <Edit className="h-4 w-4" />
+                    <span className="hidden sm:inline">Edit Layout</span>
+                    <span className="sm:hidden">Edit</span>
+                  </Button>
+                )}
               </>
-            ) : (
-              <Button
-                onClick={handleEditToggle}
-                size="sm"
-                className="gap-1 sm:gap-2"
-              >
-                <Edit className="h-4 w-4" />
-                <span className="hidden sm:inline">Edit Layout</span>
-                <span className="sm:hidden">Edit</span>
-              </Button>
             )}
           </div>
         }
       />
       
-      {isEditMode && (
-        <div className="flex flex-col gap-3">
-          <BreakpointSelector
-            currentBreakpoint={currentBreakpoint}
-            editingBreakpoint={editingBreakpoint}
-            onBreakpointChange={setEditingBreakpoint}
-            customLayouts={customLayouts}
-          />
+      {showLayoutList ? (
+        <LayoutList
+          onSelectLayout={handleSelectLayout}
+          onCreateLayout={handleCreateLayout}
+          onEditLayout={handleEditLayout}
+          onDeleteLayout={handleDeleteLayout}
+          onDuplicateLayout={handleDuplicateLayout}
+          selectedLayoutId={selectedLayout?.id}
+        />
+      ) : (
+        <>
+          {selectedLayout && isEditMode && (
+            <div className="flex flex-col gap-3">
+              <BreakpointSelector
+                currentBreakpoint={currentBreakpoint}
+                editingBreakpoint={editingBreakpoint}
+                onBreakpointChange={setEditingBreakpoint}
+                customLayouts={customLayouts}
+              />
+              
+              <ViewportIndicator
+                currentViewport={viewportWidth}
+                simulatedViewport={simulatedViewport}
+                onSimulatedViewportChange={setSimulatedViewport}
+              />
+            </div>
+          )}
           
-          <ViewportIndicator
-            currentViewport={viewportWidth}
-            simulatedViewport={simulatedViewport}
-            onSimulatedViewportChange={setSimulatedViewport}
-          />
-        </div>
+          {selectedLayout ? (
+            <GridLayoutWrapper />
+          ) : (
+            <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-lg">
+              <p className="text-muted-foreground mb-4">No layout selected</p>
+              <Button onClick={() => setShowLayoutList(true)}>
+                <List className="w-4 h-4 mr-2" />
+                Select a Layout
+              </Button>
+            </div>
+          )}
+        </>
       )}
       
-      <GridLayoutWrapper />
+      <LayoutForm
+        open={showLayoutForm}
+        onOpenChange={setShowLayoutForm}
+        layout={editingLayout}
+        onSubmit={handleSubmitLayout}
+      />
+      
+      <TileEditor
+        open={showTileEditor}
+        onOpenChange={setShowTileEditor}
+        tile={editingTile}
+        layoutId={selectedLayout?.id}
+        onSave={handleSaveTile}
+      />
+      
+      <TileSelector
+        isOpen={showTileSelector}
+        onClose={() => setShowTileSelector(false)}
+        onSelectTile={handleSelectTile}
+        onCreateNew={handleCreateNewTile}
+      />
     </div>
   );
 }

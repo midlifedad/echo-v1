@@ -47,10 +47,10 @@ export const NAV_ITEMS: NavItem[] = [
     href: '/playground'
   },
   {
-    id: 'editor',
-    label: 'Editor',
+    id: 'tile-library',
+    label: 'Tile Library',
     icon: 'Edit3',
-    href: '/editor'
+    href: '/tile-library'
   },
   {
     id: 'layout',
@@ -95,7 +95,7 @@ export const BREAKPOINT_ORDER = ['lg', 'md', 'sm', 'xs'] as const;
 
 export const GRID_CONFIG = {
   ROW_HEIGHT: 80,
-  MARGIN: [16, 16] as [number, number],
+  MARGIN: [9, 9] as [number, number],
   CONTAINER_PADDING: [0, 0] as [number, number],
   RESIZE_HANDLES: ['se', 'sw', 'ne', 'nw'] as const,
   MIN_WIDTH: 2,

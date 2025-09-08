@@ -27,6 +27,7 @@ export function initDatabase() {
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
       description TEXT,
+      config TEXT,
       is_default INTEGER DEFAULT 0,
       is_shared INTEGER DEFAULT 0,
       owner_id TEXT,
@@ -43,6 +44,15 @@ export function initDatabase() {
       id TEXT PRIMARY KEY,
       type TEXT NOT NULL,
       title TEXT NOT NULL,
+      name TEXT,
+      description TEXT,
+      category TEXT,
+      tags TEXT,
+      is_template INTEGER DEFAULT 0,
+      thumbnail TEXT,
+      owner_id TEXT,
+      is_public INTEGER DEFAULT 0,
+      usage_count INTEGER DEFAULT 0,
       config TEXT NOT NULL,
       data TEXT,
       data_source TEXT,
@@ -79,6 +89,17 @@ export function initDatabase() {
       created_at INTEGER DEFAULT (unixepoch()),
       updated_at INTEGER DEFAULT (unixepoch()),
       FOREIGN KEY (layout_id) REFERENCES layouts(id)
+    )
+  `);
+
+  // Create user_tile_favorites table
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS user_tile_favorites (
+      user_id TEXT NOT NULL,
+      tile_id TEXT NOT NULL,
+      created_at INTEGER DEFAULT (unixepoch()),
+      PRIMARY KEY (user_id, tile_id),
+      FOREIGN KEY (tile_id) REFERENCES tiles(id) ON DELETE CASCADE
     )
   `);
 

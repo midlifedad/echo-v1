@@ -54,7 +54,7 @@ export default function ChartWrapper({
     return (
       <div className={cn(
         'h-full w-full flex items-center justify-center',
-        'bg-gray-50 rounded animate-pulse',
+        'rounded animate-pulse',
         className
       )}>
         <div className="text-center">
