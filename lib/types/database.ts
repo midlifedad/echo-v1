@@ -1,35 +1,54 @@
-// Database entity types that match our schema
-export interface Layout {
-  id: string;
-  name: string;
-  description?: string | null;
-  config: {
-    cols: { lg: number; md: number; sm: number; xs: number };
-    rowHeight: number;
-    compactType: 'vertical' | 'horizontal' | null;
-    preventCollision: boolean;
-  };
-  isShared: boolean;
-  ownerId?: string | null;
-  createdAt: Date;
-  updatedAt: Date;
+// Import generated types from schema
+import type { 
+  Layout as SchemaLayout,
+  TileTemplate as SchemaTileTemplate,
+  TileInstance as SchemaTileInstance,
+  LayoutTile as SchemaLayoutTile,
+  Page as SchemaPage,
+  Tile as SchemaTile // Legacy
+} from '@/lib/db/schema';
+
+// Re-export schema types
+export type Layout = SchemaLayout;
+export type TileTemplate = SchemaTileTemplate;
+export type TileInstance = SchemaTileInstance;
+export type LayoutTile = SchemaLayoutTile;
+export type Page = SchemaPage;
+export type Tile = SchemaTile; // Legacy
+
+// Display settings for tiles within layouts
+export interface TileDisplaySettings {
+  showBorder?: boolean;
+  borderColor?: string;
+  borderWidth?: number;
+  expandable?: boolean;
+  showTitle?: boolean;
+  titlePosition?: 'top' | 'bottom' | 'hidden';
+  padding?: number;
+  backgroundColor?: string;
+  opacity?: number;
+  interactive?: boolean;
+  locked?: boolean;
 }
 
-export interface Tile {
-  id: string;
-  type: string;
-  title: string;
-  config: any;
-  data: any | null;
-  dataSource: any | null;
-  createdAt: Date;
-  updatedAt: Date;
+// Extended tile template with computed fields
+export interface TileTemplateWithMetadata extends TileTemplate {
+  isFavorite?: boolean;
+  instanceCount?: number;
+  lastUsedAt?: Date | null;
 }
 
-export interface LayoutTile {
-  layoutId: string;
-  tileId: string;
-  breakpoint: 'lg' | 'md' | 'sm' | 'xs';
+// Extended tile instance with relationships
+export interface TileInstanceWithRelations extends TileInstance {
+  template?: TileTemplate | null;
+  layout?: Layout;
+  parentInstance?: TileInstance | null;
+  positions?: LayoutTilePosition[];
+}
+
+// Position data for a tile at different breakpoints
+export interface LayoutTilePosition {
+  breakpoint: string;
   position: {
     x: number;
     y: number;
@@ -45,17 +64,14 @@ export interface LayoutTile {
   inheritanceMode: 'inherit' | 'custom';
 }
 
-export interface Page {
-  id: string;
-  name: string;
-  slug: string;
-  layoutId?: string | null;
-  config: any | null;
-  createdAt: Date;
-  updatedAt: Date;
+// Complete tile instance with all position data
+export interface TileInstanceWithPositions extends TileInstance {
+  positions: {
+    [breakpoint: string]: LayoutTilePosition['position'];
+  };
 }
 
-// API Response types
+// Legacy API Response types (for migration compatibility)
 export interface TileWithPositions extends Tile {
   positions: {
     [breakpoint: string]: {
@@ -66,27 +82,108 @@ export interface TileWithPositions extends Tile {
   };
 }
 
-// Form/Request types
+// Template-specific request types
+export interface CreateTileTemplateRequest {
+  type: string;
+  title: string;
+  name?: string;
+  description?: string;
+  category?: string;
+  tags?: string[];
+  thumbnail?: string;
+  config: Record<string, any>;
+  data?: Record<string, any>;
+  content?: Record<string, any>;
+  dataSource?: Record<string, any>;
+  defaultDisplaySettings?: TileDisplaySettings;
+  isPublic?: boolean;
+}
+
+export interface UpdateTileTemplateRequest {
+  title?: string;
+  name?: string;
+  description?: string;
+  category?: string;
+  tags?: string[];
+  thumbnail?: string;
+  config?: Record<string, any>;
+  data?: Record<string, any>;
+  content?: Record<string, any>;
+  dataSource?: Record<string, any>;
+  defaultDisplaySettings?: TileDisplaySettings;
+  isPublic?: boolean;
+}
+
+// Instance-specific request types
+export interface CreateTileInstanceRequest {
+  templateId?: string; // Optional - can create custom instance without template
+  layoutId: string;
+  type: string;
+  title: string;
+  config: Record<string, any>;
+  data?: Record<string, any>;
+  content?: Record<string, any>;
+  dataSource?: Record<string, any>;
+  displaySettings?: TileDisplaySettings;
+  positions?: {
+    [breakpoint: string]: LayoutTilePosition['position'];
+  };
+}
+
+export interface UpdateTileInstanceRequest {
+  title?: string;
+  config?: Record<string, any>;
+  data?: Record<string, any>;
+  content?: Record<string, any>;
+  dataSource?: Record<string, any>;
+  displaySettings?: TileDisplaySettings;
+  isModified?: boolean;
+}
+
+export interface CopyTileInstanceRequest {
+  sourceInstanceId: string;
+  targetLayoutId: string;
+  positions?: {
+    [breakpoint: string]: LayoutTilePosition['position'];
+  };
+}
+
+export interface SaveInstanceAsTemplateRequest {
+  instanceId: string;
+  name: string;
+  description?: string;
+  category?: string;
+  tags?: string[];
+  isPublic?: boolean;
+}
+
+// Layout request types
 export interface CreateLayoutRequest {
   name: string;
   description?: string;
   config?: Partial<Layout['config']>;
   isShared?: boolean;
-  ownerId?: string;
+  tags?: string[];
+  metadata?: Record<string, any>;
 }
 
 export interface UpdateLayoutRequest {
   name?: string;
   description?: string;
   config?: Partial<Layout['config']>;
+  isDefault?: boolean;
   isShared?: boolean;
+  tags?: string[];
+  metadata?: Record<string, any>;
 }
 
+// Legacy request types (for migration compatibility)
 export interface CreateTileRequest {
   type: string;
   title: string;
   config?: any;
   data?: any;
+  content?: any; // Added for text/image/smart tiles
   dataSource?: any;
 }
 
@@ -95,6 +192,7 @@ export interface UpdateTileRequest {
   title?: string;
   config?: any;
   data?: any;
+  content?: any; // Added for text/image/smart tiles
   dataSource?: any;
 }
 
@@ -106,9 +204,26 @@ export interface AddTileToLayoutRequest {
 }
 
 export interface UpdateTilePositionRequest {
-  tileId: string;
+  tileInstanceId: string;
   breakpoint: 'lg' | 'md' | 'sm' | 'xs';
   position: LayoutTile['position'];
   isVisible?: boolean;
   inheritanceMode?: 'inherit' | 'custom';
+}
+
+// Response types
+export interface TileTemplateListResponse {
+  templates: TileTemplateWithMetadata[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export interface TileInstanceListResponse {
+  instances: TileInstanceWithRelations[];
+  total: number;
+}
+
+export interface LayoutWithTiles extends Layout {
+  tileInstances: TileInstanceWithPositions[];
 }

@@ -179,7 +179,7 @@ export default function TileCard({
               Template
             </Badge>
           )}
-          {tile.usageCount > 0 && (
+          {tile.usageCount && tile.usageCount > 0 && (
             <Badge variant="outline" className="text-xs">
               <Star className="h-3 w-3 mr-1" />
               {tile.usageCount}

@@ -95,9 +95,11 @@ export default function TileSelector({
         break;
       case 'recent':
         // Sort by created date and take first 10
-        filtered = filtered.sort((a, b) => 
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        ).slice(0, 10);
+        filtered = filtered.sort((a, b) => {
+          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return dateB - dateA;
+        }).slice(0, 10);
         break;
       case 'popular':
         filtered = filtered.filter(t => t.usageCount > 0)

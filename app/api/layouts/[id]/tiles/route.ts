@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { addCompatibilityFields } from '@/lib/db/compatibility';
 import { LayoutService } from '@/lib/services/layoutService';
 import { TileService } from '@/lib/services/tileService';
 
@@ -20,7 +21,7 @@ export async function GET(
     const tilesWithPositions = tiles.map(tile => {
       const positions: any = {};
       layoutTiles
-        .filter(lt => lt.tileId === tile.id)
+        .filter(lt => (lt as any).tileId === tile.id || (lt as any).tileInstanceId === tile.id)
         .forEach(lt => {
           positions[lt.breakpoint] = {
             position: lt.position,
@@ -29,10 +30,10 @@ export async function GET(
           };
         });
       
-      return {
+      return addCompatibilityFields({
         ...tile,
         positions
-      };
+      });
     });
     
     return NextResponse.json(tilesWithPositions);

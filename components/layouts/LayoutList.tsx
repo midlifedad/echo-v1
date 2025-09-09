@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { formatDate } from '@/lib/db/compatibility';
 import { Plus, Edit2, Trash2, Copy, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -94,7 +95,7 @@ export function LayoutList({
             <CardContent>
               <div className="flex items-center justify-between">
                 <div className="text-sm text-muted-foreground">
-                  Created {new Date(layout.createdAt).toLocaleDateString()}
+                  Created {formatDate(layout.createdAt)}
                 </div>
                 <div className="flex gap-1">
                   <Button
