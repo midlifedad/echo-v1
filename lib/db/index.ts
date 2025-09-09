@@ -38,41 +38,63 @@ export function initDatabase() {
     )
   `);
 
-  // Create tiles table
+  // Create tile_templates table
   sqlite.exec(`
-    CREATE TABLE IF NOT EXISTS tiles (
+    CREATE TABLE IF NOT EXISTS tile_templates (
       id TEXT PRIMARY KEY,
       type TEXT NOT NULL,
-      title TEXT NOT NULL,
-      name TEXT,
+      name TEXT NOT NULL,
       description TEXT,
       category TEXT,
       tags TEXT,
-      is_template INTEGER DEFAULT 0,
       thumbnail TEXT,
       owner_id TEXT,
       is_public INTEGER DEFAULT 0,
+      is_favorite INTEGER DEFAULT 0,
       usage_count INTEGER DEFAULT 0,
-      config TEXT NOT NULL,
-      data TEXT,
-      data_source TEXT,
+      content TEXT,
+      default_config TEXT,
+      default_data TEXT,
+      default_data_source TEXT,
+      default_display_settings TEXT,
       created_at INTEGER DEFAULT (unixepoch()),
       updated_at INTEGER DEFAULT (unixepoch())
     )
   `);
 
-  // Create layout_tiles junction table
+  // Create tile_instances table
   sqlite.exec(`
-    CREATE TABLE IF NOT EXISTS layout_tiles (
+    CREATE TABLE IF NOT EXISTS tile_instances (
+      id TEXT PRIMARY KEY,
+      template_id TEXT,
       layout_id TEXT NOT NULL,
-      tile_id TEXT NOT NULL,
+      parent_instance_id TEXT,
+      title TEXT,
+      content TEXT,
+      config TEXT,
+      data TEXT,
+      data_source TEXT,
+      display_settings TEXT,
+      is_modified INTEGER DEFAULT 0,
+      created_at INTEGER DEFAULT (unixepoch()),
+      updated_at INTEGER DEFAULT (unixepoch()),
+      FOREIGN KEY (template_id) REFERENCES tile_templates(id) ON DELETE SET NULL,
+      FOREIGN KEY (layout_id) REFERENCES layouts(id) ON DELETE CASCADE
+    )
+  `);
+
+  // Create layout_tile_positions table
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS layout_tile_positions (
+      layout_id TEXT NOT NULL,
+      tile_instance_id TEXT NOT NULL,
       breakpoint TEXT NOT NULL,
       position TEXT NOT NULL,
       is_visible INTEGER DEFAULT 1,
       inheritance_mode TEXT DEFAULT 'inherit',
-      PRIMARY KEY (layout_id, tile_id, breakpoint),
+      PRIMARY KEY (layout_id, tile_instance_id, breakpoint),
       FOREIGN KEY (layout_id) REFERENCES layouts(id) ON DELETE CASCADE,
-      FOREIGN KEY (tile_id) REFERENCES tiles(id) ON DELETE CASCADE
+      FOREIGN KEY (tile_instance_id) REFERENCES tile_instances(id) ON DELETE CASCADE
     )
   `);
 
@@ -92,21 +114,23 @@ export function initDatabase() {
     )
   `);
 
-  // Create user_tile_favorites table
+  // Create user_template_favorites table
   sqlite.exec(`
-    CREATE TABLE IF NOT EXISTS user_tile_favorites (
+    CREATE TABLE IF NOT EXISTS user_template_favorites (
       user_id TEXT NOT NULL,
-      tile_id TEXT NOT NULL,
+      template_id TEXT NOT NULL,
       created_at INTEGER DEFAULT (unixepoch()),
-      PRIMARY KEY (user_id, tile_id),
-      FOREIGN KEY (tile_id) REFERENCES tiles(id) ON DELETE CASCADE
+      PRIMARY KEY (user_id, template_id),
+      FOREIGN KEY (template_id) REFERENCES tile_templates(id) ON DELETE CASCADE
     )
   `);
 
   // Create indexes for better performance
   sqlite.exec(`
-    CREATE INDEX IF NOT EXISTS idx_layout_tiles_layout_id ON layout_tiles(layout_id);
-    CREATE INDEX IF NOT EXISTS idx_layout_tiles_tile_id ON layout_tiles(tile_id);
+    CREATE INDEX IF NOT EXISTS idx_tile_instances_template_id ON tile_instances(template_id);
+    CREATE INDEX IF NOT EXISTS idx_tile_instances_layout_id ON tile_instances(layout_id);
+    CREATE INDEX IF NOT EXISTS idx_layout_tile_positions_layout_id ON layout_tile_positions(layout_id);
+    CREATE INDEX IF NOT EXISTS idx_layout_tile_positions_instance_id ON layout_tile_positions(tile_instance_id);
     CREATE INDEX IF NOT EXISTS idx_pages_layout_id ON pages(layout_id);
     CREATE INDEX IF NOT EXISTS idx_pages_slug ON pages(slug);
   `);

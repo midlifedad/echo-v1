@@ -199,7 +199,7 @@ export function TileEditor({
       
       if (tile) {
         // Update existing tile
-        const response = await fetch(`/api/tiles/${tile.id}`, {
+        const response = await fetch(`/api/templates/${tile.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData),
@@ -209,7 +209,7 @@ export function TileEditor({
         savedTile = await response.json();
       } else {
         // Create new tile
-        const response = await fetch('/api/tiles', {
+        const response = await fetch('/api/templates', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData),
@@ -468,3 +468,5 @@ export function TileEditor({
     </Dialog>
   );
 }
+
+export default TileEditor;

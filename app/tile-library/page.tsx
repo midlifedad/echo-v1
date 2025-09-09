@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/tabs';
 import PageHeader from '@/components/layout/PageHeader';
 import TileCard from '@/components/tiles/TileCard';
-import { TileEditor } from '@/components/tiles/TileEditor';
+import TileEditor from '@/components/tiles/TileEditor';
 import { Tile } from '@/lib/db/schema';
 
 export default function TileLibraryPage() {
@@ -49,7 +49,7 @@ export default function TileLibraryPage() {
   const fetchTiles = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/tiles');
+      const response = await fetch('/api/templates');
       const data = await response.json();
       setTiles(data);
     } catch (error) {
@@ -61,7 +61,7 @@ export default function TileLibraryPage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('/api/tiles/categories');
+      const response = await fetch('/api/templates/categories');
       const data = await response.json();
       setCategories(data);
     } catch (error) {
@@ -118,7 +118,7 @@ export default function TileLibraryPage() {
 
   const handleDuplicateTile = async (tile: Tile) => {
     try {
-      const response = await fetch(`/api/tiles/${tile.id}/duplicate`, {
+      const response = await fetch(`/api/templates/${tile.id}/duplicate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: `${tile.name} (Copy)` }),
@@ -136,7 +136,7 @@ export default function TileLibraryPage() {
     if (!confirm('Are you sure you want to delete this tile?')) return;
 
     try {
-      const response = await fetch(`/api/tiles/${tile.id}`, {
+      const response = await fetch(`/api/templates/${tile.id}`, {
         method: 'DELETE',
       });
 
@@ -150,7 +150,7 @@ export default function TileLibraryPage() {
 
   const handleToggleFavorite = async (tile: Tile) => {
     try {
-      const response = await fetch(`/api/tiles/${tile.id}/favorite`, {
+      const response = await fetch(`/api/templates/${tile.id}/favorite`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: 'default-user' }),
@@ -168,8 +168,8 @@ export default function TileLibraryPage() {
   const handleSaveTile = async (tileData: any) => {
     try {
       const url = editorMode === 'edit' && selectedTile
-        ? `/api/tiles/${selectedTile.id}`
-        : '/api/tiles';
+        ? `/api/templates/${selectedTile.id}`
+        : '/api/templates';
       
       const method = editorMode === 'edit' ? 'PUT' : 'POST';
 

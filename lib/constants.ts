@@ -50,7 +50,7 @@ export const NAV_ITEMS: NavItem[] = [
   {
     id: 'tile-library',
     label: 'Tile Library',
-    icon: 'Library',
+    icon: 'Layers',
     href: '/tile-library'
   },
   {
