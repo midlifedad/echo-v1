@@ -150,7 +150,7 @@ export function TileEditor({
   }, [tile, open]);
 
   const handleBasicUpdate = (updates: Partial<CreateTileRequest>) => {
-    setFormData(prev => ({
+    setFormData((prev: Partial<CreateTileRequest>) => ({
       ...prev,
       ...updates,
       config: {
@@ -165,7 +165,7 @@ export function TileEditor({
   };
 
   const handleDataUpdate = (data: any) => {
-    setFormData(prev => ({
+    setFormData((prev: Partial<CreateTileRequest>) => ({
       ...prev,
       config: {
         ...prev.config,
@@ -179,7 +179,7 @@ export function TileEditor({
   };
 
   const handleOptionsUpdate = (options: any) => {
-    setFormData(prev => ({
+    setFormData((prev: Partial<CreateTileRequest>) => ({
       ...prev,
       config: {
         ...prev.config,
