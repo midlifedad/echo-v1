@@ -1,30 +1,55 @@
-# Tile Schemas
+# Template & Instance Schemas
 
 ## Overview
-Tiles are the fundamental content units of the dashboard system. Each tile represents a discrete piece of content that can be positioned, styled, and configured independently.
+The dashboard system uses a template/instance architecture where templates are reusable definitions and instances are their implementations in layouts. This document defines the schemas for both.
 
-## Base Tile Schema
+## Template Schema
 
-All tiles share this base structure:
+Templates are reusable tile definitions stored in the library:
 
 ```typescript
-interface BaseTile {
-  id: string;                    // Unique identifier
-  type: TileType;                 // Tile type identifier
-  title: string;                  // Display title
-  name?: string;                  // User-friendly name for library/reuse
-  description?: string;           // Purpose/content description
-  category?: string;              // Organizational category
-  tags?: string[];               // Searchable tags
-  isTemplate: boolean;           // Pre-built template flag
-  isPublic: boolean;             // Sharing permission
-  thumbnail?: string;            // Preview image (base64 or URL)
-  ownerId?: string;              // Creator identifier
-  usageCount: number;            // Popularity metric
-  config: TileConfig;            // Type-specific configuration
-  data?: Record<string, any>;   // Static data (charts)
-  content?: TileContent;         // Type-specific content
-  dataSource?: DataSource;       // Dynamic data configuration
+interface TileTemplate {
+  id: string;                           // Unique identifier
+  type: TileType;                       // Tile type identifier
+  title: string;                        // Template title
+  name?: string;                        // User-friendly library name
+  description?: string;                 // Template description
+  category?: string;                    // Organizational category
+  tags?: string[];                     // Searchable tags
+  isSystem: boolean;                   // System-provided template
+  isPublic: boolean;                   // Sharing permission
+  thumbnail?: string;                  // Preview image (base64 or URL)
+  ownerId?: string;                    // Creator identifier
+  usageCount: number;                  // Popularity/usage counter
+  config: TileConfig;                  // Type-specific configuration
+  data?: Record<string, any>;         // Static data (for charts)
+  content?: TileContent;               // Type-specific content
+  dataSource?: DataSource;             // Dynamic data configuration
+  defaultDisplaySettings: DisplaySettings; // Default display options
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
+
+## Instance Schema
+
+Instances are actual tiles used within specific layouts:
+
+```typescript
+interface TileInstance {
+  id: string;                          // Unique identifier
+  templateId?: string;                 // Link to template (optional)
+  layoutId: string;                    // Parent layout ID
+  parentInstanceId?: string;           // For copied instances
+  type: TileType;                      // Tile type (denormalized)
+  title: string;                       // Instance title (can override template)
+  config: TileConfig;                  // Instance configuration
+  data?: Record<string, any>;         // Instance-specific data
+  content?: TileContent;               // Instance-specific content
+  dataSource?: DataSource;             // Instance data source config
+  displaySettings: DisplaySettings;    // Layout-specific display settings
+  isModified: boolean;                 // Whether instance differs from template
+  lastSyncedAt?: Date;                 // Last sync with template
   createdAt: Date;
   updatedAt: Date;
 }
@@ -149,6 +174,23 @@ interface ChartTileConfig {
 
 ## Supporting Schemas
 
+### Display Settings
+```typescript
+interface DisplaySettings {
+  showBorder?: boolean;           // Show tile border
+  borderColor?: string;           // Border color (hex)
+  borderWidth?: number;           // Border width in pixels
+  expandable?: boolean;           // Allow tile expansion
+  showTitle?: boolean;            // Show tile title
+  titlePosition?: 'top' | 'bottom' | 'hidden'; // Title position
+  padding?: number;               // Internal padding in pixels
+  backgroundColor?: string;        // Background color (hex)
+  opacity?: number;               // Opacity (0-1)
+  interactive?: boolean;          // Allow user interaction
+  locked?: boolean;               // Prevent editing/moving
+}
+```
+
 ### Data Source
 ```typescript
 interface DataSource {
@@ -201,13 +243,38 @@ type TileContent =
   | undefined;  // Chart tiles don't use content field
 ```
 
+## Template/Instance Relationships
+
+### Resolution Rules
+When rendering an instance:
+
+1. **Base Properties**: Start with template defaults (if templateId exists)
+2. **Override Properties**: Apply instance-specific overrides
+3. **Display Settings**: Merge template defaultDisplaySettings with instance displaySettings
+4. **Configuration**: Instance config takes precedence over template config
+5. **Content**: Instance content takes precedence over template content
+
+### Modification Tracking
+- `isModified` flag tracks whether instance differs from its template
+- Set to `true` when instance properties differ from template
+- Set to `false` when synced with template
+- Custom instances (no templateId) are always `isModified: true`
+
+### Synchronization
+- Sync operation reverts instance to template state
+- Only affects config, content, data, and dataSource
+- Display settings are preserved (layout-specific)
+- Updates `lastSyncedAt` timestamp
+
 ## Validation Rules
 
+### Template Validation
 1. **Required Fields:**
-   - `id` must be unique
+   - `id` must be unique across templates
    - `type` must be valid TileType
    - `title` must be non-empty string
    - `config` must match type requirements
+   - `defaultDisplaySettings` must be valid DisplaySettings
 
 2. **Content Requirements:**
    - Text tiles: `content.richText` required
@@ -215,16 +282,45 @@ type TileContent =
    - Smart tiles: Structure TBD
    - Chart tiles: `config.options` required
 
-3. **Data Constraints:**
-   - `tags` array max 10 items
-   - `thumbnail` max 500KB if base64
-   - `richText` max 100KB
-   - `imageUrl` must be valid URL
+### Instance Validation
+1. **Required Fields:**
+   - `id` must be unique across instances
+   - `layoutId` must reference existing layout
+   - `type` must be valid TileType
+   - `title` must be non-empty string
+   - `config` must match type requirements
+   - `displaySettings` must be valid DisplaySettings
+
+2. **Template Relationship:**
+   - If `templateId` provided, must reference existing template
+   - `type` must match template type (if linked)
+
+### Common Data Constraints
+- `tags` array max 10 items
+- `thumbnail` max 500KB if base64
+- `richText` max 100KB
+- `imageUrl` must be valid URL
+- `displaySettings.opacity` must be between 0 and 1
+- Color values must be valid hex codes
 
 ## Storage Considerations
 
-- Tiles are stored in a relational database
-- `content` and `config` fields are JSON columns
+### Templates
+- Stored in `tile_templates` table
+- `content`, `config`, and `defaultDisplaySettings` are JSON columns
+- Templates are versioned independently of instances
 - Large content should reference external storage
 - Thumbnails should be optimized/compressed
-- Templates should be versioned separately
+
+### Instances
+- Stored in `tile_instances` table
+- Linked to templates via foreign key (optional)
+- `content`, `config`, and `displaySettings` are JSON columns
+- Instance data overrides template data when present
+- Instances are layout-specific and deleted with layouts
+
+### Performance Optimizations
+- Templates cached for frequent access
+- Instance resolution performed at render time
+- Denormalized type field in instances for quick filtering
+- Usage counts updated asynchronously

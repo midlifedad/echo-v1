@@ -1,16 +1,32 @@
 # Tile System Architecture
 
 ## Overview
-The tile system provides a flexible, extensible architecture for creating, managing, and rendering diverse content types within dashboards. This document describes the system's core concepts, lifecycle, and extension patterns.
+The tile system uses a template/instance architecture for creating, managing, and rendering diverse content types within dashboards. This provides flexibility for customization while maintaining consistency and reusability.
 
 ## Core Concepts
 
+### Template/Instance Pattern
+The system separates reusable definitions from their implementations:
+
+- **Templates**: Reusable tile definitions stored in the library
+  - Sharable across users and layouts
+  - Have default display settings
+  - Track usage statistics
+  - Can be system-provided or user-created
+
+- **Instances**: Actual tiles used within specific layouts
+  - Linked to templates (optional)
+  - Have layout-specific display settings
+  - Can override template properties
+  - Track modification status
+
 ### Tile Definition
-A tile is a self-contained content unit with:
+Each template and instance is a self-contained content unit with:
 - **Identity**: Unique identifier and metadata
-- **Type**: Determines rendering and behavior
+- **Type**: Determines rendering and behavior  
 - **Configuration**: Type-specific settings
 - **Content**: The actual data to display
+- **Display Settings**: Layout-specific presentation options
 - **State**: Runtime state and lifecycle
 
 ### Tile Types
@@ -20,31 +36,53 @@ The system supports multiple tile types through a plugin-like architecture:
 - **Interactive Tiles**: Forms, controls
 - **Smart Tiles**: AI-enhanced content (future)
 
-## Tile Lifecycle
+## Template/Instance Lifecycle
 
-### 1. Creation
+### Template Lifecycle
+
+#### 1. Template Creation
 ```
-User Input → Type Selection → Configuration → Validation → Storage
+Type Selection → Configuration → Default Settings → Validation → Library Storage
 ```
 
 **Steps:**
 1. User selects tile type
 2. System loads type-specific configuration interface
-3. User provides required data
+3. User provides required data and default display settings
 4. System validates against type schema
-5. Tile saved to database
+5. Template saved to library database
 
-### 2. Loading
+#### 2. Template Management
+- Templates can be favorited by users
+- Usage statistics are tracked
+- Templates can be shared (public/private)
+- Templates can be updated (affects future instances)
+
+### Instance Lifecycle
+
+#### 1. Instance Creation
 ```
-Query → Fetch → Hydrate → Initialize → Ready
+Template Selection → Layout Assignment → Customization → Validation → Storage
 ```
 
 **Steps:**
-1. System queries tiles for layout
-2. Fetches tile data from database
-3. Hydrates with runtime configuration
-4. Initializes type-specific handlers
-5. Tile ready for rendering
+1. User selects template from library (or creates custom)
+2. Instance created and assigned to specific layout
+3. User customizes display settings and content (optional)
+4. System validates instance configuration
+5. Instance saved with layout relationship
+
+#### 2. Instance Loading
+```
+Layout Query → Fetch Instances → Template Resolution → Hydration → Ready
+```
+
+**Steps:**
+1. System queries instances for layout
+2. Fetches instance and template data from database
+3. Resolves template inheritance and overrides
+4. Hydrates with runtime configuration
+5. Instance ready for rendering
 
 ### 3. Rendering
 ```
@@ -155,30 +193,86 @@ interface DataSource {
 Source → Fetch → Transform → Cache → Render
 ```
 
-## Tile Services
+## Template/Instance Relationships
 
-### Core Service Interface
+### Template Inheritance
 ```typescript
-interface TileService {
+interface InstanceResolution {
+  // Base template properties
+  template: Template;
+  
+  // Instance overrides
+  instance: Instance;
+  
+  // Resolved final properties
+  resolved: {
+    config: ResolvedConfig;
+    content: ResolvedContent;
+    displaySettings: ResolvedDisplaySettings;
+  };
+}
+```
+
+### Resolution Priority (highest to lowest)
+1. Instance-specific overrides
+2. Template defaults
+3. System defaults
+
+### Synchronization
+- **Modified instances**: Track changes vs template
+- **Sync operation**: Revert instance to template state
+- **Template updates**: Optionally propagate to instances
+
+## Template/Instance Services
+
+### Template Service Interface
+```typescript
+interface TemplateService {
   // CRUD Operations
-  create(tile: TileInput): Promise<Tile>;
-  read(id: string): Promise<Tile>;
-  update(id: string, changes: Partial<Tile>): Promise<Tile>;
+  create(template: TemplateInput): Promise<Template>;
+  read(id: string): Promise<Template>;
+  update(id: string, changes: Partial<Template>): Promise<Template>;
   delete(id: string): Promise<void>;
   
-  // Bulk Operations
-  list(filter?: Filter): Promise<Tile[]>;
-  bulkCreate(tiles: TileInput[]): Promise<Tile[]>;
-  bulkUpdate(updates: Update[]): Promise<Tile[]>;
-  bulkDelete(ids: string[]): Promise<void>;
+  // Library Operations
+  list(filter?: TemplateFilter): Promise<Template[]>;
+  search(query: string): Promise<Template[]>;
+  getCategories(): Promise<Category[]>;
+  
+  // Favorites
+  addToFavorites(templateId: string, userId: string): Promise<void>;
+  removeFromFavorites(templateId: string, userId: string): Promise<void>;
+  
+  // Usage tracking
+  incrementUsage(templateId: string): Promise<void>;
+  getUsageStats(templateId: string): Promise<UsageStats>;
+}
+```
+
+### Instance Service Interface
+```typescript
+interface InstanceService {
+  // CRUD Operations
+  create(instance: InstanceInput): Promise<Instance>;
+  read(id: string): Promise<Instance>;
+  update(id: string, changes: Partial<Instance>): Promise<Instance>;
+  delete(id: string): Promise<void>;
   
   // Template Operations
-  saveAsTemplate(id: string): Promise<Template>;
-  createFromTemplate(templateId: string): Promise<Tile>;
+  createFromTemplate(templateId: string, layoutId: string): Promise<Instance>;
+  syncWithTemplate(instanceId: string): Promise<Instance>;
+  saveAsTemplate(instanceId: string, templateData: TemplateInput): Promise<Template>;
+  
+  // Layout Operations
+  getByLayout(layoutId: string): Promise<Instance[]>;
+  moveToLayout(instanceId: string, targetLayoutId: string): Promise<Instance>;
+  duplicate(instanceId: string, targetLayoutId?: string): Promise<Instance>;
+  
+  // Resolution
+  resolve(instanceId: string): Promise<ResolvedInstance>;
   
   // Validation
-  validate(tile: TileInput): ValidationResult;
-  validateType(type: string, config: any): ValidationResult;
+  validate(instance: InstanceInput): ValidationResult;
 }
 ```
 

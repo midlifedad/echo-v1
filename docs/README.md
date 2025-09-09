@@ -60,34 +60,52 @@ How the system components work together.
 ### 🔌 03-api/
 RESTful API contracts for system interaction.
 
-#### [tiles-api.md](03-api/tiles-api.md)
-- CRUD operations for tiles
-- Batch operations
+#### [templates-api.md](03-api/templates-api.md)
+- Template library management
+- CRUD operations for reusable tile templates
+- Favorites and usage tracking
 - Import/export functionality
-- Error handling patterns
+
+#### [instances-api.md](03-api/instances-api.md)
+- Instance management within layouts
+- Template linking and synchronization
+- Layout-specific customization
+- Bulk operations
 
 #### [layouts-api.md](03-api/layouts-api.md)
 - Layout management endpoints
-- Tile positioning APIs
+- Instance positioning APIs
 - Template system
 - WebSocket events
 
 ## Key Concepts
 
-### Tiles
-Self-contained content units that can be:
+### Template/Instance Architecture
+The system uses a two-tier approach for flexibility and reusability:
+
+#### Templates
+Reusable tile definitions stored in the library that can be:
 - **Created** from various types (text, image, charts)
-- **Positioned** within layouts
-- **Configured** with type-specific settings
-- **Rendered** based on their type
-- **Reused** across multiple layouts
+- **Shared** across users and layouts
+- **Favorited** by users
+- **Tracked** for usage statistics
+- **Configured** with default display settings
+
+#### Instances
+Actual tiles used within layouts that can be:
+- **Linked** to templates or exist independently
+- **Positioned** within specific layouts
+- **Customized** with layout-specific settings
+- **Synchronized** with their source templates
+- **Modified** independently from templates
 
 ### Layouts
 Spatial organization systems that:
-- **Define** grid-based positioning
+- **Define** grid-based positioning for instances
 - **Adapt** to different screen sizes
-- **Persist** tile arrangements
+- **Persist** instance arrangements
 - **Support** inheritance and locking
+- **Reference** instances, not templates directly
 
 ### Data Flow
 Information movement that:
@@ -118,6 +136,25 @@ Information movement that:
    - Efficient caching layers
    - Optimized rendering pipelines
 
+## Template/Instance Migration
+
+This documentation reflects the new template/instance architecture. For systems migrating from legacy tile-only structures:
+
+### Migration Process
+1. **Run Migration Script**: Execute `lib/db/migrate-to-template-instance.ts`
+2. **Template Creation**: Existing tiles marked as templates become reusable library items
+3. **Instance Generation**: Tiles used in layouts become instances, linked to templates where applicable
+4. **Relationship Updates**: Layout positioning references instances instead of tiles
+5. **Data Preservation**: All existing data and relationships are maintained
+6. **Rollback Safety**: Legacy tables preserved during migration for rollback capability
+
+### New API Structure
+- **Templates**: `/api/templates` - Library management
+- **Instances**: `/api/instances` - Layout-specific tile management
+- **Legacy**: Original `/api/tiles` endpoints deprecated but preserved for compatibility
+
+See [TEMPLATE_INSTANCE_ARCHITECTURE.md](TEMPLATE_INSTANCE_ARCHITECTURE.md) for detailed migration information.
+
 ## Implementation Checklist
 
 When building a new dashboard system:
@@ -129,18 +166,26 @@ When building a new dashboard system:
 - [ ] Add seed data
 
 ### ✅ Core Services
-- [ ] Tile CRUD operations
+- [ ] Template library management
+- [ ] Instance CRUD operations
 - [ ] Layout management
 - [ ] Position calculations
+- [ ] Template/instance resolution
 - [ ] Data fetching
 
 ### ✅ API Layer
-- [ ] RESTful endpoints
+- [ ] Template endpoints (/api/templates)
+- [ ] Instance endpoints (/api/instances) 
+- [ ] Layout endpoints (updated for instances)
 - [ ] Authentication/authorization
 - [ ] Error handling
 - [ ] Rate limiting
 
 ### ✅ Business Logic
+- [ ] Template/instance relationship handling
+- [ ] Display settings inheritance
+- [ ] Instance modification tracking
+- [ ] Template synchronization
 - [ ] Tile type registry
 - [ ] Rendering pipeline
 - [ ] Grid calculations

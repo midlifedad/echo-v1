@@ -3,38 +3,82 @@
 ## Overview
 The dashboard system uses a relational database (SQLite) with JSON columns for flexible data storage. This document defines the complete database structure.
 
+**Architecture Note:** The system now uses a template/instance pattern where:
+- **Templates** are reusable tile definitions stored in the library
+- **Instances** are actual tiles used within specific layouts
+- **Layout positions** reference instances, not templates directly
+
 ## Tables
 
-### tiles
-Stores all tile definitions and configurations.
+### tile_templates
+Stores reusable tile definitions for the library.
 
 ```sql
-CREATE TABLE tiles (
+CREATE TABLE tile_templates (
   id TEXT PRIMARY KEY,
   type TEXT NOT NULL,                    -- Tile type identifier
   title TEXT NOT NULL,                   -- Display title
-  name TEXT,                             -- Reusable name
-  description TEXT,                      -- Tile description
+  name TEXT,                             -- User-friendly name for library
+  description TEXT,                      -- Template description
   category TEXT,                         -- Category for organization
   tags TEXT,                             -- JSON array of tags
-  is_template INTEGER DEFAULT 0,         -- Boolean: template flag
-  thumbnail TEXT,                        -- Preview image
+  is_system INTEGER DEFAULT 0,           -- System-provided template
+  thumbnail TEXT,                        -- Preview image (base64/URL)
   owner_id TEXT,                         -- Creator ID
-  is_public INTEGER DEFAULT 0,          -- Boolean: public flag
-  usage_count INTEGER DEFAULT 0,        -- Usage counter
-  config TEXT NOT NULL,                 -- JSON: configuration
+  is_public INTEGER DEFAULT 0,          -- Boolean: sharing permission
+  usage_count INTEGER DEFAULT 0,        -- Popularity counter
+  config TEXT NOT NULL,                 -- JSON: tile configuration
   data TEXT,                             -- JSON: static data
   content TEXT,                          -- JSON: type-specific content
   data_source TEXT,                      -- JSON: data source config
+  default_display_settings TEXT,        -- JSON: default display settings
   created_at INTEGER DEFAULT CURRENT_TIMESTAMP,
   updated_at INTEGER DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Indexes
-CREATE INDEX idx_tiles_type ON tiles(type);
-CREATE INDEX idx_tiles_category ON tiles(category);
-CREATE INDEX idx_tiles_owner ON tiles(owner_id);
-CREATE INDEX idx_tiles_public ON tiles(is_public);
+CREATE INDEX idx_tile_templates_type ON tile_templates(type);
+CREATE INDEX idx_tile_templates_category ON tile_templates(category);
+CREATE INDEX idx_tile_templates_owner ON tile_templates(owner_id);
+CREATE INDEX idx_tile_templates_public ON tile_templates(is_public);
+CREATE INDEX idx_tile_templates_system ON tile_templates(is_system);
+```
+
+### tile_instances
+Stores actual tile instances used within layouts.
+
+```sql
+CREATE TABLE tile_instances (
+  id TEXT PRIMARY KEY,
+  template_id TEXT REFERENCES tile_templates(id) ON DELETE SET NULL,
+  layout_id TEXT NOT NULL REFERENCES layouts(id) ON DELETE CASCADE,
+  parent_instance_id TEXT,               -- For copied instances
+  type TEXT NOT NULL,                    -- Tile type (denormalized)
+  title TEXT NOT NULL,                   -- Instance title (can override template)
+  config TEXT NOT NULL,                 -- JSON: instance configuration
+  data TEXT,                             -- JSON: instance-specific data
+  content TEXT,                          -- JSON: instance-specific content
+  data_source TEXT,                      -- JSON: instance data source config
+  display_settings TEXT,                -- JSON: layout-specific display settings
+  is_modified INTEGER DEFAULT 0,        -- Whether instance differs from template
+  last_synced_at INTEGER,               -- Last sync with template
+  created_at INTEGER DEFAULT CURRENT_TIMESTAMP,
+  updated_at INTEGER DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes
+CREATE INDEX idx_tile_instances_template ON tile_instances(template_id);
+CREATE INDEX idx_tile_instances_layout ON tile_instances(layout_id);
+CREATE INDEX idx_tile_instances_type ON tile_instances(type);
+CREATE INDEX idx_tile_instances_parent ON tile_instances(parent_instance_id);
+```
+
+### tiles (Legacy - Deprecated)
+**DEPRECATED:** Legacy table maintained for backward compatibility during migration.
+
+```sql
+-- This table structure is deprecated and will be removed after migration
+-- See migration documentation for details
 ```
 
 ### layouts
@@ -62,25 +106,25 @@ CREATE INDEX idx_layouts_shared ON layouts(is_shared);
 ```
 
 ### layout_tiles
-Junction table linking layouts to tiles with position data.
+Junction table linking layouts to tile instances with position data.
 
 ```sql
 CREATE TABLE layout_tiles (
   layout_id TEXT NOT NULL,              -- Foreign key to layouts
-  tile_id TEXT NOT NULL,                -- Foreign key to tiles
+  tile_instance_id TEXT NOT NULL,       -- Foreign key to tile_instances
   breakpoint TEXT NOT NULL,             -- Screen size: lg/md/sm/xs
   position TEXT NOT NULL,               -- JSON: grid position
   is_visible INTEGER DEFAULT 1,         -- Boolean: visibility
   inheritance_mode TEXT DEFAULT 'inherit', -- inherit/custom
   
-  PRIMARY KEY (layout_id, tile_id, breakpoint),
+  PRIMARY KEY (layout_id, tile_instance_id, breakpoint),
   FOREIGN KEY (layout_id) REFERENCES layouts(id) ON DELETE CASCADE,
-  FOREIGN KEY (tile_id) REFERENCES tiles(id) ON DELETE CASCADE
+  FOREIGN KEY (tile_instance_id) REFERENCES tile_instances(id) ON DELETE CASCADE
 );
 
 -- Indexes
 CREATE INDEX idx_layout_tiles_layout ON layout_tiles(layout_id);
-CREATE INDEX idx_layout_tiles_tile ON layout_tiles(tile_id);
+CREATE INDEX idx_layout_tiles_instance ON layout_tiles(tile_instance_id);
 ```
 
 ### pages
@@ -106,27 +150,34 @@ CREATE UNIQUE INDEX idx_pages_slug ON pages(slug);
 CREATE INDEX idx_pages_layout ON pages(layout_id);
 ```
 
-### user_tile_favorites
-Tracks user favorite tiles.
+### user_template_favorites
+Tracks user favorite templates.
 
 ```sql
-CREATE TABLE user_tile_favorites (
+CREATE TABLE user_template_favorites (
   user_id TEXT NOT NULL,
-  tile_id TEXT NOT NULL,
+  template_id TEXT NOT NULL,
   created_at INTEGER DEFAULT CURRENT_TIMESTAMP,
   
-  PRIMARY KEY (user_id, tile_id),
-  FOREIGN KEY (tile_id) REFERENCES tiles(id) ON DELETE CASCADE
+  PRIMARY KEY (user_id, template_id),
+  FOREIGN KEY (template_id) REFERENCES tile_templates(id) ON DELETE CASCADE
 );
 
 -- Indexes
-CREATE INDEX idx_favorites_user ON user_tile_favorites(user_id);
-CREATE INDEX idx_favorites_tile ON user_tile_favorites(tile_id);
+CREATE INDEX idx_template_favorites_user ON user_template_favorites(user_id);
+CREATE INDEX idx_template_favorites_template ON user_template_favorites(template_id);
+```
+
+### user_tile_favorites (Legacy - Deprecated)
+**DEPRECATED:** Legacy table for backward compatibility. Use user_template_favorites instead.
+
+```sql
+-- This table structure is deprecated and will be removed after migration
 ```
 
 ## JSON Column Structures
 
-### tiles.config
+### tile_templates.config / tile_instances.config
 ```json
 {
   "type": "string",
@@ -138,7 +189,7 @@ CREATE INDEX idx_favorites_tile ON user_tile_favorites(tile_id);
 }
 ```
 
-### tiles.content
+### tile_templates.content / tile_instances.content
 ```json
 {
   // Text tiles
@@ -155,7 +206,7 @@ CREATE INDEX idx_favorites_tile ON user_tile_favorites(tile_id);
 }
 ```
 
-### tiles.data_source
+### tile_templates.data_source / tile_instances.data_source
 ```json
 {
   "type": "api | database | static",
@@ -165,6 +216,23 @@ CREATE INDEX idx_favorites_tile ON user_tile_favorites(tile_id);
   "headers": {},
   "method": "GET | POST",
   "body": {}
+}
+```
+
+### tile_templates.default_display_settings / tile_instances.display_settings
+```json
+{
+  "showBorder": true,
+  "borderColor": "#e2e8f0",
+  "borderWidth": 1,
+  "expandable": true,
+  "showTitle": true,
+  "titlePosition": "top | bottom | hidden",
+  "padding": 16,
+  "backgroundColor": "#ffffff",
+  "opacity": 1.0,
+  "interactive": true,
+  "locked": false
 }
 ```
 
@@ -234,18 +302,21 @@ CREATE INDEX idx_favorites_tile ON user_tile_favorites(tile_id);
 ## Constraints
 
 ### Foreign Key Constraints
+- `tile_instances.template_id` → `tile_templates.id` (SET NULL)
+- `tile_instances.layout_id` → `layouts.id` (CASCADE DELETE)
 - `layout_tiles.layout_id` → `layouts.id` (CASCADE DELETE)
-- `layout_tiles.tile_id` → `tiles.id` (CASCADE DELETE)
+- `layout_tiles.tile_instance_id` → `tile_instances.id` (CASCADE DELETE)
 - `pages.layout_id` → `layouts.id`
-- `user_tile_favorites.tile_id` → `tiles.id` (CASCADE DELETE)
+- `user_template_favorites.template_id` → `tile_templates.id` (CASCADE DELETE)
 
 ### Unique Constraints
-- `tiles.id` (PRIMARY KEY)
+- `tile_templates.id` (PRIMARY KEY)
+- `tile_instances.id` (PRIMARY KEY)
 - `layouts.id` (PRIMARY KEY)
 - `pages.id` (PRIMARY KEY)
 - `pages.slug` (UNIQUE)
-- `(layout_id, tile_id, breakpoint)` in layout_tiles
-- `(user_id, tile_id)` in user_tile_favorites
+- `(layout_id, tile_instance_id, breakpoint)` in layout_tiles
+- `(user_id, template_id)` in user_template_favorites
 
 ## Migration Strategy
 
@@ -305,7 +376,8 @@ sqlite3 dashboard.db < backup.sql
 ## Future Considerations
 
 ### Potential Tables
-- `tile_versions`: Version history for tiles
+- `tile_template_versions`: Version history for templates
+- `tile_instance_history`: Track instance changes
 - `layout_history`: Track layout changes
 - `user_preferences`: User-specific settings
 - `audit_log`: Track all database changes
@@ -315,3 +387,17 @@ sqlite3 dashboard.db < backup.sql
 - Implement read replicas for scaling
 - Add caching layer (Redis)
 - Consider NoSQL for large JSON data
+
+## Template/Instance Migration
+
+This database schema represents the new template/instance architecture. For systems migrating from the legacy tiles-only approach:
+
+1. **Run Migration Script**: Execute `lib/db/migrate-to-template-instance.ts` to safely transform existing data
+2. **Template Creation**: Existing tiles marked with `isTemplate=true` become templates
+3. **Instance Creation**: Tiles used in layouts become instances, linked to templates where applicable
+4. **Relationship Updates**: Layout positioning now references instances instead of tiles directly
+5. **Favorites Migration**: User favorites are migrated to the new template favorites system
+
+**Migration Path**: Legacy tables are preserved during migration for rollback safety. Remove after successful migration and testing.
+
+See `TEMPLATE_INSTANCE_ARCHITECTURE.md` for detailed information about the new architecture.
