@@ -1,6 +1,6 @@
 import { db } from '@/lib/db';
 import { tileTemplates, userTemplateFavorites, tileInstances } from '@/lib/db/schema';
-import { eq, and, or, like, desc, sql } from 'drizzle-orm';
+import { eq, and, or, like, desc, sql, isNotNull } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 import type { 
   TileTemplate, 
@@ -359,5 +359,18 @@ export class TileTemplateService {
       console.error('Failed to get user favorites:', error);
       throw error;
     }
+  }
+
+  // Get unique categories
+  static async getCategories(): Promise<string[]> {
+    const results = await db
+      .selectDistinct({ category: tileTemplates.category })
+      .from(tileTemplates)
+      .where(isNotNull(tileTemplates.category));
+    
+    return results
+      .map(r => r.category)
+      .filter((c): c is string => c !== null)
+      .sort();
   }
 }

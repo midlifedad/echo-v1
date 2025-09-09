@@ -200,7 +200,7 @@ export default function GridLayoutWrapper({ className }: GridLayoutWrapperProps)
   }, [tiles, computeLayoutsForBreakpoint, currentBreakpoint, editingBreakpoint, isEditMode, layoutInheritance]);
 
   // Debounce timer ref for layout changes
-  const layoutChangeTimer = useRef<NodeJS.Timeout>();
+  const layoutChangeTimer = useRef<NodeJS.Timeout | null>(null);
 
   /**
    * Handle layout changes with debouncing to prevent excessive updates
@@ -230,7 +230,7 @@ export default function GridLayoutWrapper({ className }: GridLayoutWrapperProps)
         });
         
         // Only update the specific breakpoint that changed, preserve others
-        setLayouts(prev => ({
+        setLayouts((prev: Layouts) => ({
           ...prev,
           [activeBreakpoint]: currentLayout
         }));

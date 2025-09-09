@@ -1,4 +1,5 @@
 import { Client, NavItem } from './types';
+import type { ResizeHandle } from 'react-grid-layout';
 
 export const CLIENTS: Client[] = [
   {
@@ -49,7 +50,7 @@ export const NAV_ITEMS: NavItem[] = [
   {
     id: 'tile-library',
     label: 'Tile Library',
-    icon: 'Edit3',
+    icon: 'Library',
     href: '/tile-library'
   },
   {
@@ -97,7 +98,7 @@ export const GRID_CONFIG = {
   ROW_HEIGHT: 80,
   MARGIN: [9, 9] as [number, number],
   CONTAINER_PADDING: [0, 0] as [number, number],
-  RESIZE_HANDLES: ['se', 'sw', 'ne', 'nw'] as const,
+  RESIZE_HANDLES: ['se', 'sw', 'ne', 'nw'] as ResizeHandle[],
   MIN_WIDTH: 2,
   MIN_HEIGHT: 2,
   DEFAULT_HEIGHT: 4
