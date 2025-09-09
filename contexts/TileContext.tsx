@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { TileContextType, TileData, ChartType } from '@/lib/types';
+import { TileContextType, TileData, TileType } from '@/lib/types';
 import { STORAGE_KEYS } from '@/lib/constants';
 
 const TileContext = createContext<TileContextType | undefined>(undefined);
@@ -86,7 +86,7 @@ export function TileProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const addTile = (type: ChartType) => {
+  const addTile = (type: TileType) => {
     // Generate next available numeric ID
     const existingIds = tiles.map(t => parseInt(t.id)).filter(id => !isNaN(id));
     const nextId = existingIds.length > 0 ? Math.max(...existingIds) + 1 : tiles.length + 1;
@@ -94,11 +94,11 @@ export function TileProvider({ children }: { children: React.ReactNode }) {
     const newTile: TileData = {
       id: nextId.toString(),
       type,
-      title: `New ${type.charAt(0).toUpperCase() + type.slice(1)} Chart`,
+      title: `New ${type.charAt(0).toUpperCase() + type.slice(1)} ${type === 'text' || type === 'image' || type === 'smart' ? 'Tile' : 'Chart'}`,
       position: tiles.length,
       config: {
         type,
-        title: `New ${type.charAt(0).toUpperCase() + type.slice(1)} Chart`,
+        title: `New ${type.charAt(0).toUpperCase() + type.slice(1)} ${type === 'text' || type === 'image' || type === 'smart' ? 'Tile' : 'Chart'}`,
         options: {}
       }
     };

@@ -16,7 +16,14 @@ import { ChartDataEditor } from './ChartDataEditor';
 import { ChartOptionsEditor } from './ChartOptionsEditor';
 import HighchartsWrapper from '@/components/charts/HighchartsWrapper';
 import type { Tile, CreateTileRequest, UpdateTileRequest } from '@/lib/types/database';
-import type { ChartType } from '@/lib/types';
+import type { TileType } from '@/lib/types';
+import { RichTextEditor } from './RichTextEditor';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import TextTileContent from './TextTileContent';
+import ImageTileContent from './ImageTileContent';
+import SmartTileContent from './SmartTileContent';
 
 interface TileEditorProps {
   open?: boolean;
@@ -28,6 +35,18 @@ interface TileEditorProps {
   layoutId?: string;
   onSave?: (tile: any, layoutId?: string) => void;
 }
+
+// Helper functions
+const isChartType = (type: string): boolean => {
+  const chartTypes = ['line', 'area', 'column', 'bar', 'pie', 'donut', 'scatter', 'bubble', 'heatmap', 'treemap', 'funnel', 'gauge', 'waterfall', 'spline', 'areaspline'];
+  return chartTypes.includes(type);
+};
+
+const getTabCount = (type: string): number => {
+  if (type === 'text' || type === 'image' || type === 'smart') return 2;
+  if (isChartType(type)) return 3;
+  return 1;
+};
 
 export function TileEditor({ 
   open, 
@@ -93,6 +112,7 @@ export function TileEditor({
         options: {}
       },
       data: null,
+      content: null,
       dataSource: null,
     };
   };
@@ -109,18 +129,20 @@ export function TileEditor({
         title: tile.title,
         config: tile.config,
         data: tile.data,
+        content: tile.content,
         dataSource: tile.dataSource,
       });
     } else {
       setFormData({
-        type: 'line',
+        type: 'text',
         title: '',
         config: {
-          type: 'line',
+          type: 'text',
           title: '',
           options: {}
         },
         data: null,
+        content: null,
         dataSource: null,
       });
     }
@@ -136,7 +158,8 @@ export function TileEditor({
         type: updates.type || prev.type || 'line',
         title: updates.title || prev.title || '',
         subtitle: updates.config?.subtitle,
-      }
+      },
+      content: updates.content || prev.content
     }));
     setPreviewKey(prev => prev + 1);
   };
@@ -251,37 +274,123 @@ export function TileEditor({
         <div className="flex-1 grid grid-cols-2 gap-6 overflow-hidden">
           <div className="flex flex-col overflow-hidden">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${getTabCount(formData.type)}, 1fr)` }}>
                 <TabsTrigger value="basic">Basic</TabsTrigger>
-                <TabsTrigger value="data">Data</TabsTrigger>
-                <TabsTrigger value="options">Options</TabsTrigger>
+                {formData.type === 'text' && <TabsTrigger value="content">Content</TabsTrigger>}
+                {formData.type === 'image' && <TabsTrigger value="image">Image</TabsTrigger>}
+                {formData.type === 'smart' && <TabsTrigger value="smart">Smart (Soon)</TabsTrigger>}
+                {isChartType(formData.type) && <TabsTrigger value="data">Data</TabsTrigger>}
+                {isChartType(formData.type) && <TabsTrigger value="options">Options</TabsTrigger>}
               </TabsList>
               
               <div className="flex-1 overflow-auto mt-4">
                 <TabsContent value="basic" className="m-0">
                   <TileForm
-                    type={formData.type as ChartType}
+                    type={formData.type as TileType}
                     title={formData.title || ''}
                     subtitle={formData.config?.subtitle}
+                    content={formData.content}
                     onUpdate={handleBasicUpdate}
                   />
                 </TabsContent>
                 
-                <TabsContent value="data" className="m-0">
-                  <ChartDataEditor
-                    type={formData.type as ChartType}
-                    data={formData.config?.options || {}}
-                    onUpdate={handleDataUpdate}
-                  />
-                </TabsContent>
+                {/* Text tile content */}
+                {formData.type === 'text' && (
+                  <TabsContent value="content" className="m-0">
+                    <div className="space-y-4">
+                      <div>
+                        <Label>Content</Label>
+                        <RichTextEditor
+                          content={formData.content?.richText || ''}
+                          onChange={(richText) => handleBasicUpdate({
+                            content: { richText, format: 'html' }
+                          })}
+                          placeholder="Enter your formatted text here..."
+                        />
+                      </div>
+                    </div>
+                  </TabsContent>
+                )}
                 
-                <TabsContent value="options" className="m-0">
-                  <ChartOptionsEditor
-                    type={formData.type as ChartType}
-                    options={formData.config?.options || {}}
-                    onUpdate={handleOptionsUpdate}
-                  />
-                </TabsContent>
+                {/* Image tile content */}
+                {formData.type === 'image' && (
+                  <TabsContent value="image" className="m-0">
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="imageUrl">Image URL</Label>
+                        <Input
+                          id="imageUrl"
+                          value={formData.content?.imageUrl || ''}
+                          onChange={(e) => handleBasicUpdate({
+                            content: { 
+                              ...formData.content,
+                              imageUrl: e.target.value 
+                            }
+                          })}
+                          placeholder="https://example.com/image.png"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="caption">Caption (Optional)</Label>
+                        <Input
+                          id="caption"
+                          value={formData.content?.caption || ''}
+                          onChange={(e) => handleBasicUpdate({
+                            content: { 
+                              ...formData.content,
+                              caption: e.target.value 
+                            }
+                          })}
+                          placeholder="Image caption"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="alt">Alt Text (Optional)</Label>
+                        <Input
+                          id="alt"
+                          value={formData.content?.alt || ''}
+                          onChange={(e) => handleBasicUpdate({
+                            content: { 
+                              ...formData.content,
+                              alt: e.target.value 
+                            }
+                          })}
+                          placeholder="Alternative text for accessibility"
+                        />
+                      </div>
+                    </div>
+                  </TabsContent>
+                )}
+                
+                {/* Smart tile placeholder */}
+                {formData.type === 'smart' && (
+                  <TabsContent value="smart" className="m-0">
+                    <div className="text-center py-8 text-muted-foreground">
+                      <p>Smart tiles with AI-powered insights are coming soon!</p>
+                    </div>
+                  </TabsContent>
+                )}
+                
+                {/* Chart data and options */}
+                {isChartType(formData.type) && (
+                  <>
+                    <TabsContent value="data" className="m-0">
+                      <ChartDataEditor
+                        type={formData.type as any}
+                        data={formData.config?.options || {}}
+                        onUpdate={handleDataUpdate}
+                      />
+                    </TabsContent>
+                    
+                    <TabsContent value="options" className="m-0">
+                      <ChartOptionsEditor
+                        type={formData.type as any}
+                        options={formData.config?.options || {}}
+                        onUpdate={handleOptionsUpdate}
+                      />
+                    </TabsContent>
+                  </>
+                )}
               </div>
             </Tabs>
           </div>
@@ -289,18 +398,56 @@ export function TileEditor({
           <div className="flex flex-col">
             <h3 className="text-sm font-medium mb-2">Preview</h3>
             <div className="flex-1 border rounded-lg p-4 bg-muted/10">
-              {formData.title && formData.config?.options?.series ? (
-                <HighchartsWrapper
-                  key={previewKey}
-                  type={formData.type as ChartType}
-                  config={formData.config}
-                  data={formData.data || {}}
-                />
-              ) : (
-                <div className="h-full flex items-center justify-center text-muted-foreground">
-                  Configure your tile to see a preview
-                </div>
-              )}
+              {(() => {
+                // Preview for text tiles
+                if (formData.type === 'text') {
+                  return formData.content?.richText ? (
+                    <TextTileContent content={formData.content} />
+                  ) : (
+                    <div className="h-full flex items-center justify-center text-muted-foreground">
+                      Add content to see a preview
+                    </div>
+                  );
+                }
+                
+                // Preview for image tiles
+                if (formData.type === 'image') {
+                  return formData.content?.imageUrl ? (
+                    <ImageTileContent content={formData.content} />
+                  ) : (
+                    <div className="h-full flex items-center justify-center text-muted-foreground">
+                      Add an image URL to see a preview
+                    </div>
+                  );
+                }
+                
+                // Preview for smart tiles
+                if (formData.type === 'smart') {
+                  return <SmartTileContent content={formData.content} />;
+                }
+                
+                // Preview for chart tiles
+                if (isChartType(formData.type)) {
+                  return formData.title && formData.config?.options?.series ? (
+                    <HighchartsWrapper
+                      key={previewKey}
+                      type={formData.type as any}
+                      config={formData.config}
+                      data={formData.data || {}}
+                    />
+                  ) : (
+                    <div className="h-full flex items-center justify-center text-muted-foreground">
+                      Configure your chart to see a preview
+                    </div>
+                  );
+                }
+                
+                return (
+                  <div className="h-full flex items-center justify-center text-muted-foreground">
+                    Select a tile type
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>

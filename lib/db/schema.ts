@@ -28,7 +28,7 @@ export const layouts = sqliteTable('layouts', {
 // Tiles table - stores individual tile/widget configurations
 export const tiles = sqliteTable('tiles', {
   id: text('id').primaryKey(),
-  type: text('type').notNull(), // Chart type: line, bar, pie, etc.
+  type: text('type').notNull(), // Tile type: line, bar, pie, text, image, smart, etc.
   title: text('title').notNull(),
   name: text('name'), // User-friendly name for tile library
   description: text('description'), // What this tile shows
@@ -46,6 +46,18 @@ export const tiles = sqliteTable('tiles', {
     options: Record<string, any>;
   }>(),
   data: text('data', { mode: 'json' }).$type<Record<string, any>>(),
+  // New content field for type-specific data (text, image, smart tiles)
+  content: text('content', { mode: 'json' }).$type<{
+    // For text tiles
+    richText?: string;
+    format?: 'html' | 'markdown';
+    // For image tiles
+    imageUrl?: string;
+    caption?: string;
+    alt?: string;
+    // For smart tiles - structure TBD
+    smartData?: Record<string, any>;
+  }>(),
   dataSource: text('data_source', { mode: 'json' }).$type<{
     type: 'api' | 'database' | 'static';
     endpoint?: string;

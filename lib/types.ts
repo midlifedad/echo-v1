@@ -27,11 +27,12 @@ export interface GridLayout {
 
 export interface TileData {
   id: string;
-  type: ChartType;
+  type: TileType;
   title: string;
   position: number;
   config: ChartConfig;
   data?: Record<string, unknown>;
+  content?: TileContent;
   gridLayout?: GridLayout;
 }
 
@@ -59,6 +60,28 @@ export type ChartType =
   | 'spline'
   | 'areaspline';
 
+// Extended tile types including non-chart tiles
+export type TileType = ChartType | 'text' | 'image' | 'smart';
+
+// Content types for different tile types
+export interface TextTileContent {
+  richText: string;
+  format: 'html' | 'markdown';
+}
+
+export interface ImageTileContent {
+  imageUrl: string;
+  caption?: string;
+  alt?: string;
+}
+
+export interface SmartTileContent {
+  // Structure TBD - placeholder for future implementation
+  smartData?: Record<string, any>;
+}
+
+export type TileContent = TextTileContent | ImageTileContent | SmartTileContent;
+
 export interface SidebarContextType {
   isCollapsed: boolean;
   isHovered: boolean;
@@ -72,7 +95,7 @@ export interface SidebarContextType {
 
 export interface TileContextType {
   tiles: TileData[];
-  addTile: (type: ChartType) => void;
+  addTile: (type: TileType) => void;
   removeTile: (id: string, onCleanup?: (tileId: string) => void) => void;
   updateTile: (id: string, updates: Partial<TileData>) => void;
   reorderTiles: (tiles: TileData[]) => void;
