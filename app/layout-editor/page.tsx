@@ -20,7 +20,9 @@ function LayoutEditorContent() {
   const { 
     isEditMode, 
     setEditMode, 
-    saveLayouts, 
+    saveLayouts,
+    setLayouts,
+    layouts, 
     cancelEdit, 
     resetToDefault,
     currentBreakpoint,
@@ -74,6 +76,41 @@ function LayoutEditorContent() {
         data: tile.data,
       }));
       reorderTiles(formattedTiles);
+      
+      // Convert tile positions to grid layout format and apply to LayoutContext
+      const gridLayouts: { [key: string]: any[] } = {
+        lg: [],
+        md: [],
+        sm: [],
+        xs: []
+      };
+      
+      tiles.forEach((tile: TileWithPositions) => {
+        if (tile.positions) {
+          Object.entries(tile.positions).forEach(([breakpoint, positionData]) => {
+            if (gridLayouts[breakpoint] && positionData) {
+              // Ensure we have the position object with the nested structure
+              const position = positionData.position || positionData;
+              gridLayouts[breakpoint].push({
+                i: `tile-${tile.id}`,
+                x: position.x || 0,
+                y: position.y || 0,
+                w: position.w || 4,
+                h: position.h || 3,
+                minW: position.minW || 2,
+                minH: position.minH || 2,
+                static: position.static || false
+              });
+            }
+          });
+        }
+      });
+      
+      // Only set layouts if we have valid positions
+      if (gridLayouts.lg.length > 0 || gridLayouts.md.length > 0 || 
+          gridLayouts.sm.length > 0 || gridLayouts.xs.length > 0) {
+        setLayouts(gridLayouts);
+      }
     } catch (error) {
       console.error('Error fetching layout tiles:', error);
     }
@@ -255,6 +292,63 @@ function LayoutEditorContent() {
     setShowTileEditor(false);
   };
 
+  const handleSaveLayout = async () => {
+    if (!selectedLayout) return;
+    
+    try {
+      // Save positions to database for each tile and breakpoint
+      const savePromises: Promise<any>[] = [];
+      const breakpoints = ['lg', 'md', 'sm', 'xs'];
+      
+      breakpoints.forEach(breakpoint => {
+        const breakpointLayouts = layouts[breakpoint] || [];
+        
+        breakpointLayouts.forEach(layoutItem => {
+          // Extract tile ID from layout item ID (format: "tile-{id}")
+          const tileId = layoutItem.i.replace('tile-', '');
+          
+          // Prepare position data
+          const position = {
+            x: layoutItem.x,
+            y: layoutItem.y,
+            w: layoutItem.w,
+            h: layoutItem.h,
+            minW: layoutItem.minW,
+            minH: layoutItem.minH,
+            static: layoutItem.static || false
+          };
+          
+          // Create promise to save this position
+          const savePromise = fetch(`/api/layouts/${selectedLayout.id}/tiles`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              tileId,
+              breakpoint,
+              position,
+              isVisible: true,
+              inheritanceMode: 'custom'
+            })
+          });
+          
+          savePromises.push(savePromise);
+        });
+      });
+      
+      // Wait for all saves to complete
+      await Promise.all(savePromises);
+      
+      // Also save to localStorage for quick access
+      saveLayouts();
+      
+      console.log('Layout saved successfully to database');
+    } catch (error) {
+      console.error('Error saving layout to database:', error);
+      // Still save to localStorage even if database save fails
+      saveLayouts();
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4">
       <PageHeader 
@@ -308,7 +402,7 @@ function LayoutEditorContent() {
                       Cancel
                     </Button>
                     <Button
-                      onClick={saveLayouts}
+                      onClick={handleSaveLayout}
                       size="sm"
                       className="gap-1 sm:gap-2 bg-primary hover:bg-primary/90"
                     >
