@@ -15,6 +15,7 @@ import {
   Activity,
   ScatterChart,
   Gauge,
+  Sparkles,
 } from 'lucide-react';
 import type { ChartOption, ChartMCPResponse } from '@/lib/services/chartMCP';
 import { chartMCPService } from '@/lib/services/chartMCP';
@@ -39,12 +40,37 @@ const CHART_ICONS: Record<string, any> = {
 
 export function AIChartSelection({ response, onSelect, className }: AIChartSelectionProps) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [selectedOptimized, setSelectedOptimized] = useState<boolean>(false);
   
-  // Combine recommended and alternatives for display
-  const allOptions = [response.recommended, ...response.alternatives];
+  // Build options list: recommended (with optimized if available) + alternatives
+  const buildOptions = () => {
+    const options: (ChartOption & { isOptimized?: boolean })[] = [];
+    
+    // Add recommended chart
+    options.push(response.recommended);
+    
+    // If recommended has an optimized version, add it as a separate option
+    if (response.recommended.optimized) {
+      options.push({
+        ...response.recommended,
+        config: response.recommended.optimized.config,
+        imageUrl: response.recommended.optimized.imageUrl,
+        reason: `Optimized version: ${response.recommended.optimized.improvements.join(', ')}`,
+        isOptimized: true
+      });
+    }
+    
+    // Add alternatives
+    options.push(...response.alternatives);
+    
+    return options;
+  };
   
-  const handleSelect = (option: ChartOption) => {
+  const allOptions = buildOptions();
+  
+  const handleSelect = (option: ChartOption & { isOptimized?: boolean }, optionIdx: number) => {
     setSelectedIndex(option.index);
+    setSelectedOptimized(option.isOptimized || false);
     onSelect(option);
   };
 
@@ -71,21 +97,23 @@ export function AIChartSelection({ response, onSelect, className }: AIChartSelec
       
       <ScrollArea className="h-[500px] pr-4">
         <div className="grid gap-4">
-          {allOptions.map((option) => {
+          {allOptions.map((option, optionIdx) => {
             const ranking = getRankingInfo(option.index);
-            const isRecommended = option.index === response.recommended.index;
-            const isSelected = selectedIndex === option.index;
+            const isRecommended = option.index === response.recommended.index && !option.isOptimized;
+            const isOptimized = option.isOptimized || false;
+            const isSelected = selectedIndex === option.index && selectedOptimized === isOptimized;
             
             return (
               <div
-                key={option.index}
+                key={`${option.index}-${isOptimized ? 'optimized' : 'original'}`}
                 className={cn(
                   "relative rounded-lg border-2 transition-all cursor-pointer",
                   isRecommended && "border-primary shadow-sm",
+                  isOptimized && "border-green-500 shadow-green-100",
                   isSelected && "ring-2 ring-primary ring-offset-2",
-                  !isRecommended && !isSelected && "border-border hover:border-muted-foreground"
+                  !isRecommended && !isOptimized && !isSelected && "border-border hover:border-muted-foreground"
                 )}
-                onClick={() => handleSelect(option)}
+                onClick={() => handleSelect(option, optionIdx)}
               >
                 {/* Recommended Badge */}
                 {isRecommended && (
@@ -93,6 +121,16 @@ export function AIChartSelection({ response, onSelect, className }: AIChartSelec
                     <Badge variant="default" className="gap-1">
                       <Star className="h-3 w-3" />
                       Recommended
+                    </Badge>
+                  </div>
+                )}
+                
+                {/* Optimized Badge */}
+                {isOptimized && (
+                  <div className="absolute -top-3 left-4 px-2 bg-background">
+                    <Badge variant="outline" className="gap-1 border-green-500 text-green-700">
+                      <Sparkles className="h-3 w-3" />
+                      Optimized Version
                     </Badge>
                   </div>
                 )}
@@ -161,7 +199,13 @@ export function AIChartSelection({ response, onSelect, className }: AIChartSelec
       {selectedIndex !== null && (
         <div className="pt-4 border-t">
           <Button
-            onClick={() => onSelect(allOptions.find(o => o.index === selectedIndex)!)}
+            onClick={() => {
+              const selected = allOptions.find(o => 
+                o.index === selectedIndex && 
+                (o.isOptimized || false) === selectedOptimized
+              );
+              if (selected) onSelect(selected);
+            }}
             className="w-full"
           >
             Use Selected Chart

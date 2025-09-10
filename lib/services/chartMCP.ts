@@ -31,12 +31,19 @@ export interface ChartMCPRequest {
   };
 }
 
+export interface OptimizedChart {
+  config: any; // Optimized Highcharts configuration
+  imageUrl: string;
+  improvements: string[];
+}
+
 export interface ChartOption {
   index: number;
   chartType: string;
   config: any; // Highcharts configuration
   imageUrl: string;
   reason: string;
+  optimized?: OptimizedChart; // Optional beautified version (Stage 5)
 }
 
 export interface ChartMCPResponse {
