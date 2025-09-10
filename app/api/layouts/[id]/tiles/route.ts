@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { addCompatibilityFields } from '@/lib/db/compatibility';
 import { LayoutService } from '@/lib/services/layoutService';
-import { TileService } from '@/lib/services/tileService';
+import { TileInstanceService } from '@/lib/services/tileInstanceService';
 
 // GET /api/layouts/[id]/tiles - Get all tiles for a layout
 export async function GET(
@@ -11,27 +11,31 @@ export async function GET(
   try {
     const { id } = await params;
     
-    // Get layout tiles with positions
-    const layoutTiles = await LayoutService.getLayoutTiles(id);
+    // Get tile instances with their positions for this layout
+    const instancesWithPositions = await TileInstanceService.getInstancesForLayout(id);
     
-    // Get actual tile data
-    const tiles = await TileService.getTilesForLayout(id);
-    
-    // Combine tile data with position data
-    const tilesWithPositions = tiles.map(tile => {
+    // Transform to the format expected by the frontend
+    const tilesWithPositions = instancesWithPositions.map(instance => {
+      // Format positions for compatibility
       const positions: any = {};
-      layoutTiles
-        .filter(lt => (lt as any).tileId === tile.id || (lt as any).tileInstanceId === tile.id)
-        .forEach(lt => {
-          positions[lt.breakpoint] = {
-            position: lt.position,
-            isVisible: lt.isVisible,
-            inheritanceMode: lt.inheritanceMode
+      if (instance.positions) {
+        Object.entries(instance.positions).forEach(([breakpoint, position]) => {
+          positions[breakpoint] = {
+            position: position,
+            isVisible: true,
+            inheritanceMode: 'inherit'
           };
         });
+      }
       
       return addCompatibilityFields({
-        ...tile,
+        id: instance.id,
+        type: instance.type,
+        title: instance.title,
+        config: instance.config,
+        data: instance.data,
+        content: instance.content,
+        dataSource: instance.dataSource,
         positions
       });
     });

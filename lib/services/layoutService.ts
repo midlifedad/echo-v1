@@ -106,7 +106,7 @@ export class LayoutService {
     for (const tile of tiles) {
       await this.setTilePosition(
         newLayout.id,
-        tile.tileId,
+        tile.tileInstanceId,
         tile.breakpoint,
         tile.position,
         tile.isVisible,
@@ -143,13 +143,13 @@ export class LayoutService {
       .from(layoutTiles)
       .where(and(
         eq(layoutTiles.layoutId, layoutId),
-        eq(layoutTiles.tileId, tileId),
+        eq(layoutTiles.tileInstanceId, tileId),
         eq(layoutTiles.breakpoint, breakpoint)
       ));
 
     const layoutTileData: NewLayoutTile = {
       layoutId,
-      tileId,
+      tileInstanceId: tileId,
       breakpoint,
       position,
       isVisible,
@@ -162,7 +162,7 @@ export class LayoutService {
         .set(layoutTileData)
         .where(and(
           eq(layoutTiles.layoutId, layoutId),
-          eq(layoutTiles.tileId, tileId),
+          eq(layoutTiles.tileInstanceId, tileId),
           eq(layoutTiles.breakpoint, breakpoint)
         ));
     } else {
@@ -176,7 +176,7 @@ export class LayoutService {
     await db.delete(layoutTiles)
       .where(and(
         eq(layoutTiles.layoutId, layoutId),
-        eq(layoutTiles.tileId, tileId)
+        eq(layoutTiles.tileInstanceId, tileId)
       ));
   }
 
@@ -231,7 +231,7 @@ export class LayoutService {
         for (const tile of data.tiles) {
           await this.setTilePosition(
             newLayout.id,
-            tile.tileId,
+            tile.tileInstanceId,
             tile.breakpoint,
             tile.position,
             tile.isVisible,

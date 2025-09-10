@@ -4,10 +4,11 @@ import { TileTemplateService } from '@/lib/services/tileTemplateService';
 // GET /api/templates/[id] - Get a single template
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const template = await TileTemplateService.getTemplate(params.id);
+    const { id } = await params;
+    const template = await TileTemplateService.getTemplate(id);
     
     if (!template) {
       return NextResponse.json(
@@ -29,12 +30,13 @@ export async function GET(
 // PUT /api/templates/[id] - Update a template
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
     
-    const template = await TileTemplateService.updateTemplate(params.id, body);
+    const template = await TileTemplateService.updateTemplate(id, body);
     
     if (!template) {
       return NextResponse.json(
@@ -56,10 +58,11 @@ export async function PUT(
 // DELETE /api/templates/[id] - Delete a template
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await TileTemplateService.deleteTemplate(params.id);
+    const { id } = await params;
+    await TileTemplateService.deleteTemplate(id);
     
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { tiles, layoutTiles, userTileFavorites, type Tile, type NewTile } from '@/lib/db/schema';
+import { tiles, layoutTiles, userTileFavorites, tileInstances, type Tile, type NewTile } from '@/lib/db/schema';
 import { eq, and, inArray, desc, sql } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 
@@ -49,18 +49,45 @@ export class TileService {
   }
 
   // Get tiles for a specific layout
-  static async getTilesForLayout(layoutId: string): Promise<Tile[]> {
+  static async getTilesForLayout(layoutId: string): Promise<any[]> {
     const layoutTileRecords = await db.select()
       .from(layoutTiles)
       .where(eq(layoutTiles.layoutId, layoutId));
     
     if (layoutTileRecords.length === 0) return [];
     
-    const tileIds = [...new Set(layoutTileRecords.map(lt => lt.tileId))];
+    const tileInstanceIds = [...new Set(layoutTileRecords.map(lt => lt.tileInstanceId))];
     
-    return await db.select()
-      .from(tiles)
-      .where(inArray(tiles.id, tileIds));
+    // Get tile instances - they don't have type field, so parse it from config
+    const instances = await db.select()
+      .from(tileInstances)
+      .where(inArray(tileInstances.id, tileInstanceIds));
+    
+    // Return instances formatted as tiles for compatibility
+    return instances.map(instance => {
+      // Parse type from config if it exists
+      let type = 'line'; // default
+      if (instance.config) {
+        try {
+          const config = typeof instance.config === 'string' ? JSON.parse(instance.config) : instance.config;
+          type = config.type || 'line';
+        } catch (e) {
+          console.error('Error parsing config:', e);
+        }
+      }
+      
+      return {
+        id: instance.id,
+        type: type,
+        title: instance.title || 'Untitled',
+        config: instance.config,
+        data: instance.data,
+        content: instance.content,
+        dataSource: instance.dataSource,
+        createdAt: instance.createdAt,
+        updatedAt: instance.updatedAt
+      };
+    });
   }
 
   // Update a tile
@@ -158,7 +185,7 @@ export class TileService {
   static async getTileUsageCount(tileId: string): Promise<number> {
     const result = await db.select()
       .from(layoutTiles)
-      .where(eq(layoutTiles.tileId, tileId));
+      .where(eq(layoutTiles.tileInstanceId, tileId));
     
     // Count unique layout IDs
     const uniqueLayouts = new Set(result.map(lt => lt.layoutId));

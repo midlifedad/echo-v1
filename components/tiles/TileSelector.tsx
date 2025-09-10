@@ -78,10 +78,21 @@ export default function TileSelector({
   const fetchCategories = async () => {
     try {
       const response = await fetch('/api/tiles/categories');
-      const data = await response.json();
-      setCategories(data);
+      if (response.ok) {
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          setCategories(data);
+        } else {
+          console.error('Categories API returned non-array data:', data);
+          setCategories([]);
+        }
+      } else {
+        console.error('Failed to fetch categories:', response.status);
+        setCategories([]);
+      }
     } catch (error) {
       console.error('Failed to fetch categories:', error);
+      setCategories([]);
     }
   };
 

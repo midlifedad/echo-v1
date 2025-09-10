@@ -43,19 +43,20 @@ export function initDatabase() {
     CREATE TABLE IF NOT EXISTS tile_templates (
       id TEXT PRIMARY KEY,
       type TEXT NOT NULL,
-      name TEXT NOT NULL,
+      title TEXT NOT NULL,
+      name TEXT,
       description TEXT,
       category TEXT,
       tags TEXT,
+      is_system INTEGER DEFAULT 0,
       thumbnail TEXT,
       owner_id TEXT,
       is_public INTEGER DEFAULT 0,
-      is_favorite INTEGER DEFAULT 0,
       usage_count INTEGER DEFAULT 0,
+      config TEXT NOT NULL,
+      data TEXT,
       content TEXT,
-      default_config TEXT,
-      default_data TEXT,
-      default_data_source TEXT,
+      data_source TEXT,
       default_display_settings TEXT,
       created_at INTEGER DEFAULT (unixepoch()),
       updated_at INTEGER DEFAULT (unixepoch())
@@ -69,10 +70,11 @@ export function initDatabase() {
       template_id TEXT,
       layout_id TEXT NOT NULL,
       parent_instance_id TEXT,
-      title TEXT,
-      content TEXT,
-      config TEXT,
+      type TEXT NOT NULL,
+      title TEXT NOT NULL,
+      config TEXT NOT NULL,
       data TEXT,
+      content TEXT,
       data_source TEXT,
       display_settings TEXT,
       is_modified INTEGER DEFAULT 0,
@@ -122,6 +124,53 @@ export function initDatabase() {
       created_at INTEGER DEFAULT (unixepoch()),
       PRIMARY KEY (user_id, template_id),
       FOREIGN KEY (template_id) REFERENCES tile_templates(id) ON DELETE CASCADE
+    )
+  `);
+
+  // Create legacy tiles table for backward compatibility
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS tiles (
+      id TEXT PRIMARY KEY,
+      type TEXT NOT NULL,
+      title TEXT NOT NULL,
+      name TEXT,
+      description TEXT,
+      category TEXT,
+      tags TEXT,
+      is_template INTEGER DEFAULT 0,
+      thumbnail TEXT,
+      owner_id TEXT,
+      is_public INTEGER DEFAULT 0,
+      usage_count INTEGER DEFAULT 0,
+      config TEXT NOT NULL,
+      data TEXT,
+      content TEXT,
+      data_source TEXT,
+      created_at INTEGER DEFAULT (unixepoch()),
+      updated_at INTEGER DEFAULT (unixepoch())
+    )
+  `);
+
+  // Create legacy layout_tiles table for backward compatibility
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS layout_tiles (
+      layout_id TEXT NOT NULL,
+      tile_id TEXT NOT NULL,
+      positions TEXT,
+      PRIMARY KEY (layout_id, tile_id),
+      FOREIGN KEY (layout_id) REFERENCES layouts(id) ON DELETE CASCADE,
+      FOREIGN KEY (tile_id) REFERENCES tiles(id) ON DELETE CASCADE
+    )
+  `);
+
+  // Create legacy user_tile_favorites table for backward compatibility
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS user_tile_favorites (
+      user_id TEXT NOT NULL,
+      tile_id TEXT NOT NULL,
+      created_at INTEGER DEFAULT (unixepoch()),
+      PRIMARY KEY (user_id, tile_id),
+      FOREIGN KEY (tile_id) REFERENCES tiles(id) ON DELETE CASCADE
     )
   `);
 

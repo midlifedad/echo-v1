@@ -29,23 +29,16 @@ export const layouts = sqliteTable('layouts', {
 export const tileTemplates = sqliteTable('tile_templates', {
   id: text('id').primaryKey(),
   type: text('type').notNull(), // Tile type: line, bar, pie, text, image, smart, etc.
-  title: text('title').notNull(),
-  name: text('name'), // User-friendly name for tile library
+  title: text('title'),
+  name: text('name').notNull(), // User-friendly name for tile library
   description: text('description'), // What this tile shows
   category: text('category'), // e.g., 'sales', 'marketing', 'performance'
   tags: text('tags', { mode: 'json' }).$type<string[]>(), // For searching/filtering
-  isSystem: integer('is_system', { mode: 'boolean' }).default(false), // System-provided templates
   thumbnail: text('thumbnail'), // Base64 preview image or URL
   ownerId: text('owner_id'), // Who created it
   isPublic: integer('is_public', { mode: 'boolean' }).default(false), // Shared across users
+  isFavorite: integer('is_favorite', { mode: 'boolean' }).default(false),
   usageCount: integer('usage_count').default(0), // Track popularity
-  config: text('config', { mode: 'json' }).notNull().$type<{
-    type: string;
-    title: string;
-    subtitle?: string;
-    options: Record<string, any>;
-  }>(),
-  data: text('data', { mode: 'json' }).$type<Record<string, any>>(),
   content: text('content', { mode: 'json' }).$type<{
     // For text tiles
     richText?: string;
@@ -57,7 +50,14 @@ export const tileTemplates = sqliteTable('tile_templates', {
     // For smart tiles
     smartData?: Record<string, any>;
   }>(),
-  dataSource: text('data_source', { mode: 'json' }).$type<{
+  defaultConfig: text('default_config', { mode: 'json' }).$type<{
+    type: string;
+    title: string;
+    subtitle?: string;
+    options: Record<string, any>;
+  }>(),
+  defaultData: text('default_data', { mode: 'json' }).$type<Record<string, any>>(),
+  defaultDataSource: text('default_data_source', { mode: 'json' }).$type<{
     type: 'api' | 'database' | 'static';
     endpoint?: string;
     query?: string;
@@ -129,13 +129,12 @@ export const tileInstances = sqliteTable('tile_instances', {
   
   // Instance metadata
   isModified: integer('is_modified', { mode: 'boolean' }).default(false), // Has diverged from template
-  lastSyncedAt: integer('last_synced_at', { mode: 'timestamp' }), // Last sync with template
   createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
 });
 
 // Layout-Tiles junction table - stores tile positions per layout and breakpoint
-export const layoutTiles = sqliteTable('layout_tiles', {
+export const layoutTiles = sqliteTable('layout_tile_positions', {
   layoutId: text('layout_id').notNull().references(() => layouts.id, { onDelete: 'cascade' }),
   tileInstanceId: text('tile_instance_id').notNull().references(() => tileInstances.id, { onDelete: 'cascade' }),
   breakpoint: text('breakpoint').notNull(), // lg, md, sm, xs

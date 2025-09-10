@@ -43,8 +43,8 @@ export default function TileCard({
           <div className="w-24 h-24 rounded-md flex overflow-hidden">
             <ChartPreview
               type={tile.type}
-              config={tile.config}
-              data={tile.data || undefined}
+              config={tile.defaultConfig || tile.config}
+              data={tile.defaultData || tile.data || undefined}
               className="flex-1 [&_.highcharts-legend]:hidden [&_.highcharts-credits]:hidden"
               fallback={
                 tile.thumbnail ? (
@@ -149,8 +149,8 @@ export default function TileCard({
         <div className="flex-1 flex">
           <ChartPreview
             type={tile.type}
-            config={tile.config}
-            data={tile.data || undefined}
+            config={tile.defaultConfig || tile.config}
+            data={tile.defaultData || tile.data || undefined}
             className="flex-1"
             fallback={
               tile.thumbnail ? (
