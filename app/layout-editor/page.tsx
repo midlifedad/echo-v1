@@ -7,7 +7,7 @@ import BreakpointSelector from '@/components/layout-tiles/BreakpointSelector';
 import ViewportIndicator from '@/components/layout-tiles/ViewportIndicator';
 import { LayoutList } from '@/components/layouts/LayoutList';
 import { LayoutForm } from '@/components/layouts/LayoutForm';
-import { TileEditor } from '@/components/tiles/TileEditor';
+import TileEditorV2 from '@/components/tiles/TileEditorV2';
 import TileSelector from '@/components/tiles/TileSelector';
 import { useTiles } from '@/contexts/TileContext';
 import { LayoutProvider, useLayout } from '@/contexts/LayoutContext';
@@ -265,6 +265,7 @@ function LayoutEditorContent() {
         body: JSON.stringify({
           tileId: tile.id,
           positions: positionsArray,
+          isTemplate: true, // Tiles from the selector are templates
         }),
       });
       
@@ -284,9 +285,40 @@ function LayoutEditorContent() {
     setShowTileEditor(true);
   };
 
-  const handleSaveTile = async (tile: Tile, layoutId?: string) => {
-    // Refresh the layout tiles
-    if (selectedLayout) {
+  const handleSaveTile = async (tileData: any, layoutId?: string) => {
+    // If a new tile was created, it should be added to the layout
+    if (selectedLayout && tileData && tileData.id) {
+      // Add the newly created tile to the layout
+      const positions = {
+        lg: { x: 0, y: 0, w: 4, h: 3 },
+        md: { x: 0, y: 0, w: 4, h: 3 },
+        sm: { x: 0, y: 0, w: 3, h: 3 },
+        xs: { x: 0, y: 0, w: 2, h: 3 },
+      };
+      
+      const positionsArray = Object.entries(positions).map(([breakpoint, position]) => ({
+        breakpoint,
+        position
+      }));
+      
+      try {
+        const response = await fetch(`/api/layouts/${selectedLayout.id}/tiles`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tileId: tileData.id,
+            positions: positionsArray,
+          }),
+        });
+        
+        if (!response.ok) {
+          console.error('Failed to add tile to layout');
+        }
+      } catch (error) {
+        console.error('Error adding tile to layout:', error);
+      }
+      
+      // Refresh the layout tiles
       await fetchLayoutTiles(selectedLayout.id);
     }
     setShowTileEditor(false);
@@ -477,10 +509,11 @@ function LayoutEditorContent() {
         onSubmit={handleSubmitLayout}
       />
       
-      <TileEditor
+      <TileEditorV2
         open={showTileEditor}
         onOpenChange={setShowTileEditor}
         tile={editingTile}
+        mode={editingTile ? 'edit' : 'create'}
         layoutId={selectedLayout?.id}
         onSave={handleSaveTile}
       />

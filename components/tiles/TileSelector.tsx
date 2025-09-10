@@ -65,7 +65,7 @@ export default function TileSelector({
   const fetchTiles = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/tiles');
+      const response = await fetch('/api/templates');
       const data = await response.json();
       setTiles(data);
     } catch (error) {
@@ -77,7 +77,7 @@ export default function TileSelector({
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('/api/tiles/categories');
+      const response = await fetch('/api/templates/categories');
       if (response.ok) {
         const data = await response.json();
         if (Array.isArray(data)) {
@@ -227,8 +227,8 @@ export default function TileSelector({
                           <div className="w-full h-full pointer-events-none">
                             <ChartPreview
                               type={tile.type}
-                              config={tile.config}
-                              data={tile.data || undefined}
+                              config={tile.defaultConfig || tile.config}
+                              data={tile.defaultData || tile.data || undefined}
                               className="w-full h-full [&_.highcharts-legend]:hidden [&_.highcharts-credits]:hidden [&_.highcharts-title]:hidden"
                               fallback={
                                 tile.thumbnail ? (

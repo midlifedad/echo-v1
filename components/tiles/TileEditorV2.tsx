@@ -290,12 +290,19 @@ export function TileEditorV2({
             xs: { x: 0, y: 0, w: 2, h: 3 },
           };
           
+          // Map positions to array format for the API
+          const positionsArray = Object.entries(positions).map(([breakpoint, position]) => ({
+            breakpoint,
+            position
+          }));
+          
           await fetch(`/api/layouts/${layoutId}/tiles`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               tileId: savedTile.id,
-              positions,
+              positions: positionsArray,
+              isTemplate: true, // New tiles created here are templates
             }),
           });
         }

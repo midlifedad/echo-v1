@@ -58,7 +58,7 @@ export async function POST(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { tileId, positions } = body;
+    const { tileId, positions, isTemplate } = body;
     
     if (!tileId || !positions) {
       return NextResponse.json(
@@ -67,9 +67,17 @@ export async function POST(
       );
     }
     
-    await LayoutService.addTileToLayout(id, tileId, positions);
+    let instanceId = tileId;
     
-    return NextResponse.json({ success: true });
+    // If tileId refers to a template, create an instance first
+    if (isTemplate) {
+      const instance = await TileInstanceService.createFromTemplate(tileId);
+      instanceId = instance.id;
+    }
+    
+    await LayoutService.addTileToLayout(id, instanceId, positions);
+    
+    return NextResponse.json({ success: true, instanceId });
   } catch (error) {
     console.error('Failed to add tile to layout:', error);
     return NextResponse.json(
