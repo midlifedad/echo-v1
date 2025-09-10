@@ -34,11 +34,13 @@ import {
   Database,
   FileText,
   Check,
+  Sparkles,
 } from 'lucide-react';
 import { RichTextEditor } from './RichTextEditor';
 import { ImageUpload } from './ImageUpload';
 import { ChartDataEditor } from './ChartDataEditor';
 import { ChartOptionsEditorV2 } from './ChartOptionsEditorV2';
+import { AIChartEditor } from './AIChartEditor';
 import type { Tile, CreateTileRequest, UpdateTileRequest } from '@/lib/types/database';
 import type { TileType } from '@/lib/types';
 
@@ -60,6 +62,7 @@ const TILE_TYPES = {
     { value: 'smart' as TileType, label: 'Smart', icon: Brain, description: 'AI insights (soon)', disabled: true },
   ],
   charts: [
+    { value: 'ai-generated' as TileType, label: 'AI Gen', icon: Sparkles, description: 'AI-powered charts' },
     { value: 'line' as TileType, label: 'Line', icon: Activity, description: 'Trends over time' },
     { value: 'area' as TileType, label: 'Area', icon: TrendingUp, description: 'Cumulative values' },
     { value: 'column' as TileType, label: 'Column', icon: BarChart3, description: 'Compare categories' },
@@ -72,7 +75,11 @@ const TILE_TYPES = {
 };
 
 const isChartType = (type: string): boolean => {
-  return TILE_TYPES.charts.some(t => t.value === type);
+  return TILE_TYPES.charts.some(t => t.value === type) && type !== 'ai-generated';
+};
+
+const isAIGenerated = (type: string): boolean => {
+  return type === 'ai-generated';
 };
 
 export function TileEditorV2({ 
@@ -90,6 +97,8 @@ export function TileEditorV2({
   const [loading, setLoading] = useState(false);
   const [selectedType, setSelectedType] = useState<TileType>('text');
   const [activeTab, setActiveTab] = useState('content');
+  const [aiMetadata, setAiMetadata] = useState<any>(null);
+  const [showAIEditor, setShowAIEditor] = useState(false);
   
   // Form state
   const getInitialFormData = () => {
@@ -164,15 +173,45 @@ export function TileEditorV2({
 
   const handleTypeSelect = (type: TileType) => {
     setSelectedType(type);
+    
+    if (isAIGenerated(type)) {
+      setShowAIEditor(true);
+      setActiveTab('content');
+    } else {
+      setFormData((prev: any) => ({
+        ...prev,
+        type,
+        config: {
+          ...prev.config,
+          type,
+        }
+      }));
+      setActiveTab(isChartType(type) ? 'data' : 'content');
+    }
+  };
+
+  const handleAIChartComplete = (chartConfig: any, metadata: any) => {
+    // Extract chart type from the config
+    const chartType = chartConfig.chart?.type || 'line';
+    const title = chartConfig.title?.text || metadata.prompt || 'AI Generated Chart';
+    
     setFormData((prev: any) => ({
       ...prev,
-      type,
+      type: chartType,
+      title: title,
+      description: `AI generated from: ${metadata.prompt}`,
       config: {
-        ...prev.config,
-        type,
-      }
+        type: chartType,
+        title: title,
+        options: chartConfig,
+      },
+      aiMetadata: metadata,
     }));
-    setActiveTab(isChartType(type) ? 'data' : 'content');
+    
+    setAiMetadata(metadata);
+    setShowAIEditor(false);
+    setSelectedType(chartType as TileType);
+    setActiveTab('data');
   };
 
   const handleDataUpdate = (data: any) => {
@@ -431,6 +470,16 @@ export function TileEditorV2({
                       </div>
                     )}
                     
+                    {isAIGenerated(selectedType) && showAIEditor && (
+                      <AIChartEditor
+                        onComplete={handleAIChartComplete}
+                        onCancel={() => {
+                          setShowAIEditor(false);
+                          setSelectedType('text');
+                        }}
+                      />
+                    )}
+                    
                     {isChartType(selectedType) && (
                       <div className="text-muted-foreground">
                         Switch to the Data tab to configure chart content
@@ -439,7 +488,7 @@ export function TileEditorV2({
                   </TabsContent>
                   
                   <TabsContent value="data" className="m-0">
-                    {isChartType(selectedType) && (
+                    {(isChartType(selectedType) || aiMetadata) && (
                       <ChartDataEditor
                         type={selectedType as any}
                         data={formData.config?.options || {}}
@@ -449,7 +498,7 @@ export function TileEditorV2({
                   </TabsContent>
                   
                   <TabsContent value="style" className="m-0">
-                    {isChartType(selectedType) ? (
+                    {(isChartType(selectedType) || aiMetadata) ? (
                       <ChartOptionsEditorV2
                         type={selectedType as any}
                         options={formData.config?.options || {}}

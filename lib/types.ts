@@ -61,7 +61,7 @@ export type ChartType =
   | 'areaspline';
 
 // Extended tile types including non-chart tiles
-export type TileType = ChartType | 'text' | 'image' | 'smart';
+export type TileType = ChartType | 'text' | 'image' | 'smart' | 'ai-generated';
 
 // Content types for different tile types
 export interface TextTileContent {
