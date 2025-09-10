@@ -46,20 +46,10 @@ const getDefaultLayouts = (): Layouts => {
     { i: 'tile-5', x: 0, y: 11, w: 6, h: 3, minW: GRID_CONFIG.MIN_WIDTH, minH: GRID_CONFIG.MIN_HEIGHT },
   ];
 
-  // Extra small breakpoint (4 columns)
-  const xsTiles: LayoutItem[] = [
-    { i: 'tile-1', x: 0, y: 0, w: 4, h: GRID_CONFIG.DEFAULT_HEIGHT, minW: GRID_CONFIG.MIN_WIDTH, minH: GRID_CONFIG.MIN_HEIGHT },
-    { i: 'tile-2', x: 0, y: 4, w: 4, h: GRID_CONFIG.DEFAULT_HEIGHT, minW: GRID_CONFIG.MIN_WIDTH, minH: GRID_CONFIG.MIN_HEIGHT },
-    { i: 'tile-3', x: 0, y: 8, w: 4, h: 3, minW: GRID_CONFIG.MIN_WIDTH, minH: GRID_CONFIG.MIN_HEIGHT },
-    { i: 'tile-4', x: 0, y: 11, w: 4, h: 3, minW: GRID_CONFIG.MIN_WIDTH, minH: GRID_CONFIG.MIN_HEIGHT },
-    { i: 'tile-5', x: 0, y: 14, w: 4, h: 3, minW: GRID_CONFIG.MIN_WIDTH, minH: GRID_CONFIG.MIN_HEIGHT },
-  ];
-
   return {
     lg: lgTiles,
     md: mdTiles,
     sm: smTiles,
-    xs: xsTiles,
   };
 };
 
@@ -80,17 +70,16 @@ export function LayoutProvider({ children }: { children: React.ReactNode }) {
   const getBreakpointFromWidth = (width: number): Breakpoint => {
     if (width >= BREAKPOINTS.lg) return 'lg';
     if (width >= BREAKPOINTS.md) return 'md';
-    if (width >= BREAKPOINTS.sm) return 'sm';
-    return 'xs';
+    return 'sm';
   };
   
-  const [currentBreakpoint, setCurrentBreakpoint] = useState(() => {
+  const [currentBreakpoint, setCurrentBreakpoint] = useState<Breakpoint>(() => {
     if (typeof window !== 'undefined') {
       return getBreakpointFromWidth(window.innerWidth);
     }
     return 'lg';
   });
-  const [editingBreakpoint, setEditingBreakpoint] = useState(() => {
+  const [editingBreakpoint, setEditingBreakpoint] = useState<Breakpoint>(() => {
     if (typeof window !== 'undefined') {
       return getBreakpointFromWidth(window.innerWidth);
     }

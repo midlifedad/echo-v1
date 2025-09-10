@@ -186,7 +186,7 @@ export class LayoutService {
     tileId: string,
     positions: Record<string, any>
   ): Promise<void> {
-    const breakpoints = ['lg', 'md', 'sm', 'xs'];
+    const breakpoints = ['lg', 'md', 'sm'];
     
     for (const breakpoint of breakpoints) {
       if (positions[breakpoint]) {

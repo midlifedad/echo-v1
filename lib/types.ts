@@ -102,7 +102,7 @@ export interface TileContextType {
 }
 
 // Layout system types
-export type Breakpoint = 'lg' | 'md' | 'sm' | 'xs';
+export type Breakpoint = 'lg' | 'md' | 'sm';
 
 export interface LayoutItem {
   i: string;

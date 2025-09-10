@@ -81,18 +81,16 @@ export const CHART_TYPES = [
 export const BREAKPOINTS = {
   lg: 1200,
   md: 996,
-  sm: 768,
-  xs: 480
+  sm: 768
 } as const;
 
 export const BREAKPOINT_COLUMNS = {
   lg: 12,
   md: 10,
-  sm: 6,
-  xs: 4
+  sm: 6
 } as const;
 
-export const BREAKPOINT_ORDER = ['lg', 'md', 'sm', 'xs'] as const;
+export const BREAKPOINT_ORDER = ['lg', 'md', 'sm'] as const;
 
 export const GRID_CONFIG = {
   ROW_HEIGHT: 80,

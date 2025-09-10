@@ -7,7 +7,7 @@ import { useTiles } from '@/contexts/TileContext';
 import { cn } from '@/lib/utils';
 import LayoutTile from './LayoutTile';
 import LayoutTileFullscreen from './LayoutTileFullscreen';
-import { TileData } from '@/lib/types';
+import { TileData, Breakpoint } from '@/lib/types';
 import { BREAKPOINT_COLUMNS, GRID_CONFIG } from '@/lib/constants';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
@@ -63,11 +63,6 @@ export default function GridLayoutWrapper({ className }: GridLayoutWrapperProps)
         x = index < 2 ? 0 : ((index - 2) * 3) % cols;
         y = index < 2 ? (index * GRID_CONFIG.DEFAULT_HEIGHT) : (8 + Math.floor((index - 2) / 2) * 3);
         break;
-      case 'xs':
-        w = 4;
-        x = 0;
-        y = index * GRID_CONFIG.DEFAULT_HEIGHT;
-        break;
       default:
         w = 4;
         x = (index * 4) % BREAKPOINT_COLUMNS.lg;
@@ -87,7 +82,7 @@ export default function GridLayoutWrapper({ className }: GridLayoutWrapperProps)
 
   // Carefully ensure layouts exist only for missing tiles, preserve existing positions
   const ensureCompleteLayouts = useCallback((currentLayouts: Layouts) => {
-    const breakpoints = ['lg', 'md', 'sm', 'xs'];
+    const breakpoints = ['lg', 'md', 'sm'];
     const completeLayouts: Layouts = {};
     
     breakpoints.forEach(bp => {
@@ -124,7 +119,7 @@ export default function GridLayoutWrapper({ className }: GridLayoutWrapperProps)
 
   // Compute layouts for all breakpoints using the simplified logic
   const computedLayouts = useMemo(() => {
-    const breakpoints = ['lg', 'md', 'sm', 'xs'] as const;
+    const breakpoints = ['lg', 'md', 'sm'] as const;
     const computed: Layouts = {};
     
     breakpoints.forEach(bp => {
@@ -138,7 +133,7 @@ export default function GridLayoutWrapper({ className }: GridLayoutWrapperProps)
   const gridItems = useMemo(() => {
     // Use editing breakpoint in edit mode, current breakpoint otherwise
     const activeBreakpoint = isEditMode ? editingBreakpoint : currentBreakpoint;
-    const activeLayout = getBreakpointLayout(activeBreakpoint as 'lg' | 'md' | 'sm' | 'xs');
+    const activeLayout = getBreakpointLayout(activeBreakpoint as Breakpoint);
     
     return tiles.map((tile, index) => {
       // Find the layout for this tile
@@ -235,7 +230,7 @@ export default function GridLayoutWrapper({ className }: GridLayoutWrapperProps)
             layouts={computedLayouts}
             onLayoutChange={() => {}} // Disable layout changes in view mode
             onBreakpointChange={handleBreakpointChange}
-            breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480 }} // Keep hardcoded for react-grid-layout compatibility  
+            breakpoints={{ lg: 1200, md: 996, sm: 768 }} // Keep hardcoded for react-grid-layout compatibility  
             cols={BREAKPOINT_COLUMNS}
             isDraggable={false}
             isResizable={false}

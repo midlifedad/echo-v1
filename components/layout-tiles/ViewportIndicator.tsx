@@ -11,11 +11,9 @@ interface ViewportIndicatorProps {
 }
 
 const breakpointThresholds = [
-  { name: 'xs', max: 480, color: 'bg-red-500' },
-  { name: 'sm', min: 480, max: 768, color: 'bg-yellow-500' },
+  { name: 'sm', max: 768, color: 'bg-yellow-500' },
   { name: 'md', min: 768, max: 996, color: 'bg-blue-500' },
-  { name: 'lg', min: 996, max: 1200, color: 'bg-green-500' },
-  { name: 'xl', min: 1200, color: 'bg-purple-500' },
+  { name: 'lg', min: 996, color: 'bg-green-500' },
 ];
 
 export default function ViewportIndicator({
@@ -64,11 +62,9 @@ export default function ViewportIndicator({
   };
 
   const getBreakpointName = (width: number) => {
-    if (width < 480) return 'Phone (xs)';
     if (width < 768) return 'Mobile (sm)';
     if (width < 996) return 'Tablet (md)';
-    if (width < 1200) return 'Desktop (lg)';
-    return 'Wide (xl)';
+    return 'Desktop (lg)';
   };
 
   const getPosition = (width: number) => {
@@ -95,16 +91,14 @@ export default function ViewportIndicator({
       <div className="relative" ref={containerRef}>
         {/* Gradient background showing breakpoint ranges */}
         <div className="h-8 rounded-md overflow-hidden flex">
-          <div className="bg-red-500/20 flex-none" style={{ width: '25%' }} />
-          <div className="bg-yellow-500/20 flex-none" style={{ width: '15%' }} />
-          <div className="bg-blue-500/20 flex-none" style={{ width: '11.5%' }} />
-          <div className="bg-green-500/20 flex-none" style={{ width: '10.5%' }} />
-          <div className="bg-purple-500/20 flex-1" />
+          <div className="bg-yellow-500/20 flex-none" style={{ width: '40%' }} />
+          <div className="bg-blue-500/20 flex-none" style={{ width: '12%' }} />
+          <div className="bg-green-500/20 flex-1" />
         </div>
 
         {/* Breakpoint markers */}
         <div className="absolute inset-0 pointer-events-none">
-          {[480, 768, 996, 1200].map((threshold) => {
+          {[768, 996].map((threshold) => {
             const pos = getPosition(threshold);
             return (
               <div
@@ -160,10 +154,6 @@ export default function ViewportIndicator({
         <span>{minWidth}px</span>
         <div className="flex gap-4">
           <span className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-red-500/20 rounded" />
-            xs
-          </span>
-          <span className="flex items-center gap-1">
             <div className="w-3 h-3 bg-yellow-500/20 rounded" />
             sm
           </span>
@@ -174,10 +164,6 @@ export default function ViewportIndicator({
           <span className="flex items-center gap-1">
             <div className="w-3 h-3 bg-green-500/20 rounded" />
             lg
-          </span>
-          <span className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-purple-500/20 rounded" />
-            xl
           </span>
         </div>
         <span>{maxWidth}px</span>

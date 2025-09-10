@@ -18,7 +18,7 @@ async function seed() {
       name: 'Default Dashboard',
       description: 'Main dashboard layout',
       config: {
-        cols: { lg: 12, md: 10, sm: 6, xs: 4 },
+        cols: { lg: 12, md: 10, sm: 6 },
         rowHeight: 80,
         compactType: 'vertical',
         preventCollision: false,
@@ -195,18 +195,18 @@ async function seed() {
 
     // Create layout-tile relationships with positions
     const layoutTilePositions = [
-      { tileIndex: 0, lg: { x: 0, y: 0, w: 6, h: 3 }, md: { x: 0, y: 0, w: 5, h: 3 }, sm: { x: 0, y: 0, w: 6, h: 3 }, xs: { x: 0, y: 0, w: 4, h: 3 } },
-      { tileIndex: 1, lg: { x: 6, y: 0, w: 6, h: 3 }, md: { x: 5, y: 0, w: 5, h: 3 }, sm: { x: 0, y: 3, w: 6, h: 3 }, xs: { x: 0, y: 3, w: 4, h: 3 } },
-      { tileIndex: 2, lg: { x: 0, y: 3, w: 4, h: 3 }, md: { x: 0, y: 3, w: 4, h: 3 }, sm: { x: 0, y: 6, w: 3, h: 3 }, xs: { x: 0, y: 6, w: 4, h: 3 } },
-      { tileIndex: 3, lg: { x: 4, y: 3, w: 4, h: 3 }, md: { x: 4, y: 3, w: 3, h: 3 }, sm: { x: 3, y: 6, w: 3, h: 3 }, xs: { x: 0, y: 9, w: 4, h: 3 } },
-      { tileIndex: 4, lg: { x: 8, y: 3, w: 4, h: 3 }, md: { x: 7, y: 3, w: 3, h: 3 }, sm: { x: 0, y: 9, w: 6, h: 3 }, xs: { x: 0, y: 12, w: 4, h: 3 } },
-      { tileIndex: 5, lg: { x: 0, y: 6, w: 12, h: 3 }, md: { x: 0, y: 6, w: 10, h: 3 }, sm: { x: 0, y: 12, w: 6, h: 3 }, xs: { x: 0, y: 15, w: 4, h: 3 } },
+      { tileIndex: 0, lg: { x: 0, y: 0, w: 6, h: 3 }, md: { x: 0, y: 0, w: 5, h: 3 }, sm: { x: 0, y: 0, w: 6, h: 3 } },
+      { tileIndex: 1, lg: { x: 6, y: 0, w: 6, h: 3 }, md: { x: 5, y: 0, w: 5, h: 3 }, sm: { x: 0, y: 3, w: 6, h: 3 } },
+      { tileIndex: 2, lg: { x: 0, y: 3, w: 4, h: 3 }, md: { x: 0, y: 3, w: 4, h: 3 }, sm: { x: 0, y: 6, w: 3, h: 3 } },
+      { tileIndex: 3, lg: { x: 4, y: 3, w: 4, h: 3 }, md: { x: 4, y: 3, w: 3, h: 3 }, sm: { x: 3, y: 6, w: 3, h: 3 } },
+      { tileIndex: 4, lg: { x: 8, y: 3, w: 4, h: 3 }, md: { x: 7, y: 3, w: 3, h: 3 }, sm: { x: 0, y: 9, w: 6, h: 3 } },
+      { tileIndex: 5, lg: { x: 0, y: 6, w: 12, h: 3 }, md: { x: 0, y: 6, w: 10, h: 3 }, sm: { x: 0, y: 12, w: 6, h: 3 } },
     ];
 
     const layoutTilesData = [];
     for (const pos of layoutTilePositions) {
       const tile = insertedTiles[pos.tileIndex];
-      for (const breakpoint of ['lg', 'md', 'sm', 'xs'] as const) {
+      for (const breakpoint of ['lg', 'md', 'sm'] as const) {
         layoutTilesData.push({
           layoutId: defaultLayoutId,
           tileId: tile.id,
@@ -227,7 +227,7 @@ async function seed() {
       name: 'Analytics Dashboard',
       description: 'Focused analytics view',
       config: {
-        cols: { lg: 12, md: 10, sm: 6, xs: 4 },
+        cols: { lg: 12, md: 10, sm: 6 },
         rowHeight: 80,
         compactType: 'vertical',
         preventCollision: false,
@@ -240,15 +240,15 @@ async function seed() {
 
     // Add some tiles to analytics layout with different positions
     const analyticsLayoutTiles = [
-      { tileIndex: 0, lg: { x: 0, y: 0, w: 12, h: 4 }, md: { x: 0, y: 0, w: 10, h: 4 }, sm: { x: 0, y: 0, w: 6, h: 4 }, xs: { x: 0, y: 0, w: 4, h: 4 } },
-      { tileIndex: 4, lg: { x: 0, y: 4, w: 6, h: 3 }, md: { x: 0, y: 4, w: 5, h: 3 }, sm: { x: 0, y: 4, w: 6, h: 3 }, xs: { x: 0, y: 4, w: 4, h: 3 } },
-      { tileIndex: 5, lg: { x: 6, y: 4, w: 6, h: 3 }, md: { x: 5, y: 4, w: 5, h: 3 }, sm: { x: 0, y: 7, w: 6, h: 3 }, xs: { x: 0, y: 7, w: 4, h: 3 } },
+      { tileIndex: 0, lg: { x: 0, y: 0, w: 12, h: 4 }, md: { x: 0, y: 0, w: 10, h: 4 }, sm: { x: 0, y: 0, w: 6, h: 4 } },
+      { tileIndex: 4, lg: { x: 0, y: 4, w: 6, h: 3 }, md: { x: 0, y: 4, w: 5, h: 3 }, sm: { x: 0, y: 4, w: 6, h: 3 } },
+      { tileIndex: 5, lg: { x: 6, y: 4, w: 6, h: 3 }, md: { x: 5, y: 4, w: 5, h: 3 }, sm: { x: 0, y: 7, w: 6, h: 3 } },
     ];
 
     const analyticsLayoutTilesData = [];
     for (const pos of analyticsLayoutTiles) {
       const tile = insertedTiles[pos.tileIndex];
-      for (const breakpoint of ['lg', 'md', 'sm', 'xs'] as const) {
+      for (const breakpoint of ['lg', 'md', 'sm'] as const) {
         analyticsLayoutTilesData.push({
           layoutId: analyticsLayoutId,
           tileId: tile.id,

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Monitor, Tablet, Smartphone, Phone } from 'lucide-react';
+import { Monitor, Tablet, Smartphone } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -32,15 +32,8 @@ const breakpoints = [
     key: 'sm',
     label: 'Mobile',
     icon: Smartphone,
-    range: '768-995px',
+    range: '<996px',
     cols: 6,
-  },
-  {
-    key: 'xs',
-    label: 'Phone',
-    icon: Phone,
-    range: '<768px',
-    cols: 4,
   },
 ];
 

@@ -205,7 +205,7 @@ export interface AddTileToLayoutRequest {
 
 export interface UpdateTilePositionRequest {
   tileInstanceId: string;
-  breakpoint: 'lg' | 'md' | 'sm' | 'xs';
+  breakpoint: 'lg' | 'md' | 'sm';
   position: LayoutTile['position'];
   isVisible?: boolean;
   inheritanceMode?: 'inherit' | 'custom';
