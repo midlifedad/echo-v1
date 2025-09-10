@@ -28,7 +28,7 @@ function LayoutEditorContent() {
     currentBreakpoint,
     editingBreakpoint,
     setEditingBreakpoint,
-    customLayouts,
+    customBreakpoints,
     simulatedViewport,
     setSimulatedViewport,
   } = useLayout();
@@ -477,7 +477,7 @@ function LayoutEditorContent() {
                 currentBreakpoint={currentBreakpoint}
                 editingBreakpoint={editingBreakpoint}
                 onBreakpointChange={setEditingBreakpoint}
-                customLayouts={customLayouts}
+                customBreakpoints={customBreakpoints}
               />
               
               <ViewportIndicator

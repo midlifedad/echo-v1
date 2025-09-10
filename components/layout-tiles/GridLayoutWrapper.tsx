@@ -28,13 +28,10 @@ export default function GridLayoutWrapper({ className }: GridLayoutWrapperProps)
     currentBreakpoint, 
     setCurrentBreakpoint,
     editingBreakpoint,
-    layoutInheritance,
-    updateTileInheritance,
-    getInheritedLayout,
-    customLayouts,
-    isTileLocked,
-    lockedTiles,
-    lockedPositions,
+    useResponsiveLayout,
+    customBreakpoints,
+    markBreakpointAsCustom,
+    getBreakpointLayout,
   } = useLayout();
   const { tiles, reorderTiles } = useTiles();
   const [expandedTile, setExpandedTile] = React.useState<TileData | null>(null);
@@ -125,79 +122,35 @@ export default function GridLayoutWrapper({ className }: GridLayoutWrapperProps)
     }
   }, [initializedLayouts, tiles.length, setLayouts, ensureCompleteLayouts]); // Only depend on tiles.length, not tiles array
 
-  // Compute layouts for a specific breakpoint with inheritance logic
-  const computeLayoutsForBreakpoint = useCallback((breakpoint: string) => {
-    return tiles.map((tile, index) => {
-      let layoutItem;
-      
-      // Check if this tile is globally locked first
-      if (isTileLocked(tile.id)) {
-        const lockedPosition = lockedPositions[tile.id];
-        
-        if (lockedPosition && lockedPosition.layouts && lockedPosition.layouts[breakpoint]) {
-          // Use the exact stored position for this breakpoint (no scaling)
-          layoutItem = { ...lockedPosition.layouts[breakpoint], static: true };
-        } else {
-          // No stored locked position for this breakpoint, use current layout or generate default
-          layoutItem = layouts[breakpoint]?.find(l => l.i === `tile-${tile.id}`) || 
-                      generateDefaultLayoutForBreakpoint(breakpoint, tile.id, index);
-          // Still mark as static to prevent dragging
-          layoutItem = { ...layoutItem, static: true };
-        }
-      } else {
-        // Normal inheritance logic for non-locked tiles
-        const inheritanceMode = layoutInheritance[tile.id]?.[breakpoint as 'lg' | 'md' | 'sm' | 'xs'];
-        
-        if (inheritanceMode === 'inherit' || !inheritanceMode) {
-          // Use inherited layout
-          layoutItem = getInheritedLayout(tile.id, breakpoint);
-        } else {
-          // Use stored layout for custom
-          layoutItem = layouts[breakpoint]?.find(l => l.i === `tile-${tile.id}`);
-        }
-        
-        // Fallback to generated default
-        if (!layoutItem) {
-          layoutItem = generateDefaultLayoutForBreakpoint(breakpoint, tile.id, index);
-        }
-        
-        // Explicitly mark non-locked tiles as not static for drag/resize
-        layoutItem = { ...layoutItem, static: false };
-      }
-      
-      return layoutItem;
-    });
-  }, [tiles, layouts, layoutInheritance, getInheritedLayout, generateDefaultLayoutForBreakpoint, isTileLocked, lockedPositions]);
-
-  // Create computed layouts that respect inheritance for all breakpoints
+  // Compute layouts for all breakpoints using the simplified logic
   const computedLayouts = useMemo(() => {
-    const breakpoints = ['lg', 'md', 'sm', 'xs'];
+    const breakpoints = ['lg', 'md', 'sm', 'xs'] as const;
     const computed: Layouts = {};
     
     breakpoints.forEach(bp => {
-      computed[bp] = computeLayoutsForBreakpoint(bp);
+      computed[bp] = getBreakpointLayout(bp);
     });
     
     return computed;
-  }, [computeLayoutsForBreakpoint]);
+  }, [getBreakpointLayout]);
 
   // Convert tiles to grid items with proper layouts (for edit mode)
   const gridItems = useMemo(() => {
     // Use editing breakpoint in edit mode, current breakpoint otherwise
     const activeBreakpoint = isEditMode ? editingBreakpoint : currentBreakpoint;
+    const activeLayout = getBreakpointLayout(activeBreakpoint as 'lg' | 'md' | 'sm' | 'xs');
     
     return tiles.map((tile, index) => {
-      // Get the computed layout for this breakpoint
-      const layoutItem = computeLayoutsForBreakpoint(activeBreakpoint)[index];
-      const inheritanceMode = layoutInheritance[tile.id]?.[activeBreakpoint as 'lg' | 'md' | 'sm' | 'xs'];
+      // Find the layout for this tile
+      const layoutItem = activeLayout.find(l => l.i === `tile-${tile.id}`) || 
+                        generateDefaultLayoutForBreakpoint(activeBreakpoint, tile.id, index);
       
       return {
         ...tile,
         gridLayout: layoutItem,
-        inheritanceMode: inheritanceMode || 'inherit',
       };
     });
-  }, [tiles, computeLayoutsForBreakpoint, currentBreakpoint, editingBreakpoint, isEditMode, layoutInheritance]);
+  }, [tiles, getBreakpointLayout, generateDefaultLayoutForBreakpoint, currentBreakpoint, editingBreakpoint, isEditMode]);
 
   // Debounce timer ref for layout changes
   const layoutChangeTimer = useRef<NodeJS.Timeout | null>(null);
@@ -212,22 +165,15 @@ export default function GridLayoutWrapper({ className }: GridLayoutWrapperProps)
       clearTimeout(layoutChangeTimer.current);
     }
 
-    // When a tile is moved/resized, mark it as custom for this breakpoint
+    // When a tile is moved/resized, mark this breakpoint as custom
     const activeBreakpoint = isEditMode ? editingBreakpoint : currentBreakpoint;
     
     // Only process changes if we're in edit mode
     if (isEditMode) {
       // Debounce the layout update to prevent excessive re-renders
       layoutChangeTimer.current = setTimeout(() => {
-        currentLayout.forEach(layout => {
-          const tileId = layout.i.replace('tile-', '');
-          const currentInheritance = layoutInheritance[tileId]?.[activeBreakpoint as 'lg' | 'md' | 'sm' | 'xs'];
-          
-          // Only update if not already custom and not globally locked
-          if (currentInheritance !== 'custom' && !isTileLocked(tileId)) {
-            updateTileInheritance(tileId, activeBreakpoint, 'custom');
-          }
-        });
+        // Mark this breakpoint as having custom layout
+        markBreakpointAsCustom(activeBreakpoint);
         
         // Only update the specific breakpoint that changed, preserve others
         setLayouts((prev: Layouts) => ({
@@ -236,7 +182,7 @@ export default function GridLayoutWrapper({ className }: GridLayoutWrapperProps)
         }));
       }, 150); // 150ms debounce
     }
-  }, [setLayouts, isEditMode, editingBreakpoint, currentBreakpoint, layoutInheritance, updateTileInheritance, isTileLocked]);
+  }, [setLayouts, isEditMode, editingBreakpoint, currentBreakpoint, markBreakpointAsCustom]);
 
   // Clean up debounce timer on unmount
   useEffect(() => {
@@ -285,7 +231,6 @@ export default function GridLayoutWrapper({ className }: GridLayoutWrapperProps)
           className
         )}>
           <ResponsiveGridLayout 
-            key={`grid-${Array.from(lockedTiles).sort().join('-')}`} // Force re-render when locked state changes
             {...baseGridConfig}
             layouts={computedLayouts}
             onLayoutChange={() => {}} // Disable layout changes in view mode

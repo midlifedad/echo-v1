@@ -1,15 +1,11 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { Layout } from 'react-grid-layout';
 import { 
   LayoutContextType, 
-  InheritanceMode, 
-  TileInheritance, 
   Layouts, 
   LayoutItem, 
-  Breakpoint,
-  LockedPosition
+  Breakpoint
 } from '@/lib/types';
 import { 
   BREAKPOINTS, 
@@ -67,12 +63,18 @@ const getDefaultLayouts = (): Layouts => {
   };
 };
 
-// These are now imported from constants
-
 export function LayoutProvider({ children }: { children: React.ReactNode }) {
   const [isEditMode, setEditMode] = useState(false);
   const [layouts, setLayouts] = useState<Layouts>(getDefaultLayouts());
   const [savedLayouts, setSavedLayouts] = useState<Layouts>(layouts);
+  
+  // Simplified: Use responsive layouts by default, custom overrides per breakpoint
+  const [useResponsiveLayout, setUseResponsiveLayout] = useState(true);
+  const [savedUseResponsiveLayout, setSavedUseResponsiveLayout] = useState(true);
+  const [simulatedViewport, setSimulatedViewport] = useState<number | undefined>();
+  
+  // Track which breakpoints have been customized
+  const [customBreakpoints, setCustomBreakpoints] = useState<Set<string>>(new Set());
   
   // Determine initial breakpoint based on viewport width
   const getBreakpointFromWidth = (width: number): Breakpoint => {
@@ -94,21 +96,6 @@ export function LayoutProvider({ children }: { children: React.ReactNode }) {
     }
     return 'lg';
   });
-  const [layoutInheritance, setLayoutInheritance] = useState<{ [tileId: string]: TileInheritance }>({});
-  const [savedInheritance, setSavedInheritance] = useState<{ [tileId: string]: TileInheritance }>({});
-  const [simulatedViewport, setSimulatedViewport] = useState<number | undefined>();
-  const [lockedTiles, setLockedTiles] = useState<Set<string>>(new Set());
-  const [savedLockedTiles, setSavedLockedTiles] = useState<Set<string>>(new Set());
-  const [lockedPositions, setLockedPositions] = useState<{ [tileId: string]: { layout: Layout; sourceBreakpoint: string } }>({});
-  const [savedLockedPositions, setSavedLockedPositions] = useState<{ [tileId: string]: { layout: Layout; sourceBreakpoint: string } }>({});
-
-  // Track which layouts are custom (user-modified)
-  const [customLayouts, setCustomLayouts] = useState<{ [breakpoint: string]: string[] }>({
-    lg: [],
-    md: [],
-    sm: [],
-    xs: [],
-  });
 
   // Update currentBreakpoint on window resize
   useEffect(() => {
@@ -128,13 +115,11 @@ export function LayoutProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener('resize', handleResize);
   }, [isEditMode]);
 
-  // Load layouts and inheritance from localStorage on mount
+  // Load layouts from localStorage on mount
   useEffect(() => {
     const savedLayoutData = localStorage.getItem(STORAGE_KEYS.LAYOUTS);
-    const savedInheritanceData = localStorage.getItem(STORAGE_KEYS.INHERITANCE);
-    const savedCustomData = localStorage.getItem(STORAGE_KEYS.CUSTOM_LAYOUTS);
-    const savedLockedData = localStorage.getItem(STORAGE_KEYS.LOCKED_TILES);
-    const savedLockedPositionsData = localStorage.getItem(STORAGE_KEYS.LOCKED_POSITIONS);
+    const savedResponsiveData = localStorage.getItem('dashboard_responsive_mode');
+    const savedCustomData = localStorage.getItem('dashboard_custom_breakpoints');
     
     if (savedLayoutData) {
       try {
@@ -146,58 +131,22 @@ export function LayoutProvider({ children }: { children: React.ReactNode }) {
       }
     }
     
-    if (savedInheritanceData) {
+    if (savedResponsiveData) {
       try {
-        const parsedInheritance = JSON.parse(savedInheritanceData);
-        setLayoutInheritance(parsedInheritance);
-        setSavedInheritance(parsedInheritance);
+        const parsedResponsive = JSON.parse(savedResponsiveData);
+        setUseResponsiveLayout(parsedResponsive);
+        setSavedUseResponsiveLayout(parsedResponsive);
       } catch (error) {
-        console.error('Failed to load saved inheritance:', error);
+        console.error('Failed to load responsive mode:', error);
       }
     }
     
     if (savedCustomData) {
       try {
         const parsedCustom = JSON.parse(savedCustomData);
-        setCustomLayouts(parsedCustom);
+        setCustomBreakpoints(new Set(parsedCustom));
       } catch (error) {
-        console.error('Failed to load custom layouts:', error);
-      }
-    }
-
-    if (savedLockedData) {
-      try {
-        const parsedLocked = JSON.parse(savedLockedData);
-        const lockedSet = new Set(Array.isArray(parsedLocked) ? parsedLocked : []);
-        setLockedTiles(lockedSet);
-        setSavedLockedTiles(lockedSet);
-      } catch (error) {
-        console.error('Failed to load locked tiles:', error);
-      }
-    }
-
-    if (savedLockedPositionsData) {
-      try {
-        const parsedLockedPositions = JSON.parse(savedLockedPositionsData);
-        // Check if this is the old format and migrate to new format
-        const migratedPositions: { [tileId: string]: { layouts: { [breakpoint: string]: LayoutItem } } } = {};
-        
-        Object.keys(parsedLockedPositions || {}).forEach(tileId => {
-          const position = parsedLockedPositions[tileId];
-          // Check if it's the old format (has layout and sourceBreakpoint)
-          if (position.layout && position.sourceBreakpoint) {
-            console.log(`Clearing old locked position format for tile ${tileId}`);
-            // Skip migration - let user re-lock tiles with new format
-          } else if (position.layouts) {
-            // New format - keep it
-            migratedPositions[tileId] = position;
-          }
-        });
-        
-        setLockedPositions(migratedPositions);
-        setSavedLockedPositions(migratedPositions);
-      } catch (error) {
-        console.error('Failed to load locked positions:', error);
+        console.error('Failed to load custom breakpoints:', error);
       }
     }
   }, []);
@@ -232,113 +181,23 @@ export function LayoutProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   /**
-   * Get inherited layout for a tile at a specific breakpoint
-   * Follows inheritance chain from larger breakpoints
+   * Get layout for a breakpoint - either custom or responsive scaled
    */
-  const getInheritedLayout = useCallback((
-    tileId: string,
-    breakpoint: string
-  ): LayoutItem | undefined => {
-    const tileKey = `tile-${tileId}`;
-    const inheritance = layoutInheritance[tileId]?.[breakpoint as Breakpoint];
-    
-    // If custom, use the stored layout
-    if (inheritance === 'custom') {
-      return layouts[breakpoint]?.find(l => l.i === tileKey);
+  const getBreakpointLayout = useCallback((breakpoint: Breakpoint): LayoutItem[] => {
+    // If this breakpoint has custom layout or responsive mode is off, use stored layout
+    if (customBreakpoints.has(breakpoint) || !useResponsiveLayout) {
+      return layouts[breakpoint] || [];
     }
     
-    // If inherit, find the next larger breakpoint with a layout
-    const targetIndex = BREAKPOINT_ORDER.indexOf(breakpoint as Breakpoint);
-    if (targetIndex === -1) {
-      console.warn(`Invalid breakpoint: ${breakpoint}`);
-      return layouts[breakpoint]?.find(l => l.i === tileKey);
+    // Otherwise, scale from the largest breakpoint (lg)
+    const sourceLayout = layouts.lg || [];
+    if (breakpoint === 'lg') {
+      return sourceLayout;
     }
     
-    for (let i = targetIndex - 1; i >= 0; i--) {
-      const sourceBreakpoint = BREAKPOINT_ORDER[i];
-      const sourceLayout = layouts[sourceBreakpoint]?.find(l => l.i === tileKey);
-      
-      if (sourceLayout) {
-        const sourceInheritance = layoutInheritance[tileId]?.[sourceBreakpoint];
-        // Only inherit from custom layouts or if we're at the largest breakpoint
-        if (sourceInheritance === 'custom' || i === 0) {
-          return scaleLayout(sourceLayout, sourceBreakpoint, breakpoint);
-        }
-      }
-    }
-    
-    // Fallback to the stored layout if no inheritance found
-    return layouts[breakpoint]?.find(l => l.i === tileKey);
-  }, [layouts, layoutInheritance, scaleLayout]);
-
-  // Update tile inheritance mode
-  const updateTileInheritance = useCallback((
-    tileId: string,
-    breakpoint: string,
-    mode: InheritanceMode
-  ) => {
-    setLayoutInheritance(prev => ({
-      ...prev,
-      [tileId]: {
-        ...prev[tileId],
-        [breakpoint]: mode,
-      },
-    }));
-    
-    // Update custom layouts tracking
-    if (mode === 'custom') {
-      setCustomLayouts(prev => ({
-        ...prev,
-        [breakpoint]: [...new Set([...(prev[breakpoint] || []), tileId])],
-      }));
-    } else {
-      setCustomLayouts(prev => ({
-        ...prev,
-        [breakpoint]: (prev[breakpoint] || []).filter(id => id !== tileId),
-      }));
-    }
-  }, []);
-
-  /**
-   * Set a tile as locked or unlocked globally
-   * When locking, captures all breakpoint layout positions
-   */
-  const setTileLocked = useCallback((
-    tileId: string, 
-    locked: boolean, 
-    allBreakpointLayouts?: { [breakpoint: string]: LayoutItem }
-  ) => {
-    setLockedTiles(prev => {
-      const newSet = new Set(prev);
-      if (locked) {
-        newSet.add(tileId);
-        
-        // Store all breakpoint positions if provided
-        if (allBreakpointLayouts) {
-          setLockedPositions(prevPos => ({
-            ...prevPos,
-            [tileId]: {
-              layouts: allBreakpointLayouts
-            }
-          }));
-        }
-      } else {
-        newSet.delete(tileId);
-        
-        // Remove the locked position
-        setLockedPositions(prevPos => {
-          const newPos = { ...prevPos };
-          delete newPos[tileId];
-          return newPos;
-        });
-      }
-      return newSet;
-    });
-  }, []);
-
-  const isTileLocked = useCallback((tileId: string) => {
-    return lockedTiles.has(tileId);
-  }, [lockedTiles]);
+    // Scale each tile from lg to target breakpoint
+    return sourceLayout.map(item => scaleLayout(item, 'lg', breakpoint));
+  }, [layouts, customBreakpoints, useResponsiveLayout, scaleLayout]);
 
   /**
    * Save all layout data to localStorage and exit edit mode
@@ -346,15 +205,11 @@ export function LayoutProvider({ children }: { children: React.ReactNode }) {
   const saveLayouts = () => {
     try {
       localStorage.setItem(STORAGE_KEYS.LAYOUTS, JSON.stringify(layouts));
-      localStorage.setItem(STORAGE_KEYS.INHERITANCE, JSON.stringify(layoutInheritance));
-      localStorage.setItem(STORAGE_KEYS.CUSTOM_LAYOUTS, JSON.stringify(customLayouts));
-      localStorage.setItem(STORAGE_KEYS.LOCKED_TILES, JSON.stringify(Array.from(lockedTiles)));
-      localStorage.setItem(STORAGE_KEYS.LOCKED_POSITIONS, JSON.stringify(lockedPositions));
+      localStorage.setItem('dashboard_responsive_mode', JSON.stringify(useResponsiveLayout));
+      localStorage.setItem('dashboard_custom_breakpoints', JSON.stringify(Array.from(customBreakpoints)));
       
       setSavedLayouts(layouts);
-      setSavedInheritance(layoutInheritance);
-      setSavedLockedTiles(new Set(lockedTiles));
-      setSavedLockedPositions({ ...lockedPositions });
+      setSavedUseResponsiveLayout(useResponsiveLayout);
       setEditMode(false);
     } catch (error) {
       console.error('Failed to save layout data:', error);
@@ -363,9 +218,7 @@ export function LayoutProvider({ children }: { children: React.ReactNode }) {
 
   const cancelEdit = () => {
     setLayouts(savedLayouts);
-    setLayoutInheritance(savedInheritance);
-    setLockedTiles(savedLockedTiles);
-    setLockedPositions(savedLockedPositions);
+    setUseResponsiveLayout(savedUseResponsiveLayout);
     setEditMode(false);
   };
 
@@ -375,25 +228,17 @@ export function LayoutProvider({ children }: { children: React.ReactNode }) {
   const resetToDefault = () => {
     try {
       const defaultLayouts = getDefaultLayouts();
-      const emptySet = new Set<string>();
-      const emptyPositions = {};
       
       setLayouts(defaultLayouts);
-      setLayoutInheritance({});
-      setCustomLayouts({ lg: [], md: [], sm: [], xs: [] });
-      setLockedTiles(emptySet);
-      setLockedPositions(emptyPositions);
+      setUseResponsiveLayout(true);
+      setCustomBreakpoints(new Set());
       
       localStorage.setItem(STORAGE_KEYS.LAYOUTS, JSON.stringify(defaultLayouts));
-      localStorage.removeItem(STORAGE_KEYS.INHERITANCE);
-      localStorage.removeItem(STORAGE_KEYS.CUSTOM_LAYOUTS);
-      localStorage.removeItem(STORAGE_KEYS.LOCKED_TILES);
-      localStorage.removeItem(STORAGE_KEYS.LOCKED_POSITIONS);
+      localStorage.setItem('dashboard_responsive_mode', JSON.stringify(true));
+      localStorage.removeItem('dashboard_custom_breakpoints');
       
       setSavedLayouts(defaultLayouts);
-      setSavedInheritance({});
-      setSavedLockedTiles(emptySet);
-      setSavedLockedPositions(emptyPositions);
+      setSavedUseResponsiveLayout(true);
     } catch (error) {
       console.error('Failed to reset layout data:', error);
     }
@@ -410,24 +255,23 @@ export function LayoutProvider({ children }: { children: React.ReactNode }) {
         [breakpoint]: defaultLayouts[breakpoint],
       }));
       
-      // Clear inheritance for this breakpoint
-      const newInheritance = { ...layoutInheritance };
-      Object.keys(newInheritance).forEach(tileId => {
-        if (newInheritance[tileId]) {
-          delete newInheritance[tileId][breakpoint as Breakpoint];
-        }
+      // Remove from custom breakpoints
+      setCustomBreakpoints(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(breakpoint);
+        return newSet;
       });
-      setLayoutInheritance(newInheritance);
-      
-      // Clear custom layouts for this breakpoint
-      setCustomLayouts(prev => ({
-        ...prev,
-        [breakpoint]: [],
-      }));
     } catch (error) {
       console.error(`Failed to reset breakpoint ${breakpoint}:`, error);
     }
   };
+
+  /**
+   * Mark a breakpoint as having custom layout
+   */
+  const markBreakpointAsCustom = useCallback((breakpoint: string) => {
+    setCustomBreakpoints(prev => new Set(prev).add(breakpoint));
+  }, []);
 
   /**
    * Clean up layout data for a removed tile
@@ -446,39 +290,6 @@ export function LayoutProvider({ children }: { children: React.ReactNode }) {
         return updatedLayouts;
       });
 
-      // Remove inheritance settings
-      setLayoutInheritance(prev => {
-        const updated = { ...prev };
-        delete updated[tileId];
-        return updated;
-      });
-
-      // Remove from custom layouts tracking
-      setCustomLayouts(prev => {
-        const updated: { [breakpoint: string]: string[] } = {};
-        Object.keys(prev).forEach(bp => {
-          updated[bp] = prev[bp].filter(id => id !== tileId);
-        });
-        return updated;
-      });
-
-      // Remove locked state and position
-      if (lockedTiles.has(tileId)) {
-        setLockedTiles(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(tileId);
-          return newSet;
-        });
-      }
-
-      if (lockedPositions[tileId]) {
-        setLockedPositions(prev => {
-          const updated = { ...prev };
-          delete updated[tileId];
-          return updated;
-        });
-      }
-
       // Update saved states if not in edit mode
       if (!isEditMode) {
         setSavedLayouts(prev => {
@@ -490,35 +301,13 @@ export function LayoutProvider({ children }: { children: React.ReactNode }) {
           });
           return updatedLayouts;
         });
-
-        setSavedInheritance(prev => {
-          const updated = { ...prev };
-          delete updated[tileId];
-          return updated;
-        });
-
-        if (savedLockedTiles.has(tileId)) {
-          setSavedLockedTiles(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(tileId);
-            return newSet;
-          });
-        }
-
-        if (savedLockedPositions[tileId]) {
-          setSavedLockedPositions(prev => {
-            const updated = { ...prev };
-            delete updated[tileId];
-            return updated;
-          });
-        }
       }
 
       console.log(`Cleaned up layout data for tile ${tileId}`);
     } catch (error) {
       console.error(`Failed to cleanup tile data for ${tileId}:`, error);
     }
-  }, [lockedTiles, lockedPositions, isEditMode, savedLockedTiles, savedLockedPositions]);
+  }, [isEditMode]);
 
   const value: LayoutContextType = {
     isEditMode,
@@ -529,18 +318,14 @@ export function LayoutProvider({ children }: { children: React.ReactNode }) {
     setCurrentBreakpoint,
     editingBreakpoint,
     setEditingBreakpoint,
-    layoutInheritance,
-    setLayoutInheritance,
-    updateTileInheritance,
-    customLayouts,
+    useResponsiveLayout,
+    setUseResponsiveLayout,
+    customBreakpoints,
+    markBreakpointAsCustom,
     simulatedViewport,
     setSimulatedViewport,
-    getInheritedLayout,
+    getBreakpointLayout,
     scaleLayout,
-    lockedTiles,
-    lockedPositions,
-    setTileLocked,
-    isTileLocked,
     saveLayouts,
     cancelEdit,
     resetToDefault,

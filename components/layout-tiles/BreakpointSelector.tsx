@@ -10,7 +10,7 @@ interface BreakpointSelectorProps {
   currentBreakpoint: string;
   editingBreakpoint: string;
   onBreakpointChange: (breakpoint: string) => void;
-  customLayouts: { [key: string]: string[] };
+  customBreakpoints: Set<string>;
   className?: string;
 }
 
@@ -49,7 +49,7 @@ export default function BreakpointSelector({
   currentBreakpoint,
   editingBreakpoint,
   onBreakpointChange,
-  customLayouts,
+  customBreakpoints,
   className,
 }: BreakpointSelectorProps) {
   return (
@@ -61,7 +61,7 @@ export default function BreakpointSelector({
           const Icon = bp.icon;
           const isEditing = editingBreakpoint === bp.key;
           const isCurrent = currentBreakpoint === bp.key;
-          const hasCustomLayout = customLayouts[bp.key]?.length > 0;
+          const hasCustomLayout = customBreakpoints.has(bp.key);
           
           return (
             <Button

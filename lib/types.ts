@@ -103,14 +103,6 @@ export interface TileContextType {
 
 // Layout system types
 export type Breakpoint = 'lg' | 'md' | 'sm' | 'xs';
-export type InheritanceMode = 'inherit' | 'custom';
-
-export interface TileInheritance {
-  lg?: InheritanceMode;
-  md?: InheritanceMode;
-  sm?: InheritanceMode;
-  xs?: InheritanceMode;
-}
 
 export interface LayoutItem {
   i: string;
@@ -129,12 +121,6 @@ export interface Layouts {
   [breakpoint: string]: LayoutItem[];
 }
 
-export interface LockedPosition {
-  layouts: {
-    [breakpoint: string]: LayoutItem;
-  };
-}
-
 export interface LayoutContextType {
   isEditMode: boolean;
   setEditMode: (enabled: boolean) => void;
@@ -144,18 +130,14 @@ export interface LayoutContextType {
   setCurrentBreakpoint: (breakpoint: string) => void;
   editingBreakpoint: string;
   setEditingBreakpoint: (breakpoint: string) => void;
-  layoutInheritance: { [tileId: string]: TileInheritance };
-  setLayoutInheritance: (inheritance: { [tileId: string]: TileInheritance }) => void;
-  updateTileInheritance: (tileId: string, breakpoint: string, mode: InheritanceMode) => void;
-  customLayouts: { [breakpoint: string]: string[] };
+  useResponsiveLayout: boolean;
+  setUseResponsiveLayout: (responsive: boolean) => void;
+  customBreakpoints: Set<string>;
+  markBreakpointAsCustom: (breakpoint: string) => void;
   simulatedViewport?: number;
   setSimulatedViewport: (width: number | undefined) => void;
-  getInheritedLayout: (tileId: string, breakpoint: string) => LayoutItem | undefined;
+  getBreakpointLayout: (breakpoint: Breakpoint) => LayoutItem[];
   scaleLayout: (layout: LayoutItem, fromBreakpoint: string, toBreakpoint: string) => LayoutItem;
-  lockedTiles: Set<string>;
-  lockedPositions: { [tileId: string]: LockedPosition };
-  setTileLocked: (tileId: string, locked: boolean, allBreakpointLayouts?: { [breakpoint: string]: LayoutItem }) => void;
-  isTileLocked: (tileId: string) => boolean;
   saveLayouts: () => void;
   cancelEdit: () => void;
   resetToDefault: () => void;
