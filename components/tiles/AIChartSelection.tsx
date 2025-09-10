@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Check, 
-  Star, 
+  Star,
+  Info, 
   TrendingUp,
   BarChart3,
   PieChart,
@@ -58,8 +59,14 @@ export function AIChartSelection({ response, onSelect, className }: AIChartSelec
 
   return (
     <div className={cn("space-y-4", className)}>
+      <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-lg p-3">
+        <p className="text-sm text-blue-900 dark:text-blue-100 flex items-center gap-2">
+          <Info className="h-4 w-4" />
+          Selecting a chart will automatically configure your tile with all data, styling, and settings
+        </p>
+      </div>
       <div className="text-sm text-muted-foreground">
-        Select one of the generated chart options:
+        Choose from the AI-generated options below:
       </div>
       
       <ScrollArea className="h-[500px] pr-4">

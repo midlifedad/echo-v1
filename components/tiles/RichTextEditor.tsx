@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -65,6 +66,13 @@ export function RichTextEditor({
     },
   });
 
+  // Update editor content when prop changes
+  useEffect(() => {
+    if (editor && content !== editor.getHTML()) {
+      editor.commands.setContent(content);
+    }
+  }, [content, editor]);
+
   if (!editor) {
     return null;
   }
@@ -75,24 +83,22 @@ export function RichTextEditor({
       <div className="border-b bg-muted/50 p-2 flex flex-wrap gap-1">
         <Button
           type="button"
-          variant="ghost"
+          variant={editor.isActive('bold') ? 'secondary' : 'ghost'}
           size="icon"
           className="h-8 w-8"
           onClick={() => editor.chain().focus().toggleBold().run()}
           disabled={!editor.can().chain().focus().toggleBold().run()}
-          data-active={editor.isActive('bold')}
         >
           <Bold className="h-4 w-4" />
         </Button>
         
         <Button
           type="button"
-          variant="ghost"
+          variant={editor.isActive('italic') ? 'secondary' : 'ghost'}
           size="icon"
           className="h-8 w-8"
           onClick={() => editor.chain().focus().toggleItalic().run()}
           disabled={!editor.can().chain().focus().toggleItalic().run()}
-          data-active={editor.isActive('italic')}
         >
           <Italic className="h-4 w-4" />
         </Button>
@@ -101,22 +107,20 @@ export function RichTextEditor({
         
         <Button
           type="button"
-          variant="ghost"
+          variant={editor.isActive('heading', { level: 1 }) ? 'secondary' : 'ghost'}
           size="icon"
           className="h-8 w-8"
           onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-          data-active={editor.isActive('heading', { level: 1 })}
         >
           <Heading1 className="h-4 w-4" />
         </Button>
         
         <Button
           type="button"
-          variant="ghost"
+          variant={editor.isActive('heading', { level: 2 }) ? 'secondary' : 'ghost'}
           size="icon"
           className="h-8 w-8"
           onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          data-active={editor.isActive('heading', { level: 2 })}
         >
           <Heading2 className="h-4 w-4" />
         </Button>
@@ -125,44 +129,40 @@ export function RichTextEditor({
         
         <Button
           type="button"
-          variant="ghost"
+          variant={editor.isActive('bulletList') ? 'secondary' : 'ghost'}
           size="icon"
           className="h-8 w-8"
           onClick={() => editor.chain().focus().toggleBulletList().run()}
-          data-active={editor.isActive('bulletList')}
         >
           <List className="h-4 w-4" />
         </Button>
         
         <Button
           type="button"
-          variant="ghost"
+          variant={editor.isActive('orderedList') ? 'secondary' : 'ghost'}
           size="icon"
           className="h-8 w-8"
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          data-active={editor.isActive('orderedList')}
         >
           <ListOrdered className="h-4 w-4" />
         </Button>
         
         <Button
           type="button"
-          variant="ghost"
+          variant={editor.isActive('blockquote') ? 'secondary' : 'ghost'}
           size="icon"
           className="h-8 w-8"
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          data-active={editor.isActive('blockquote')}
         >
           <Quote className="h-4 w-4" />
         </Button>
         
         <Button
           type="button"
-          variant="ghost"
+          variant={editor.isActive('code') ? 'secondary' : 'ghost'}
           size="icon"
           className="h-8 w-8"
           onClick={() => editor.chain().focus().toggleCode().run()}
-          data-active={editor.isActive('code')}
         >
           <Code className="h-4 w-4" />
         </Button>

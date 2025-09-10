@@ -195,6 +195,33 @@ Source → Fetch → Transform → Cache → Render
 
 ## Template/Instance Relationships
 
+### Workflow Examples
+
+#### Creating a Tile Template
+```
+User creates tile in library → Saved as template → Available for reuse
+```
+
+#### Adding Template to Layout
+```
+Select template → Create instance → Link to template → Add to layout
+```
+
+#### Customizing Instance
+```
+Edit instance properties → Mark as modified → Changes stay local to layout
+```
+
+#### Saving Instance as Template
+```
+Modified instance → Save to library → Create new template → Available for reuse
+```
+
+#### Copying Between Layouts
+```
+Select instance → Copy to new layout → Create new instance → Maintain relationships
+```
+
 ### Template Inheritance
 ```typescript
 interface InstanceResolution {
@@ -417,3 +444,23 @@ interface TilePermissions {
 - Memory usage
 - Cache effectiveness
 - Update efficiency
+
+## Example Use Cases
+
+### Text Tile in Multiple Layouts
+- Create text tile template with company description
+- Add to multiple dashboard layouts
+- Customize border/padding per layout
+- Update template to update all instances (optional sync)
+
+### Custom Chart per Department
+- Start with revenue chart template
+- Create instances for each department
+- Customize colors/filters per instance
+- Each department sees their specific view
+
+### Locked Template Tiles
+- Admin creates system templates
+- Users can add but not modify core properties
+- Display settings still customizable
+- Ensures consistency for critical metrics

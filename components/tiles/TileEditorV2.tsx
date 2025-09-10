@@ -62,7 +62,6 @@ const TILE_TYPES = {
     { value: 'smart' as TileType, label: 'Smart', icon: Brain, description: 'AI insights (soon)', disabled: true },
   ],
   charts: [
-    { value: 'ai-generated' as TileType, label: 'AI Gen', icon: Sparkles, description: 'AI-powered charts' },
     { value: 'line' as TileType, label: 'Line', icon: Activity, description: 'Trends over time' },
     { value: 'area' as TileType, label: 'Area', icon: TrendingUp, description: 'Cumulative values' },
     { value: 'column' as TileType, label: 'Column', icon: BarChart3, description: 'Compare categories' },
@@ -75,7 +74,7 @@ const TILE_TYPES = {
 };
 
 const isChartType = (type: string): boolean => {
-  return TILE_TYPES.charts.some(t => t.value === type) && type !== 'ai-generated';
+  return TILE_TYPES.charts.some(t => t.value === type);
 };
 
 const isAIGenerated = (type: string): boolean => {
@@ -195,6 +194,21 @@ export function TileEditorV2({
     const chartType = chartConfig.chart?.type || 'line';
     const title = chartConfig.title?.text || metadata.prompt || 'AI Generated Chart';
     
+    // Extract series data and categories from the Highcharts config
+    const series = chartConfig.series || [];
+    const categories = chartConfig.xAxis?.categories || [];
+    
+    // Build the data structure for the Data tab
+    const chartData: any = {
+      categories: categories,
+      series: series.map((s: any) => ({
+        name: s.name || 'Series',
+        data: s.data || [],
+        type: s.type || chartType,
+      })),
+    };
+    
+    // Update form data with AI-generated config and extracted data
     setFormData((prev: any) => ({
       ...prev,
       type: chartType,
@@ -203,8 +217,10 @@ export function TileEditorV2({
       config: {
         type: chartType,
         title: title,
+        subtitle: chartConfig.subtitle?.text,
         options: chartConfig,
       },
+      data: chartData,
       aiMetadata: metadata,
     }));
     
@@ -316,91 +332,154 @@ export function TileEditorV2({
         </DialogHeader>
         
         <ScrollArea className="flex-1 overflow-hidden">
-          <div className="flex flex-col">
-            {/* Type Selector */}
-            <div className="px-6 py-3 border-b bg-muted/30">
-              <div className="space-y-3">
-                {/* Content Types */}
-                <div>
-                  <Label className="text-xs text-muted-foreground mb-1.5 block">CONTENT TILES</Label>
-                  <div className="flex gap-2 flex-wrap">
-                    {TILE_TYPES.content.map((type) => {
-                      const Icon = type.icon;
-                      return (
-                        <button
-                          key={type.value}
-                          onClick={() => !type.disabled && handleTypeSelect(type.value)}
-                          disabled={type.disabled}
-                          className={cn(
-                            "flex flex-col items-center gap-1 px-3 py-2 rounded-lg border transition-all",
-                            selectedType === type.value 
-                              ? "bg-primary text-primary-foreground border-primary" 
-                              : "bg-background hover:bg-muted border-input",
-                            type.disabled && "opacity-50 cursor-not-allowed"
-                          )}
-                        >
-                          <Icon className="h-5 w-5" />
-                          <span className="text-xs font-medium">{type.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-                
-                {/* Chart Types */}
-                <div>
-                  <Label className="text-xs text-muted-foreground mb-1.5 block">CHART TILES</Label>
-                  <div className="flex gap-2 flex-wrap">
-                    {TILE_TYPES.charts.map((type) => {
-                      const Icon = type.icon;
-                      return (
-                        <button
-                          key={type.value}
-                          onClick={() => !type.disabled && handleTypeSelect(type.value)}
-                          disabled={type.disabled}
-                          className={cn(
-                            "flex flex-col items-center gap-1 px-3 py-2 rounded-lg border transition-all",
-                            selectedType === type.value 
-                              ? "bg-primary text-primary-foreground border-primary" 
-                              : "bg-background hover:bg-muted border-input",
-                            type.disabled && "opacity-50 cursor-not-allowed"
-                          )}
-                        >
-                          <Icon className="h-5 w-5" />
-                          <span className="text-xs font-medium">{type.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Configuration */}
+          {showAIEditor ? (
+            /* AI Generation Interface */
             <div className="px-6 py-4">
-              {/* Basic Info */}
-              <div className="space-y-4 mb-6">
-                <div className="grid gap-2">
-                  <Label htmlFor="title">Title *</Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="Enter tile title"
-                  />
+              <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  <h3 className="text-lg font-semibold">AI Chart Generator</h3>
                 </div>
-                
-                <div className="grid gap-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description || ''}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Brief description of this tile"
-                    rows={2}
-                  />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setShowAIEditor(false);
+                    setSelectedType('text');
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+              <AIChartEditor
+                onComplete={handleAIChartComplete}
+                onCancel={() => {
+                  setShowAIEditor(false);
+                  setSelectedType('text');
+                }}
+              />
+            </div>
+          ) : (
+            <div className="flex flex-col">
+              {/* Type Selector */}
+              <div className="px-6 py-3 border-b bg-muted/30">
+                <div className="space-y-3">
+                  {/* AI Powered Section */}
+                  <div>
+                    <Label className="text-xs text-primary mb-2 block flex items-center gap-1">
+                      <Sparkles className="h-3 w-3" />
+                      AI POWERED
+                    </Label>
+                    <button
+                      onClick={() => handleTypeSelect('ai-generated')}
+                      className="w-full flex items-center gap-3 px-4 py-3 rounded-lg border-2 border-primary/20 hover:border-primary bg-primary/5 hover:bg-primary/10 transition-all group"
+                    >
+                      <Sparkles className="h-5 w-5 text-primary" />
+                      <div className="text-left flex-1">
+                        <div className="font-medium">Generate with AI</div>
+                        <div className="text-xs text-muted-foreground">Describe your chart in natural language</div>
+                      </div>
+                    </button>
+                  </div>
+                  
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-muted/30 px-2 text-muted-foreground">or choose manually</span>
+                    </div>
+                  </div>
+                  
+                  {/* Content Types */}
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1.5 block">CONTENT TILES</Label>
+                    <div className="flex gap-2 flex-wrap">
+                      {TILE_TYPES.content.map((type) => {
+                        const Icon = type.icon;
+                        return (
+                          <button
+                            key={type.value}
+                            onClick={() => !type.disabled && handleTypeSelect(type.value)}
+                            disabled={type.disabled}
+                            className={cn(
+                              "flex flex-col items-center gap-1 px-3 py-2 rounded-lg border transition-all",
+                              selectedType === type.value 
+                                ? "bg-primary text-primary-foreground border-primary" 
+                                : "bg-background hover:bg-muted border-input",
+                              type.disabled && "opacity-50 cursor-not-allowed"
+                            )}
+                          >
+                            <Icon className="h-5 w-5" />
+                            <span className="text-xs font-medium">{type.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  
+                  {/* Chart Types */}
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1.5 block">CHART TILES</Label>
+                    <div className="flex gap-2 flex-wrap">
+                      {TILE_TYPES.charts.map((type) => {
+                        const Icon = type.icon;
+                        return (
+                          <button
+                            key={type.value}
+                            onClick={() => !type.disabled && handleTypeSelect(type.value)}
+                            disabled={type.disabled}
+                            className={cn(
+                              "flex flex-col items-center gap-1 px-3 py-2 rounded-lg border transition-all",
+                              selectedType === type.value 
+                                ? "bg-primary text-primary-foreground border-primary" 
+                                : "bg-background hover:bg-muted border-input",
+                              type.disabled && "opacity-50 cursor-not-allowed"
+                            )}
+                          >
+                            <Icon className="h-5 w-5" />
+                            <span className="text-xs font-medium">{type.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
               </div>
+            
+              {/* Configuration */}
+              <div className="px-6 py-4">
+                {/* AI Generated Indicator */}
+                {aiMetadata && (
+                  <div className="mb-4 flex items-center gap-2 text-sm text-primary bg-primary/10 px-3 py-2 rounded-md">
+                    <Sparkles className="h-4 w-4" />
+                    <span>AI Generated Content</span>
+                  </div>
+                )}
+                
+                {/* Basic Info */}
+                <div className="space-y-4 mb-6">
+                  <div className="grid gap-2">
+                    <Label htmlFor="title">Title *</Label>
+                    <Input
+                      id="title"
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      placeholder="Enter tile title"
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      value={formData.description || ''}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      placeholder="Brief description of this tile"
+                      rows={2}
+                    />
+                  </div>
+                </div>
               
               <Separator className="mb-4" />
               
@@ -470,15 +549,7 @@ export function TileEditorV2({
                       </div>
                     )}
                     
-                    {isAIGenerated(selectedType) && showAIEditor && (
-                      <AIChartEditor
-                        onComplete={handleAIChartComplete}
-                        onCancel={() => {
-                          setShowAIEditor(false);
-                          setSelectedType('text');
-                        }}
-                      />
-                    )}
+                    {/* AI Editor is now shown in the main area, not in tabs */}
                     
                     {isChartType(selectedType) && (
                       <div className="text-muted-foreground">
@@ -513,9 +584,10 @@ export function TileEditorV2({
                     )}
                   </TabsContent>
                 </div>
-              </Tabs>
+                </Tabs>
+              </div>
             </div>
-          </div>
+          )}
         </ScrollArea>
         
         <DialogFooter className="px-6 py-4 border-t flex-shrink-0">

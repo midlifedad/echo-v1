@@ -153,7 +153,27 @@ This documentation reflects the new template/instance architecture. For systems 
 - **Instances**: `/api/instances` - Layout-specific tile management
 - **Legacy**: Original `/api/tiles` endpoints deprecated but preserved for compatibility
 
-See [TEMPLATE_INSTANCE_ARCHITECTURE.md](TEMPLATE_INSTANCE_ARCHITECTURE.md) for detailed migration information.
+The migration script (`lib/db/migrate-to-template-instance.ts`) handles all necessary transformations automatically.
+
+## Implementation Status
+
+### ✅ Completed
+- **Database Schema** - New table structure with template/instance pattern
+- **TypeScript Types** - Complete type definitions for new structure  
+- **Migration Script** - Safe migration from old to new schema
+- **Template API** - Full CRUD operations for templates
+- **Instance API** - Instance management endpoints
+
+### 🔄 In Progress
+- **Service Layer** - Updating TileService and LayoutService
+- **UI Components** - Refactoring for new structure
+- **Documentation** - Updating user-facing docs
+
+### 📋 Planned Features
+- Template gallery/marketplace
+- Instance synchronization with templates
+- Bulk operations
+- Version control for templates
 
 ## Implementation Checklist
 
@@ -251,9 +271,9 @@ Before rebuilding, consider:
 
 ## Related Documentation
 
-- **[LAYOUT_ARCHITECTURE.md](LAYOUT_ARCHITECTURE.md)** - Original architecture specification (historical reference)
 - **[../CLAUDE.md](../CLAUDE.md)** - Project-specific implementation notes
-- **[../TILE_SCHEMA_DOCUMENTATION.md](../TILE_SCHEMA_DOCUMENTATION.md)** - Detailed tile implementation guide
+- **[02-architecture/tile-system.md](02-architecture/tile-system.md)** - Complete tile system architecture with template/instance pattern
+- **[01-schemas/tiles.md](01-schemas/tiles.md)** - Template and instance schema definitions
 
 ---
 

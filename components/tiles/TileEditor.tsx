@@ -24,6 +24,7 @@ import { Textarea } from '@/components/ui/textarea';
 import TextTileContent from './TextTileContent';
 import ImageTileContent from './ImageTileContent';
 import SmartTileContent from './SmartTileContent';
+import { ImageUpload } from './ImageUpload';
 
 interface TileEditorProps {
   open?: boolean;
@@ -317,18 +318,31 @@ export function TileEditor({
                   <TabsContent value="image" className="m-0">
                     <div className="space-y-4">
                       <div>
-                        <Label htmlFor="imageUrl">Image URL</Label>
-                        <Input
-                          id="imageUrl"
-                          value={formData.content?.imageUrl || ''}
-                          onChange={(e) => handleBasicUpdate({
-                            content: { 
-                              ...formData.content,
-                              imageUrl: e.target.value 
-                            }
-                          })}
-                          placeholder="https://example.com/image.png"
-                        />
+                        <Label>Image Source</Label>
+                        <div className="space-y-3">
+                          <ImageUpload
+                            value={formData.content?.imageUrl || ''}
+                            onChange={(imageUrl) => handleBasicUpdate({
+                              content: { 
+                                ...formData.content,
+                                imageUrl 
+                              }
+                            })}
+                          />
+                          <div className="text-center text-sm text-muted-foreground">
+                            — OR —
+                          </div>
+                          <Input
+                            value={formData.content?.imageUrl?.startsWith('data:') ? '' : formData.content?.imageUrl || ''}
+                            onChange={(e) => handleBasicUpdate({
+                              content: { 
+                                ...formData.content,
+                                imageUrl: e.target.value 
+                              }
+                            })}
+                            placeholder="Enter image URL (https://example.com/image.png)"
+                          />
+                        </div>
                       </div>
                       <div>
                         <Label htmlFor="caption">Caption (Optional)</Label>

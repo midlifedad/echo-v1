@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/tabs';
 import PageHeader from '@/components/layout/PageHeader';
 import TileCard from '@/components/tiles/TileCard';
-import TileEditor from '@/components/tiles/TileEditor';
+import TileEditorV2 from '@/components/tiles/TileEditorV2';
 import { Tile } from '@/lib/db/schema';
 
 export default function TileLibraryPage() {
@@ -166,26 +166,10 @@ export default function TileLibraryPage() {
   };
 
   const handleSaveTile = async (tileData: any) => {
-    try {
-      const url = editorMode === 'edit' && selectedTile
-        ? `/api/templates/${selectedTile.id}`
-        : '/api/templates';
-      
-      const method = editorMode === 'edit' ? 'PUT' : 'POST';
-
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(tileData),
-      });
-
-      if (response.ok) {
-        await fetchTiles();
-        setIsEditorOpen(false);
-      }
-    } catch (error) {
-      console.error('Failed to save tile:', error);
-    }
+    // The TileEditorV2 component already handles the API call
+    // This callback is just for refreshing the list after save
+    await fetchTiles();
+    setIsEditorOpen(false);
   };
 
   return (
@@ -230,7 +214,7 @@ export default function TileLibraryPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
-                {categories.map(category => (
+                {categories.filter(category => category).map(category => (
                   <SelectItem key={category} value={category}>
                     {category}
                   </SelectItem>
@@ -293,7 +277,7 @@ export default function TileLibraryPage() {
 
       {/* Tile Editor Dialog */}
       {isEditorOpen && (
-        <TileEditor
+        <TileEditorV2
           tile={selectedTile}
           mode={editorMode}
           isOpen={isEditorOpen}
