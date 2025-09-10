@@ -34,6 +34,13 @@ export interface TileData {
   data?: Record<string, unknown>;
   content?: TileContent;
   gridLayout?: GridLayout;
+  isLocked?: boolean;
+  displaySettings?: {
+    showTitle?: boolean;
+    titlePosition?: 'top' | 'bottom';
+    border?: 'none' | 'default';
+    padding?: 'none' | 'small' | 'medium' | 'large';
+  };
 }
 
 export interface ChartConfig {

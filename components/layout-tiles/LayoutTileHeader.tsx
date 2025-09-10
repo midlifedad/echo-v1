@@ -56,8 +56,10 @@ export default function LayoutTileHeader({
   };
 
   const handleDisplayConfig = (config: any) => {
-    // TODO: Implement display configuration
-    console.log('Display config:', config);
+    // Update tile's display settings
+    const currentSettings = tile.displaySettings || {};
+    const updatedSettings = { ...currentSettings, ...config };
+    updateTile(tile.id, { displaySettings: updatedSettings });
   };
 
   const handleExport = (type: string) => {

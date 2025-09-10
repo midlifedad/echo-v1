@@ -140,9 +140,15 @@ export default function GridLayoutWrapper({ className }: GridLayoutWrapperProps)
       const layoutItem = activeLayout.find(l => l.i === `tile-${tile.id}`) || 
                         generateDefaultLayoutForBreakpoint(activeBreakpoint, tile.id, index);
       
+      // Apply lock state to grid layout
+      const gridLayoutWithLock = {
+        ...layoutItem,
+        static: tile.isLocked || false
+      };
+      
       return {
         ...tile,
-        gridLayout: layoutItem,
+        gridLayout: gridLayoutWithLock,
       };
     });
   }, [tiles, getBreakpointLayout, generateDefaultLayoutForBreakpoint, currentBreakpoint, editingBreakpoint, isEditMode]);
