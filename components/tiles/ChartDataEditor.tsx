@@ -5,9 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Plus, Trash2, Shuffle } from 'lucide-react';
 import type { ChartType } from '@/lib/types';
 import { generateSampleData } from '@/lib/sampleDataGenerators';
+import { JsonEditor } from './JsonEditor';
 
 interface ChartDataEditorProps {
   type: ChartType;
@@ -212,8 +214,9 @@ export function ChartDataEditor({ type, data, onUpdate }: ChartDataEditorProps) 
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <ScrollArea className="h-[400px] pr-4">
+      <div className="space-y-4">
+      <div className="flex items-center justify-between sticky top-0 bg-background pb-2">
         <Label>Data Series</Label>
         <div className="flex gap-2">
           <Button
@@ -256,7 +259,7 @@ export function ChartDataEditor({ type, data, onUpdate }: ChartDataEditorProps) 
                 <Input
                   value={cat}
                   onChange={(e) => handleCategoryUpdate(index, e.target.value)}
-                  className="w-24 h-8 text-xs"
+                  className="w-32 h-9 text-sm"
                 />
                 <Button
                   type="button"
@@ -295,33 +298,28 @@ export function ChartDataEditor({ type, data, onUpdate }: ChartDataEditorProps) 
           {needsCategories(type) ? (
             <div className="grid grid-cols-3 gap-2">
               {categories.map((cat, pointIndex) => (
-                <div key={pointIndex} className="text-xs">
-                  <div className="text-muted-foreground mb-1">{cat}</div>
+                <div key={pointIndex}>
+                  <div className="text-xs text-muted-foreground mb-1 truncate">{cat}</div>
                   <Input
                     type="number"
                     value={s.data?.[pointIndex] || 0}
                     onChange={(e) => handleDataPointUpdate(seriesIndex, pointIndex, parseFloat(e.target.value) || 0)}
-                    className="h-8"
+                    className="h-9"
                   />
                 </div>
               ))}
             </div>
           ) : (
-            <Textarea
-              value={JSON.stringify(s.data || [], null, 2)}
-              onChange={(e) => {
-                try {
-                  const parsed = JSON.parse(e.target.value);
-                  handleSeriesUpdate(seriesIndex, 'data', parsed);
-                } catch {}
-              }}
+            <JsonEditor
+              value={s.data || []}
+              onChange={(data) => handleSeriesUpdate(seriesIndex, 'data', data)}
               placeholder="Enter data as JSON array"
               rows={4}
-              className="font-mono text-xs"
             />
           )}
         </div>
       ))}
-    </div>
+      </div>
+    </ScrollArea>
   );
 }
