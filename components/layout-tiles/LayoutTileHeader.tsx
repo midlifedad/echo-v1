@@ -1,31 +1,35 @@
 'use client';
 
-import React from 'react';
-import { GripHorizontal, MoreHorizontal, RefreshCw, Maximize2, X, Download } from 'lucide-react';
+import React, { useState } from 'react';
+import { GripHorizontal, Lock } from 'lucide-react';
 import Highcharts from 'highcharts';
-import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
 import { TileData } from '@/lib/types';
 import { useTiles } from '@/contexts/TileContext';
 import { useLayout } from '@/contexts/LayoutContext';
+import LayoutTileContextMenu from './LayoutTileContextMenu';
+import { TileEditorV2 } from '@/components/tiles/TileEditorV2';
 
 interface TileHeaderProps {
   tile: TileData;
   onExpand?: () => void;
   chartInstance?: Highcharts.Chart | null;
   tileId: string;
+  isLocked?: boolean;
+  onLockToggle?: () => void;
 }
 
-export default function LayoutTileHeader({ tile, onExpand, chartInstance, tileId }: TileHeaderProps) {
-  const { removeTile } = useTiles();
+export default function LayoutTileHeader({ 
+  tile, 
+  onExpand, 
+  chartInstance, 
+  tileId,
+  isLocked = false,
+  onLockToggle
+}: TileHeaderProps) {
+  const { removeTile, updateTile } = useTiles();
   const { isEditMode, cleanupTileData } = useLayout();
+  const [showEditor, setShowEditor] = useState(false);
 
   const handleRefresh = () => {
     // Trigger chart refresh
@@ -38,28 +42,67 @@ export default function LayoutTileHeader({ tile, onExpand, chartInstance, tileId
     }
   };
 
+  const handleEdit = () => {
+    setShowEditor(true);
+  };
+
+  const handleDuplicate = () => {
+    // TODO: Implement tile duplication
+    console.log('Duplicate tile:', tile.id);
+  };
+
   const handleRemove = () => {
     removeTile(tile.id, cleanupTileData);
   };
 
-  const handleExport = (type: string) => {
-    if (!chartInstance) {
-      console.warn('Chart is not ready for export');
-      return;
-    }
+  const handleDisplayConfig = (config: any) => {
+    // TODO: Implement display configuration
+    console.log('Display config:', config);
+  };
 
-    try {
-      // @ts-ignore - exportChart is added by the exporting module
-      if (chartInstance.exportChart) {
-        // @ts-ignore
-        chartInstance.exportChart({
-          type: type,
-          filename: tile.title.replace(/\s+/g, '-').toLowerCase()
-        });
+  const handleExport = (type: string) => {
+    if (type.startsWith('image/') || type === 'application/pdf') {
+      if (!chartInstance) {
+        console.warn('Chart is not ready for export');
+        return;
       }
-    } catch (error) {
-      console.error('Export failed:', error);
+
+      try {
+        // @ts-ignore - exportChart is added by the exporting module
+        if (chartInstance.exportChart) {
+          // @ts-ignore
+          chartInstance.exportChart({
+            type: type,
+            filename: tile.title.replace(/\s+/g, '-').toLowerCase()
+          });
+        }
+      } catch (error) {
+        console.error('Export failed:', error);
+      }
+    } else {
+      // TODO: Implement data export
+      console.log('Export data:', type);
     }
+  };
+
+  const handleCopy = () => {
+    // TODO: Implement copy to clipboard for text tiles
+    console.log('Copy to clipboard');
+  };
+
+  const handleShare = () => {
+    // TODO: Implement sharing
+    console.log('Share tile:', tile.id);
+  };
+
+  const handleViewDetails = () => {
+    // TODO: Implement view details
+    console.log('View details:', tile.id);
+  };
+
+  const handleSaveEdit = (updatedTile: any) => {
+    updateTile(tile.id, updatedTile);
+    setShowEditor(false);
   };
 
   return (
@@ -68,9 +111,14 @@ export default function LayoutTileHeader({ tile, onExpand, chartInstance, tileId
         {/* Left side - drag handle and title */}
         <div className="flex items-center gap-2 flex-1 min-w-0">
           {isEditMode && (
-            <div className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground/70 transition-colors">
-              <GripHorizontal size={16} />
-            </div>
+            <>
+              <div className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground/70 transition-colors">
+                <GripHorizontal size={16} />
+              </div>
+              {isLocked && (
+                <Lock size={12} className="text-muted-foreground/50" />
+              )}
+            </>
           )}
           
           <h3 className="text-sm font-medium text-foreground truncate">
@@ -78,90 +126,37 @@ export default function LayoutTileHeader({ tile, onExpand, chartInstance, tileId
           </h3>
         </div>
 
-        {/* Right side - action buttons */}
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleRefresh}
-            className="h-6 w-6 text-muted-foreground hover:text-foreground/70 hover:bg-primary/5"
-          >
-            <RefreshCw size={14} />
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleMaximize}
-            className="h-6 w-6 text-muted-foreground hover:text-foreground/70 hover:bg-primary/5"
-          >
-            <Maximize2 size={14} />
-          </Button>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 text-muted-foreground hover:text-foreground/70 hover:bg-primary/5"
-                disabled={!chartInstance}
-              >
-                <Download size={14} />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem onClick={() => handleExport('image/png')} className="gap-2">
-                <span>Export as PNG</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleExport('image/jpeg')} className="gap-2">
-                <span>Export as JPEG</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleExport('image/svg+xml')} className="gap-2">
-                <span>Export as SVG</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleExport('application/pdf')} className="gap-2">
-                <span>Export as PDF</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 text-muted-foreground hover:text-foreground/70 hover:bg-primary/5"
-              >
-                <MoreHorizontal size={14} />
-              </Button>
-            </DropdownMenuTrigger>
-            
-            <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem onClick={handleMaximize} className="gap-2">
-                <Maximize2 size={14} />
-                <span>Maximize</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleRefresh} className="gap-2">
-                <RefreshCw size={14} />
-                <span>Refresh</span>
-              </DropdownMenuItem>
-              {isEditMode && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    onClick={handleRemove} 
-                    className="gap-2 text-destructive focus:text-destructive"
-                  >
-                    <X size={14} />
-                    <span>Remove</span>
-                  </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+        {/* Right side - context menu only */}
+        <LayoutTileContextMenu
+          tile={tile}
+          isEditMode={isEditMode}
+          isLocked={isLocked}
+          chartInstance={chartInstance}
+          onMaximize={handleMaximize}
+          onRefresh={handleRefresh}
+          onEdit={handleEdit}
+          onDuplicate={handleDuplicate}
+          onRemove={handleRemove}
+          onLockToggle={onLockToggle}
+          onDisplayConfig={handleDisplayConfig}
+          onExport={handleExport}
+          onCopy={handleCopy}
+          onShare={handleShare}
+          onViewDetails={handleViewDetails}
+        />
       </div>
       <Separator />
+      
+      {/* Tile Editor Modal */}
+      {showEditor && (
+        <TileEditorV2
+          open={showEditor}
+          onOpenChange={setShowEditor}
+          tile={tile as any}
+          mode="edit"
+          onSave={handleSaveEdit}
+        />
+      )}
     </>
   );
 }
