@@ -71,7 +71,7 @@ export async function POST(
     
     // If tileId refers to a template, create an instance first
     if (isTemplate) {
-      const instance = await TileInstanceService.createFromTemplate(tileId);
+      const instance = await TileInstanceService.createInstanceFromTemplate(tileId, id, positions);
       instanceId = instance.id;
     }
     
