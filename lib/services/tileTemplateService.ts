@@ -370,7 +370,7 @@ export class TileTemplateService {
     
     return results
       .map(r => r.category)
-      .filter((c): c is string => c !== null)
+      .filter((c): c is string => c !== null && c.trim() !== '')
       .sort();
   }
 }
