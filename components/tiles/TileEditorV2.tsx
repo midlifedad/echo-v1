@@ -36,11 +36,9 @@ import {
   Check,
   Sparkles,
 } from 'lucide-react';
-import { RichTextEditor } from './RichTextEditor';
-import { ImageUpload } from './ImageUpload';
+import { AIChartEditor } from './AIChartEditor';
 import { ChartDataEditor } from './ChartDataEditor';
 import { ChartOptionsEditorV2 } from './ChartOptionsEditorV2';
-import { AIChartEditor } from './AIChartEditor';
 import type { Tile, CreateTileRequest, UpdateTileRequest } from '@/lib/types/database';
 import type { TileType } from '@/lib/types';
 
@@ -330,7 +328,13 @@ export function TileEditorV2({
 
   return (
     <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="w-full max-w-4xl h-[90vh] max-h-[90vh] p-0 gap-0 flex flex-col overflow-hidden sm:max-w-4xl">
+      <DialogContent 
+        className="w-full max-w-4xl h-[90vh] max-h-[90vh] p-0 gap-0 flex flex-col overflow-hidden sm:max-w-4xl"
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+        onClick={(e) => e.stopPropagation()}
+        onPointerDown={(e) => e.stopPropagation()}
+      >
         <DialogHeader className="px-6 py-4 border-b flex-shrink-0">
           <DialogTitle>{getDialogTitle()}</DialogTitle>
           <DialogDescription className="sr-only">
@@ -490,108 +494,108 @@ export function TileEditorV2({
               
               <Separator className="mb-4" />
               
-              {/* Content/Data/Style Tabs */}
-              <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="content" className="gap-2">
-                    <FileText className="h-4 w-4" />
-                    Content
-                  </TabsTrigger>
-                  <TabsTrigger value="data" disabled={!isChartType(selectedType)} className="gap-2">
-                    <Database className="h-4 w-4" />
-                    Data
-                  </TabsTrigger>
-                  <TabsTrigger value="style" className="gap-2">
-                    <Palette className="h-4 w-4" />
-                    Style
-                  </TabsTrigger>
-                </TabsList>
-                
-                <div className="mt-4 min-h-[300px]">
-                  <TabsContent value="content" className="m-0">
-                    {selectedType === 'text' && (
-                      <RichTextEditor
-                        content={formData.content?.richText || ''}
-                        onChange={(richText) => setFormData({
-                          ...formData,
-                          content: { richText, format: 'html' }
+              {/* Type-specific content */}
+              <div className="min-h-[300px]">
+                {selectedType === 'text' && (
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Content</Label>
+                      <Textarea
+                        value={formData.content?.text || ''}
+                        onChange={(e) => setFormData({ 
+                          ...formData, 
+                          content: { ...formData.content, text: e.target.value }
                         })}
-                        placeholder="Start typing your content..."
+                        placeholder="Enter your text content here..."
+                        className="min-h-[200px]"
                       />
-                    )}
+                    </div>
+                  </div>
+                )}
+                
+                {selectedType === 'image' && (
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Image URL</Label>
+                      <Input
+                        value={formData.content?.url || ''}
+                        onChange={(e) => setFormData({ 
+                          ...formData, 
+                          content: { ...formData.content, url: e.target.value }
+                        })}
+                        placeholder="Enter image URL..."
+                      />
+                    </div>
+                    <div>
+                      <Label>Alt Text</Label>
+                      <Input
+                        value={formData.content?.alt || ''}
+                        onChange={(e) => setFormData({ 
+                          ...formData, 
+                          content: { ...formData.content, alt: e.target.value }
+                        })}
+                        placeholder="Image description..."
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                {selectedType === 'smart' && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Smart tiles with AI insights coming soon!
+                  </div>
+                )}
+                
+                {isChartType(selectedType) && (
+                  <Tabs defaultValue="data" className="w-full">
+                    <TabsList className="grid w-full grid-cols-3">
+                      <TabsTrigger value="data">
+                        <Database className="w-4 h-4 mr-2" />
+                        Data
+                      </TabsTrigger>
+                      <TabsTrigger value="style">
+                        <Palette className="w-4 h-4 mr-2" />
+                        Style
+                      </TabsTrigger>
+                      <TabsTrigger value="settings">
+                        <FileText className="w-4 h-4 mr-2" />
+                        Settings
+                      </TabsTrigger>
+                    </TabsList>
                     
-                    {selectedType === 'image' && (
-                      <div className="space-y-4">
-                        <ImageUpload
-                          value={formData.content?.imageUrl || ''}
-                          onChange={(imageUrl) => setFormData({
-                            ...formData,
-                            content: { ...formData.content, imageUrl }
-                          })}
-                        />
-                        
-                        <Input
-                          value={formData.content?.caption || ''}
-                          onChange={(e) => setFormData({
-                            ...formData,
-                            content: { ...formData.content, caption: e.target.value }
-                          })}
-                          placeholder="Image caption (optional)"
-                        />
-                        
-                        <Input
-                          value={formData.content?.alt || ''}
-                          onChange={(e) => setFormData({
-                            ...formData,
-                            content: { ...formData.content, alt: e.target.value }
-                          })}
-                          placeholder="Alt text for accessibility (optional)"
-                        />
-                      </div>
-                    )}
-                    
-                    {selectedType === 'smart' && (
-                      <div className="text-center py-8 text-muted-foreground">
-                        Smart tiles with AI insights coming soon!
-                      </div>
-                    )}
-                    
-                    {/* AI Editor is now shown in the main area, not in tabs */}
-                    
-                    {isChartType(selectedType) && (
-                      <div className="text-muted-foreground">
-                        Switch to the Data tab to configure chart content
-                      </div>
-                    )}
-                  </TabsContent>
-                  
-                  <TabsContent value="data" className="m-0">
-                    {(isChartType(selectedType) || aiMetadata) && (
+                    <TabsContent value="data" className="mt-4">
                       <ChartDataEditor
-                        type={selectedType as any}
-                        data={formData.config?.options || {}}
-                        onUpdate={handleDataUpdate}
+                        data={formData.config?.series || []}
+                        categories={formData.config?.categories || []}
+                        onDataChange={(series, categories) => {
+                          setFormData({
+                            ...formData,
+                            config: {
+                              ...formData.config,
+                              series,
+                              categories
+                            }
+                          });
+                        }}
                       />
-                    )}
-                  </TabsContent>
-                  
-                  <TabsContent value="style" className="m-0">
-                    {(isChartType(selectedType) || aiMetadata) ? (
+                    </TabsContent>
+                    
+                    <TabsContent value="style" className="mt-4">
                       <ChartOptionsEditorV2
-                        type={selectedType as any}
-                        options={formData.config?.options || {}}
-                        onUpdate={handleOptionsUpdate}
+                        type={selectedType}
+                        options={formData.config || {}}
+                        onOptionsChange={(config) => setFormData({ ...formData, config })}
                       />
-                    ) : (
-                      <div className="space-y-4">
-                        <div className="text-sm text-muted-foreground">
-                          Style options for {selectedType} tiles coming soon
-                        </div>
+                    </TabsContent>
+                    
+                    <TabsContent value="settings" className="mt-4">
+                      <div className="text-center py-8 text-muted-foreground">
+                        Advanced settings coming soon!
                       </div>
-                    )}
-                  </TabsContent>
-                </div>
-                </Tabs>
+                    </TabsContent>
+                  </Tabs>
+                )}
+              </div>
               </div>
             </div>
           )}

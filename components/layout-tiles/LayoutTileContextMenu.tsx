@@ -28,8 +28,8 @@ import {
   MoreHorizontal,
   Eye,
   EyeOff,
-  AlignTop,
-  AlignBottom,
+  ArrowUp,
+  ArrowDown,
   Square,
   Layers,
 } from 'lucide-react';
@@ -204,11 +204,11 @@ export default function LayoutTileContextMenu({
                 <DropdownMenuSeparator />
                 <DropdownMenuLabel>Title Position</DropdownMenuLabel>
                 <DropdownMenuItem onClick={() => onDisplayConfig?.({ titlePosition: 'top' })}>
-                  <AlignTop className="mr-2 h-4 w-4" />
+                  <ArrowUp className="mr-2 h-4 w-4" />
                   <span>Top</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onDisplayConfig?.({ titlePosition: 'bottom' })}>
-                  <AlignBottom className="mr-2 h-4 w-4" />
+                  <ArrowDown className="mr-2 h-4 w-4" />
                   <span>Bottom</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />

@@ -1,10 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import PageHeader from '@/components/layout/PageHeader';
+import LayoutEditorHeader from '@/components/layout/LayoutEditorHeader';
 import GridLayoutWrapper from '@/components/layout-tiles/GridLayoutWrapper';
-import BreakpointSelector from '@/components/layout-tiles/BreakpointSelector';
-import ViewportIndicator from '@/components/layout-tiles/ViewportIndicator';
 import { LayoutList } from '@/components/layouts/LayoutList';
 import { LayoutForm } from '@/components/layouts/LayoutForm';
 import TileEditorV2 from '@/components/tiles/TileEditorV2';
@@ -12,7 +10,7 @@ import TileSelector from '@/components/tiles/TileSelector';
 import { useTiles } from '@/contexts/TileContext';
 import { LayoutProvider, useLayout } from '@/contexts/LayoutContext';
 import { Button } from '@/components/ui/button';
-import { Edit, Save, X, RotateCcw, List, Grid3X3, Plus } from 'lucide-react';
+import { List } from 'lucide-react';
 import type { Layout, CreateLayoutRequest, UpdateLayoutRequest, TileWithPositions, Tile } from '@/lib/types/database';
 
 function LayoutEditorContent() {
@@ -383,81 +381,22 @@ function LayoutEditorContent() {
 
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader 
+      <LayoutEditorHeader
         title="Layout Editor"
         subtitle={selectedLayout ? `Editing: ${selectedLayout.name}` : "Select or create a layout to get started"}
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              onClick={() => setShowLayoutList(!showLayoutList)}
-              variant="outline"
-              size="sm"
-              className="gap-1 sm:gap-2"
-            >
-              {showLayoutList ? <Grid3X3 className="h-4 w-4" /> : <List className="h-4 w-4" />}
-              <span className="hidden sm:inline">{showLayoutList ? 'Hide Layouts' : 'Manage Layouts'}</span>
-              <span className="sm:hidden">{showLayoutList ? 'Hide' : 'Layouts'}</span>
-            </Button>
-            
-            {selectedLayout && !showLayoutList && (
-              <>
-                <Button
-                  onClick={handleCreateTile}
-                  size="sm"
-                  variant="default"
-                  className="gap-1 sm:gap-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span className="hidden sm:inline">Add Tile</span>
-                  <span className="sm:hidden">Add</span>
-                </Button>
-                
-                {isEditMode ? (
-                  <>
-                    <Button
-                      onClick={resetToDefault}
-                      variant="outline"
-                      size="sm"
-                      className="gap-1 sm:gap-2"
-                    >
-                      <RotateCcw className="h-4 w-4" />
-                      <span className="hidden sm:inline">Reset All</span>
-                      <span className="sm:hidden">Reset</span>
-                    </Button>
-                    <Button
-                      onClick={cancelEdit}
-                      variant="outline"
-                      size="sm"
-                      className="gap-1 sm:gap-2"
-                    >
-                      <X className="h-4 w-4" />
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={handleSaveLayout}
-                      size="sm"
-                      className="gap-1 sm:gap-2 bg-primary hover:bg-primary/90"
-                    >
-                      <Save className="h-4 w-4" />
-                      <span className="hidden sm:inline">Save Changes</span>
-                      <span className="sm:hidden">Save</span>
-                    </Button>
-                  </>
-                ) : (
-                  <Button
-                    onClick={handleEditToggle}
-                    size="sm"
-                    className="gap-1 sm:gap-2"
-                  >
-                    <Edit className="h-4 w-4" />
-                    <span className="hidden sm:inline">Edit Layout</span>
-                    <span className="sm:hidden">Edit</span>
-                  </Button>
-                )}
-              </>
-            )}
-          </div>
-        }
+        isEditMode={isEditMode}
+        showLayoutList={showLayoutList}
+        selectedLayout={selectedLayout}
+        editingBreakpoint={editingBreakpoint}
+        customBreakpoints={customBreakpoints}
+        viewportWidth={viewportWidth}
+        onToggleLayoutList={() => setShowLayoutList(!showLayoutList)}
+        onAddTile={handleCreateTile}
+        onEditToggle={handleEditToggle}
+        onResetAll={resetToDefault}
+        onCancel={cancelEdit}
+        onSave={handleSaveLayout}
+        onBreakpointChange={setEditingBreakpoint}
       />
       
       {showLayoutList ? (
@@ -471,23 +410,6 @@ function LayoutEditorContent() {
         />
       ) : (
         <>
-          {selectedLayout && isEditMode && (
-            <div className="flex flex-col gap-3">
-              <BreakpointSelector
-                currentBreakpoint={currentBreakpoint}
-                editingBreakpoint={editingBreakpoint}
-                onBreakpointChange={setEditingBreakpoint}
-                customBreakpoints={customBreakpoints}
-              />
-              
-              <ViewportIndicator
-                currentViewport={viewportWidth}
-                simulatedViewport={simulatedViewport}
-                onSimulatedViewportChange={setSimulatedViewport}
-              />
-            </div>
-          )}
-          
           {selectedLayout ? (
             <GridLayoutWrapper />
           ) : (

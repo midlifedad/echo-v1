@@ -47,7 +47,13 @@ export function LayoutForm({ open, onOpenChange, layout, onSubmit }: LayoutFormP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent 
+        className="sm:max-w-[425px]"
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+        onClick={(e) => e.stopPropagation()}
+        onPointerDown={(e) => e.stopPropagation()}
+      >
         <DialogHeader>
           <DialogTitle>{layout ? 'Edit Layout' : 'Create New Layout'}</DialogTitle>
           <DialogDescription>

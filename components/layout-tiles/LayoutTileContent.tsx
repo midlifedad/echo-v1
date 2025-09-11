@@ -3,6 +3,7 @@
 import React from 'react';
 import Highcharts from 'highcharts';
 import { TileData } from '@/lib/types';
+import { cn } from '@/lib/utils';
 import ChartWrapper from '@/components/charts/ChartWrapper';
 import TextTileContent from '@/components/tiles/TextTileContent';
 import ImageTileContent from '@/components/tiles/ImageTileContent';
@@ -14,21 +15,46 @@ interface TileContentProps {
 }
 
 export default function LayoutTileContent({ tile, onChartReady }: TileContentProps) {
+  // Get padding classes based on display settings
+  const getPaddingClass = () => {
+    const padding = tile.displaySettings?.padding;
+    switch (padding) {
+      case 'none': return 'p-0';
+      case 'small': return 'p-2';
+      case 'large': return 'p-6';
+      case 'medium':
+      default: return 'p-4';
+    }
+  };
+
+  const paddingClass = getPaddingClass();
   // Route to appropriate content renderer based on tile type
   switch (tile.type) {
     case 'text':
-      return <TextTileContent content={tile.content as any} />;
+      return (
+        <div className={cn('flex-1 overflow-hidden min-h-0 flex', paddingClass)}>
+          <TextTileContent content={tile.content as any} className="flex-1" />
+        </div>
+      );
     
     case 'image':
-      return <ImageTileContent content={tile.content as any} />;
+      return (
+        <div className={cn('flex-1 overflow-hidden min-h-0 flex', paddingClass)}>
+          <ImageTileContent content={tile.content as any} />
+        </div>
+      );
     
     case 'smart':
-      return <SmartTileContent content={tile.content as any} />;
+      return (
+        <div className={cn('flex-1 overflow-hidden min-h-0 flex', paddingClass)}>
+          <SmartTileContent content={tile.content as any} />
+        </div>
+      );
     
     default:
       // All chart types use ChartWrapper
       return (
-        <div className="flex-1 p-3 overflow-hidden min-h-0 flex">
+        <div className={cn('flex-1 overflow-hidden min-h-0 flex', paddingClass)}>
           <ChartWrapper
             type={tile.type}
             config={tile.config}

@@ -98,7 +98,7 @@ export const GRID_CONFIG = {
   CONTAINER_PADDING: [0, 0] as [number, number],
   RESIZE_HANDLES: ['se', 'sw', 'ne', 'nw'] as ResizeHandle[],
   MIN_WIDTH: 2,
-  MIN_HEIGHT: 2,
+  MIN_HEIGHT: 1,
   DEFAULT_HEIGHT: 4
 } as const;
 

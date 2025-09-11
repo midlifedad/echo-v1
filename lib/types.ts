@@ -71,9 +71,21 @@ export type ChartType =
 export type TileType = ChartType | 'text' | 'image' | 'smart' | 'ai-generated';
 
 // Content types for different tile types
+export interface TextTileStyle {
+  textAlign?: 'left' | 'center' | 'right' | 'justify';
+  verticalAlign?: 'top' | 'middle' | 'bottom';
+  fontSize?: 'small' | 'medium' | 'large' | 'xlarge';
+  textColor?: 'default' | 'muted' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger';
+  hasBackground?: boolean;
+  backgroundColor?: 'muted' | 'primary-light' | 'secondary-light' | 'accent';
+  lineHeight?: number;
+  padding?: 'none' | 'small' | 'medium' | 'large';
+}
+
 export interface TextTileContent {
   richText: string;
   format: 'html' | 'markdown';
+  style?: TextTileStyle;
 }
 
 export interface ImageTileContent {

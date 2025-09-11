@@ -8,7 +8,6 @@ import { TileData } from '@/lib/types';
 import { useTiles } from '@/contexts/TileContext';
 import { useLayout } from '@/contexts/LayoutContext';
 import LayoutTileContextMenu from './LayoutTileContextMenu';
-import { TileEditorV2 } from '@/components/tiles/TileEditorV2';
 
 interface TileHeaderProps {
   tile: TileData;
@@ -17,6 +16,8 @@ interface TileHeaderProps {
   tileId: string;
   isLocked?: boolean;
   onLockToggle?: () => void;
+  hideTitle?: boolean;
+  onEdit?: () => void;
 }
 
 export default function LayoutTileHeader({ 
@@ -25,11 +26,12 @@ export default function LayoutTileHeader({
   chartInstance, 
   tileId,
   isLocked = false,
-  onLockToggle
+  onLockToggle,
+  hideTitle = false,
+  onEdit
 }: TileHeaderProps) {
   const { removeTile, updateTile } = useTiles();
   const { isEditMode, cleanupTileData } = useLayout();
-  const [showEditor, setShowEditor] = useState(false);
 
   const handleRefresh = () => {
     // Trigger chart refresh
@@ -42,9 +44,6 @@ export default function LayoutTileHeader({
     }
   };
 
-  const handleEdit = () => {
-    setShowEditor(true);
-  };
 
   const handleDuplicate = () => {
     // TODO: Implement tile duplication
@@ -102,10 +101,6 @@ export default function LayoutTileHeader({
     console.log('View details:', tile.id);
   };
 
-  const handleSaveEdit = (updatedTile: any) => {
-    updateTile(tile.id, updatedTile);
-    setShowEditor(false);
-  };
 
   return (
     <>
@@ -123,9 +118,11 @@ export default function LayoutTileHeader({
             </>
           )}
           
-          <h3 className="text-sm font-medium text-foreground truncate">
-            {tile.title}
-          </h3>
+          {!hideTitle && (
+            <h3 className="text-sm font-medium text-foreground truncate">
+              {tile.title}
+            </h3>
+          )}
         </div>
 
         {/* Right side - context menu only */}
@@ -136,7 +133,7 @@ export default function LayoutTileHeader({
           chartInstance={chartInstance}
           onMaximize={handleMaximize}
           onRefresh={handleRefresh}
-          onEdit={handleEdit}
+          onEdit={onEdit}
           onDuplicate={handleDuplicate}
           onRemove={handleRemove}
           onLockToggle={onLockToggle}
@@ -147,18 +144,7 @@ export default function LayoutTileHeader({
           onViewDetails={handleViewDetails}
         />
       </div>
-      <Separator />
-      
-      {/* Tile Editor Modal */}
-      {showEditor && (
-        <TileEditorV2
-          open={showEditor}
-          onOpenChange={setShowEditor}
-          tile={tile as any}
-          mode="edit"
-          onSave={handleSaveEdit}
-        />
-      )}
+      {!hideTitle && <Separator />}
     </>
   );
 }

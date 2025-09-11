@@ -100,7 +100,9 @@ export function TileProvider({ children }: { children: React.ReactNode }) {
         type,
         title: `New ${type.charAt(0).toUpperCase() + type.slice(1)} ${type === 'text' || type === 'image' || type === 'smart' ? 'Tile' : 'Chart'}`,
         options: {}
-      }
+      },
+      // Default text tiles to hide title
+      displaySettings: type === 'text' ? { showTitle: false } : undefined
     };
     
     const updatedTiles = [...tiles, newTile];

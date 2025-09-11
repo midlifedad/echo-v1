@@ -36,6 +36,30 @@ export default function GridLayoutWrapper({ className }: GridLayoutWrapperProps)
   const { tiles, reorderTiles } = useTiles();
   const [expandedTile, setExpandedTile] = React.useState<TileData | null>(null);
   const [initializedLayouts, setInitializedLayouts] = React.useState(false);
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+
+  // Track modal state from DOM
+  useEffect(() => {
+    const checkModals = () => {
+      // Check for any open dialogs by looking for dialog elements with open state
+      const hasOpenModal = document.querySelector('[role="dialog"][data-state="open"]') !== null;
+      setIsModalOpen(hasOpenModal);
+    };
+
+    // Check on mount and set up observer
+    checkModals();
+    
+    // Use MutationObserver to track dialog state changes
+    const observer = new MutationObserver(checkModals);
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['data-state']
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   /**
    * Generate default layout for a tile at a specific breakpoint
@@ -215,22 +239,27 @@ export default function GridLayoutWrapper({ className }: GridLayoutWrapperProps)
     rowHeight: GRID_CONFIG.ROW_HEIGHT,
     margin: GRID_CONFIG.MARGIN,
     containerPadding: GRID_CONFIG.CONTAINER_PADDING,
-    isDraggable: isEditMode,
-    isResizable: isEditMode,
+    isDraggable: isEditMode && !isModalOpen,
+    isResizable: isEditMode && !isModalOpen,
     resizeHandles: GRID_CONFIG.RESIZE_HANDLES,
-    compactType: 'vertical' as const,
-    preventCollision: false,
+    compactType: null,
+    preventCollision: true,
     useCSSTransforms: true,
-  }), [className, isEditMode]);
+  }), [className, isEditMode, isModalOpen]);
 
   if (!isEditMode) {
     // View mode - use ResponsiveGridLayout in read-only mode
     return (
       <>
-        <div className={cn(
-          'grid-layout-wrapper',
-          className
-        )}>
+        <div 
+          className={cn(
+            'grid-layout-wrapper',
+            isModalOpen && 'pointer-events-none',
+            className
+          )}
+          onClick={isModalOpen ? (e) => e.stopPropagation() : undefined}
+          onPointerDown={isModalOpen ? (e) => e.stopPropagation() : undefined}
+        >
           <ResponsiveGridLayout 
             {...baseGridConfig}
             layouts={computedLayouts}
@@ -274,11 +303,16 @@ export default function GridLayoutWrapper({ className }: GridLayoutWrapperProps)
   
   return (
     <>
-      <div className={cn(
-        'grid-layout-wrapper',
-        isEditMode && 'edit-mode',
-        className
-      )}>
+      <div 
+        className={cn(
+          'grid-layout-wrapper',
+          isEditMode && 'edit-mode',
+          isModalOpen && 'pointer-events-none',
+          className
+        )}
+        onClick={isModalOpen ? (e) => e.stopPropagation() : undefined}
+        onPointerDown={isModalOpen ? (e) => e.stopPropagation() : undefined}
+      >
         <GridLayoutWithProvider 
           {...baseGridConfig}
           layout={editModeLayout}
@@ -288,6 +322,8 @@ export default function GridLayoutWrapper({ className }: GridLayoutWrapperProps)
             handleLayoutChange(newLayout, updatedLayouts);
           }}
           cols={editingCols}
+          compactType={null}
+          preventCollision={true}
         >
           {gridItems.map((tile) => (
             <div key={`tile-${tile.id}`}>
