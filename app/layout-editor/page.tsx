@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import LayoutEditorHeader from '@/components/layout/LayoutEditorHeader';
+import LayoutEditorHeaderV2 from '@/components/layout/LayoutEditorHeaderV2';
 import GridLayoutWrapper from '@/components/layout-tiles/GridLayoutWrapper';
 import { LayoutList } from '@/components/layouts/LayoutList';
 import { LayoutForm } from '@/components/layouts/LayoutForm';
@@ -146,17 +146,20 @@ function LayoutEditorContent() {
     setShowLayoutForm(true);
   };
 
-  const handleDeleteLayout = async (layout: Layout) => {
-    if (!confirm(`Are you sure you want to delete "${layout.name}"?`)) return;
+  const handleDeleteLayout = async (layout?: Layout) => {
+    const layoutToDelete = layout || selectedLayout;
+    if (!layoutToDelete) return;
+    
+    if (!confirm(`Are you sure you want to delete "${layoutToDelete.name}"?`)) return;
     
     try {
-      const response = await fetch(`/api/layouts/${layout.id}`, {
+      const response = await fetch(`/api/layouts/${layoutToDelete.id}`, {
         method: 'DELETE',
       });
       
       if (!response.ok) throw new Error('Failed to delete layout');
       
-      if (selectedLayout?.id === layout.id) {
+      if (selectedLayout?.id === layoutToDelete.id) {
         setSelectedLayout(null);
         setLayoutTiles([]);
       }
@@ -168,16 +171,18 @@ function LayoutEditorContent() {
     }
   };
 
-  const handleDuplicateLayout = async (layout: Layout) => {
+  const handleDuplicateLayout = async (layout?: Layout) => {
+    const layoutToDuplicate = layout || selectedLayout;
+    if (!layoutToDuplicate) return;
     try {
       const response = await fetch('/api/layouts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: `${layout.name} (Copy)`,
-          description: layout.description,
-          config: layout.config,
-          isShared: layout.isShared,
+          name: `${layoutToDuplicate.name} (Copy)`,
+          description: layoutToDuplicate.description,
+          config: layoutToDuplicate.config,
+          isShared: layoutToDuplicate.isShared,
         }),
       });
       
@@ -186,8 +191,8 @@ function LayoutEditorContent() {
       const newLayout = await response.json();
       
       // Copy tiles to new layout
-      if (layout.id) {
-        const tilesResponse = await fetch(`/api/layouts/${layout.id}/tiles`);
+      if (layoutToDuplicate.id) {
+        const tilesResponse = await fetch(`/api/layouts/${layoutToDuplicate.id}/tiles`);
         const tiles = await tilesResponse.json();
         
         for (const tile of tiles) {
@@ -383,19 +388,29 @@ function LayoutEditorContent() {
     }
   };
 
+  const handleLayoutSettings = () => {
+    if (selectedLayout) {
+      setEditingLayout(selectedLayout);
+      setShowLayoutForm(true);
+    }
+  };
+
+  const handleManageLayouts = () => {
+    setShowLayoutList(true);
+  };
+
   return (
     <div className="flex flex-col gap-4">
-      <LayoutEditorHeader
-        title="Layout Editor"
-        subtitle={selectedLayout ? `Editing: ${selectedLayout.name}` : "Select or create a layout to get started"}
-        isEditMode={isEditMode}
-        showLayoutList={showLayoutList}
+      <LayoutEditorHeaderV2
         selectedLayout={selectedLayout}
+        isEditMode={isEditMode}
         editingBreakpoint={editingBreakpoint}
         customBreakpoints={customBreakpoints}
         editAllBreakpoints={editAllBreakpoints}
         viewportWidth={viewportWidth}
-        onToggleLayoutList={() => setShowLayoutList(!showLayoutList)}
+        onSelectLayout={handleSelectLayout}
+        onCreateLayout={handleCreateLayout}
+        onManageLayouts={handleManageLayouts}
         onAddTile={handleCreateTile}
         onEditToggle={handleEditToggle}
         onResetAll={resetToDefault}
@@ -404,9 +419,12 @@ function LayoutEditorContent() {
         onBreakpointChange={setEditingBreakpoint}
         onEditAllBreakpointsChange={setEditAllBreakpoints}
         onResetBreakpoint={resetBreakpoint}
+        onDuplicateLayout={() => handleDuplicateLayout()}
+        onDeleteLayout={() => handleDeleteLayout()}
+        onLayoutSettings={handleLayoutSettings}
       />
       
-      {showLayoutList ? (
+      {showLayoutList && !selectedLayout ? (
         <LayoutList
           onSelectLayout={handleSelectLayout}
           onCreateLayout={handleCreateLayout}
@@ -415,20 +433,17 @@ function LayoutEditorContent() {
           onDuplicateLayout={handleDuplicateLayout}
           selectedLayoutId={selectedLayout?.id}
         />
+      ) : selectedLayout ? (
+        <GridLayoutWrapper />
       ) : (
-        <>
-          {selectedLayout ? (
-            <GridLayoutWrapper />
-          ) : (
-            <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-lg">
-              <p className="text-muted-foreground mb-4">No layout selected</p>
-              <Button onClick={() => setShowLayoutList(true)}>
-                <List className="w-4 h-4 mr-2" />
-                Select a Layout
-              </Button>
-            </div>
-          )}
-        </>
+        <LayoutList
+          onSelectLayout={handleSelectLayout}
+          onCreateLayout={handleCreateLayout}
+          onEditLayout={handleEditLayout}
+          onDeleteLayout={handleDeleteLayout}
+          onDuplicateLayout={handleDuplicateLayout}
+          selectedLayoutId={selectedLayout?.id}
+        />
       )}
       
       <LayoutForm
