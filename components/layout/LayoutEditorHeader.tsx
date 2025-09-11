@@ -10,7 +10,8 @@ import {
   X, 
   RotateCcw, 
   List, 
-  Grid3X3 
+  Grid3X3,
+  Layers 
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -31,6 +32,7 @@ interface LayoutEditorHeaderProps {
   // Edit mode props
   editingBreakpoint?: string;
   customBreakpoints?: Set<string>;
+  editAllBreakpoints?: boolean;
   viewportWidth?: number;
   
   // Handlers
@@ -41,6 +43,8 @@ interface LayoutEditorHeaderProps {
   onCancel?: () => void;
   onSave?: () => void;
   onBreakpointChange?: (breakpoint: string) => void;
+  onEditAllBreakpointsChange?: (enabled: boolean) => void;
+  onResetBreakpoint?: (breakpoint: string) => void;
 }
 
 const breakpoints = [
@@ -75,6 +79,7 @@ export default function LayoutEditorHeader({
   selectedLayout,
   editingBreakpoint,
   customBreakpoints,
+  editAllBreakpoints = false,
   viewportWidth = 1313,
   onToggleLayoutList,
   onAddTile,
@@ -83,6 +88,8 @@ export default function LayoutEditorHeader({
   onCancel,
   onSave,
   onBreakpointChange,
+  onEditAllBreakpointsChange,
+  onResetBreakpoint,
 }: LayoutEditorHeaderProps) {
   
   const getBreakpointForWidth = (width: number) => {
@@ -182,41 +189,93 @@ export default function LayoutEditorHeader({
             {/* Screen size selector */}
             <div className="flex items-center gap-4">
               <span className="text-sm text-muted-foreground">Edit for:</span>
+              
+              {/* All breakpoints toggle */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={editAllBreakpoints ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => onEditAllBreakpointsChange?.(!editAllBreakpoints)}
+                    className={cn(
+                      'px-2 h-8 mr-2',
+                      editAllBreakpoints && 'ring-1 ring-primary ring-offset-1'
+                    )}
+                  >
+                    <Layers className="h-4 w-4" />
+                    <span className="ml-1.5">All</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <div className="text-xs">
+                    <div className="font-medium">Edit All Sizes</div>
+                    <div className="text-muted-foreground">Apply changes to all breakpoints</div>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+              
               <div className="flex gap-1">
                 {breakpoints.map((bp) => {
                   const Icon = bp.icon;
-                  const isActive = editingBreakpoint === bp.key;
+                  const isActive = !editAllBreakpoints && editingBreakpoint === bp.key;
                   const hasCustom = customBreakpoints?.has(bp.key);
                   
                   return (
-                    <Tooltip key={bp.key}>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant={isActive ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => onBreakpointChange?.(bp.key)}
-                          className={cn(
-                            'px-2 h-8',
-                            isActive && 'ring-1 ring-primary ring-offset-1'
-                          )}
-                        >
-                          <Icon className="h-4 w-4" />
-                          <span className="ml-1.5 hidden lg:inline">{bp.label}</span>
-                          {hasCustom && (
-                            <span className="ml-1 text-[10px] opacity-70">●</span>
-                          )}
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <div className="text-xs">
-                          <div className="font-medium">{bp.label}</div>
-                          <div className="text-muted-foreground">{bp.range}</div>
-                          {hasCustom && (
-                            <div className="text-primary mt-1">Custom layout</div>
-                          )}
-                        </div>
-                      </TooltipContent>
-                    </Tooltip>
+                    <div key={bp.key} className="relative">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant={isActive ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => !editAllBreakpoints && onBreakpointChange?.(bp.key)}
+                            disabled={editAllBreakpoints}
+                            className={cn(
+                              'px-2 h-8',
+                              isActive && 'ring-1 ring-primary ring-offset-1',
+                              editAllBreakpoints && 'opacity-50'
+                            )}
+                          >
+                            <Icon className="h-4 w-4" />
+                            <span className="ml-1.5 hidden lg:inline">{bp.label}</span>
+                            {hasCustom && (
+                              <span className="ml-1 text-[10px] opacity-70">●</span>
+                            )}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <div className="text-xs">
+                            <div className="font-medium">{bp.label}</div>
+                            <div className="text-muted-foreground">{bp.range}</div>
+                            {hasCustom && (
+                              <div className="text-primary mt-1">Custom layout</div>
+                            )}
+                            {editAllBreakpoints && (
+                              <div className="text-muted-foreground mt-1">All mode active</div>
+                            )}
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                      
+                      {/* Clear button for custom layouts */}
+                      {hasCustom && !editAllBreakpoints && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onResetBreakpoint?.(bp.key);
+                              }}
+                              className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center hover:bg-destructive/90 transition-colors"
+                            >
+                              <X className="h-2.5 w-2.5" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <div className="text-xs">Clear {bp.label} custom layout</div>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                    </div>
                   );
                 })}
               </div>

@@ -66,6 +66,9 @@ export function LayoutProvider({ children }: { children: React.ReactNode }) {
   // Track which breakpoints have been customized
   const [customBreakpoints, setCustomBreakpoints] = useState<Set<string>>(new Set());
   
+  // Edit all breakpoints mode - when true, changes apply to all breakpoints
+  const [editAllBreakpoints, setEditAllBreakpoints] = useState(false);
+  
   // Determine initial breakpoint based on viewport width
   const getBreakpointFromWidth = (width: number): Breakpoint => {
     if (width >= BREAKPOINTS.lg) return 'lg';
@@ -311,6 +314,8 @@ export function LayoutProvider({ children }: { children: React.ReactNode }) {
     setUseResponsiveLayout,
     customBreakpoints,
     markBreakpointAsCustom,
+    editAllBreakpoints,
+    setEditAllBreakpoints,
     simulatedViewport,
     setSimulatedViewport,
     getBreakpointLayout,

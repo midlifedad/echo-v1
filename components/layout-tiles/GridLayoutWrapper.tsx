@@ -32,6 +32,7 @@ export default function GridLayoutWrapper({ className }: GridLayoutWrapperProps)
     customBreakpoints,
     markBreakpointAsCustom,
     getBreakpointLayout,
+    editAllBreakpoints,
   } = useLayout();
   const { tiles, reorderTiles } = useTiles();
   const [expandedTile, setExpandedTile] = React.useState<TileData | null>(null);
@@ -164,9 +165,10 @@ export default function GridLayoutWrapper({ className }: GridLayoutWrapperProps)
       const layoutItem = activeLayout.find(l => l.i === `tile-${tile.id}`) || 
                         generateDefaultLayoutForBreakpoint(activeBreakpoint, tile.id, index);
       
-      // Apply lock state to grid layout
+      // Apply lock state to grid layout and ensure current min height
       const gridLayoutWithLock = {
         ...layoutItem,
+        minH: GRID_CONFIG.MIN_HEIGHT,  // Force the current min height from constants
         static: tile.isLocked || false
       };
       
@@ -197,17 +199,35 @@ export default function GridLayoutWrapper({ className }: GridLayoutWrapperProps)
     if (isEditMode) {
       // Debounce the layout update to prevent excessive re-renders
       layoutChangeTimer.current = setTimeout(() => {
-        // Mark this breakpoint as having custom layout
-        markBreakpointAsCustom(activeBreakpoint);
-        
-        // Only update the specific breakpoint that changed, preserve others
-        setLayouts((prev: Layouts) => ({
-          ...prev,
-          [activeBreakpoint]: currentLayout
-        }));
+        if (editAllBreakpoints) {
+          // Apply changes to all breakpoints
+          const breakpoints = ['lg', 'md', 'sm'];
+          const updatedLayouts: Layouts = {};
+          
+          breakpoints.forEach(bp => {
+            // Mark each breakpoint as custom
+            markBreakpointAsCustom(bp);
+            // Apply the same layout to each breakpoint (adjusting for column differences)
+            updatedLayouts[bp] = currentLayout;
+          });
+          
+          setLayouts((prev: Layouts) => ({
+            ...prev,
+            ...updatedLayouts
+          }));
+        } else {
+          // Mark this breakpoint as having custom layout
+          markBreakpointAsCustom(activeBreakpoint);
+          
+          // Only update the specific breakpoint that changed, preserve others
+          setLayouts((prev: Layouts) => ({
+            ...prev,
+            [activeBreakpoint]: currentLayout
+          }));
+        }
       }, 150); // 150ms debounce
     }
-  }, [setLayouts, isEditMode, editingBreakpoint, currentBreakpoint, markBreakpointAsCustom]);
+  }, [setLayouts, isEditMode, editingBreakpoint, currentBreakpoint, markBreakpointAsCustom, editAllBreakpoints]);
 
   // Clean up debounce timer on unmount
   useEffect(() => {

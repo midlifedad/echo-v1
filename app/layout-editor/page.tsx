@@ -11,6 +11,7 @@ import { useTiles } from '@/contexts/TileContext';
 import { LayoutProvider, useLayout } from '@/contexts/LayoutContext';
 import { Button } from '@/components/ui/button';
 import { List } from 'lucide-react';
+import { GRID_CONFIG } from '@/lib/constants';
 import type { Layout, CreateLayoutRequest, UpdateLayoutRequest, TileWithPositions, Tile } from '@/lib/types/database';
 
 function LayoutEditorContent() {
@@ -23,10 +24,13 @@ function LayoutEditorContent() {
     layouts, 
     cancelEdit, 
     resetToDefault,
+    resetBreakpoint,
     currentBreakpoint,
     editingBreakpoint,
     setEditingBreakpoint,
     customBreakpoints,
+    editAllBreakpoints,
+    setEditAllBreakpoints,
     simulatedViewport,
     setSimulatedViewport,
   } = useLayout();
@@ -95,8 +99,8 @@ function LayoutEditorContent() {
                 y: position.y || 0,
                 w: position.w || 4,
                 h: position.h || 3,
-                minW: position.minW || 2,
-                minH: position.minH || 2,
+                minW: position.minW || GRID_CONFIG.MIN_WIDTH,
+                minH: position.minH || GRID_CONFIG.MIN_HEIGHT,
                 static: position.static || false
               });
             }
@@ -389,6 +393,7 @@ function LayoutEditorContent() {
         selectedLayout={selectedLayout}
         editingBreakpoint={editingBreakpoint}
         customBreakpoints={customBreakpoints}
+        editAllBreakpoints={editAllBreakpoints}
         viewportWidth={viewportWidth}
         onToggleLayoutList={() => setShowLayoutList(!showLayoutList)}
         onAddTile={handleCreateTile}
@@ -397,6 +402,8 @@ function LayoutEditorContent() {
         onCancel={cancelEdit}
         onSave={handleSaveLayout}
         onBreakpointChange={setEditingBreakpoint}
+        onEditAllBreakpointsChange={setEditAllBreakpoints}
+        onResetBreakpoint={resetBreakpoint}
       />
       
       {showLayoutList ? (

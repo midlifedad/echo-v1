@@ -153,6 +153,8 @@ export interface LayoutContextType {
   setUseResponsiveLayout: (responsive: boolean) => void;
   customBreakpoints: Set<string>;
   markBreakpointAsCustom: (breakpoint: string) => void;
+  editAllBreakpoints: boolean;
+  setEditAllBreakpoints: (enabled: boolean) => void;
   simulatedViewport?: number;
   setSimulatedViewport: (width: number | undefined) => void;
   getBreakpointLayout: (breakpoint: Breakpoint) => LayoutItem[];
