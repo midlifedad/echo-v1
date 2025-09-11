@@ -318,8 +318,8 @@ export default function GridLayoutWrapper({ className }: GridLayoutWrapperProps)
   }
 
   // Edit mode - use static GridLayout with fixed columns for the editing breakpoint
-  // Get the layout for the current editing breakpoint
-  const editModeLayout = gridItems.map(item => item.gridLayout);
+  // Use the same computed layout as view mode for consistency
+  const editModeLayout = computedLayouts[editingBreakpoint] || gridItems.map(item => item.gridLayout);
   
   return (
     <>

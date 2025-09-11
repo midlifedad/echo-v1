@@ -161,7 +161,7 @@ export interface LayoutContextType {
   scaleLayout: (layout: LayoutItem, fromBreakpoint: string, toBreakpoint: string) => LayoutItem;
   saveLayouts: () => void;
   cancelEdit: () => void;
-  resetToDefault: () => void;
+  resetToDefault: (tileIds?: string[]) => void;
   resetBreakpoint: (breakpoint: string) => void;
   cleanupTileData: (tileId: string) => void;
 }

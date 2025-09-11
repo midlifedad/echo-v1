@@ -17,40 +17,49 @@ import {
 
 const LayoutContext = createContext<LayoutContextType | undefined>(undefined);
 
-// Default layouts for different breakpoints - IDs match TileContext
-const getDefaultLayouts = (): Layouts => {
-  // Large breakpoint (12 columns)
-  const lgTiles: LayoutItem[] = [
-    { i: 'tile-1', x: 0, y: 0, w: 6, h: GRID_CONFIG.DEFAULT_HEIGHT, minW: GRID_CONFIG.MIN_WIDTH, minH: GRID_CONFIG.MIN_HEIGHT },
-    { i: 'tile-2', x: 6, y: 0, w: 6, h: GRID_CONFIG.DEFAULT_HEIGHT, minW: GRID_CONFIG.MIN_WIDTH, minH: GRID_CONFIG.MIN_HEIGHT },
-    { i: 'tile-3', x: 0, y: 4, w: 4, h: 3, minW: GRID_CONFIG.MIN_WIDTH, minH: GRID_CONFIG.MIN_HEIGHT },
-    { i: 'tile-4', x: 4, y: 4, w: 4, h: 3, minW: GRID_CONFIG.MIN_WIDTH, minH: GRID_CONFIG.MIN_HEIGHT },
-    { i: 'tile-5', x: 8, y: 4, w: 4, h: 3, minW: GRID_CONFIG.MIN_WIDTH, minH: GRID_CONFIG.MIN_HEIGHT },
-  ];
-
-  // Medium breakpoint (10 columns)
-  const mdTiles: LayoutItem[] = [
-    { i: 'tile-1', x: 0, y: 0, w: 5, h: GRID_CONFIG.DEFAULT_HEIGHT, minW: GRID_CONFIG.MIN_WIDTH, minH: GRID_CONFIG.MIN_HEIGHT },
-    { i: 'tile-2', x: 5, y: 0, w: 5, h: GRID_CONFIG.DEFAULT_HEIGHT, minW: GRID_CONFIG.MIN_WIDTH, minH: GRID_CONFIG.MIN_HEIGHT },
-    { i: 'tile-3', x: 0, y: 4, w: 3, h: 3, minW: GRID_CONFIG.MIN_WIDTH, minH: GRID_CONFIG.MIN_HEIGHT },
-    { i: 'tile-4', x: 3, y: 4, w: 4, h: 3, minW: GRID_CONFIG.MIN_WIDTH, minH: GRID_CONFIG.MIN_HEIGHT },
-    { i: 'tile-5', x: 7, y: 4, w: 3, h: 3, minW: GRID_CONFIG.MIN_WIDTH, minH: GRID_CONFIG.MIN_HEIGHT },
-  ];
-
-  // Small breakpoint (6 columns)
-  const smTiles: LayoutItem[] = [
-    { i: 'tile-1', x: 0, y: 0, w: 6, h: GRID_CONFIG.DEFAULT_HEIGHT, minW: GRID_CONFIG.MIN_WIDTH, minH: GRID_CONFIG.MIN_HEIGHT },
-    { i: 'tile-2', x: 0, y: 4, w: 6, h: GRID_CONFIG.DEFAULT_HEIGHT, minW: GRID_CONFIG.MIN_WIDTH, minH: GRID_CONFIG.MIN_HEIGHT },
-    { i: 'tile-3', x: 0, y: 8, w: 3, h: 3, minW: GRID_CONFIG.MIN_WIDTH, minH: GRID_CONFIG.MIN_HEIGHT },
-    { i: 'tile-4', x: 3, y: 8, w: 3, h: 3, minW: GRID_CONFIG.MIN_WIDTH, minH: GRID_CONFIG.MIN_HEIGHT },
-    { i: 'tile-5', x: 0, y: 11, w: 6, h: 3, minW: GRID_CONFIG.MIN_WIDTH, minH: GRID_CONFIG.MIN_HEIGHT },
-  ];
-
-  return {
-    lg: lgTiles,
-    md: mdTiles,
-    sm: smTiles,
+// Generate default layouts dynamically based on tile IDs
+const generateDefaultLayoutsForTiles = (tileIds: string[]): Layouts => {
+  const layouts: Layouts = { lg: [], md: [], sm: [] };
+  
+  // For each breakpoint, generate a sensible grid layout
+  const breakpointConfigs = {
+    lg: { cols: 12, tilesPerRow: 3 },
+    md: { cols: 10, tilesPerRow: 2 },
+    sm: { cols: 6, tilesPerRow: 1 }
   };
+  
+  Object.entries(breakpointConfigs).forEach(([breakpoint, config]) => {
+    const tiles: LayoutItem[] = [];
+    let currentY = 0;
+    
+    tileIds.forEach((tileId, index) => {
+      const col = index % config.tilesPerRow;
+      const row = Math.floor(index / config.tilesPerRow);
+      const tileWidth = Math.floor(config.cols / config.tilesPerRow);
+      
+      tiles.push({
+        i: tileId,
+        x: col * tileWidth,
+        y: row * GRID_CONFIG.DEFAULT_HEIGHT,
+        w: tileWidth,
+        h: GRID_CONFIG.DEFAULT_HEIGHT,
+        minW: GRID_CONFIG.MIN_WIDTH,
+        minH: GRID_CONFIG.MIN_HEIGHT
+      });
+    });
+    
+    layouts[breakpoint] = tiles;
+  });
+  
+  return layouts;
+};
+
+// Legacy default layouts for initial state (when no tiles are loaded)
+const getDefaultLayouts = (): Layouts => {
+  // Generate default for first 5 tiles as fallback
+  return generateDefaultLayoutsForTiles([
+    'tile-1', 'tile-2', 'tile-3', 'tile-4', 'tile-5'
+  ]);
 };
 
 export function LayoutProvider({ children }: { children: React.ReactNode }) {
@@ -176,6 +185,13 @@ export function LayoutProvider({ children }: { children: React.ReactNode }) {
    * Get layout for a breakpoint - either custom or responsive scaled
    */
   const getBreakpointLayout = useCallback((breakpoint: Breakpoint): LayoutItem[] => {
+    // Always prefer stored layouts if they exist
+    // This prevents layout jumping when switching between view/edit modes
+    const storedLayout = layouts[breakpoint];
+    if (storedLayout && storedLayout.length > 0) {
+      return storedLayout;
+    }
+    
     // If this breakpoint has custom layout or responsive mode is off, use stored layout
     if (customBreakpoints.has(breakpoint) || !useResponsiveLayout) {
       return layouts[breakpoint] || [];
@@ -209,17 +225,21 @@ export function LayoutProvider({ children }: { children: React.ReactNode }) {
   };
 
   const cancelEdit = () => {
-    setLayouts(savedLayouts);
-    setUseResponsiveLayout(savedUseResponsiveLayout);
+    // Don't revert layouts - keep the current state to prevent layout jumping
+    // Only exit edit mode without changing the layout data
     setEditMode(false);
   };
 
   /**
    * Reset all layout data to default values
+   * @param tileIds - Optional array of tile IDs to generate layouts for. If not provided, uses fallback defaults.
    */
-  const resetToDefault = () => {
+  const resetToDefault = (tileIds?: string[]) => {
     try {
-      const defaultLayouts = getDefaultLayouts();
+      // Generate layouts based on actual tiles if provided, otherwise use fallback
+      const defaultLayouts = tileIds && tileIds.length > 0 
+        ? generateDefaultLayoutsForTiles(tileIds)
+        : getDefaultLayouts();
       
       setLayouts(defaultLayouts);
       setUseResponsiveLayout(true);

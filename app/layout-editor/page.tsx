@@ -15,7 +15,7 @@ import { GRID_CONFIG } from '@/lib/constants';
 import type { Layout, CreateLayoutRequest, UpdateLayoutRequest, TileWithPositions, Tile } from '@/lib/types/database';
 
 function LayoutEditorContent() {
-  const { addTile, reorderTiles } = useTiles();
+  const { tiles, addTile, reorderTiles } = useTiles();
   const { 
     isEditMode, 
     setEditMode, 
@@ -120,7 +120,8 @@ function LayoutEditorContent() {
 
   const handleEditToggle = () => {
     if (isEditMode) {
-      cancelEdit();
+      // When exiting edit mode, just change the mode without reverting layouts
+      setEditMode(false);
     } else {
       // Get the actual current breakpoint based on window width
       const actualBreakpoint = window.innerWidth >= 1200 ? 'lg' :
@@ -413,7 +414,7 @@ function LayoutEditorContent() {
         onManageLayouts={handleManageLayouts}
         onAddTile={handleCreateTile}
         onEditToggle={handleEditToggle}
-        onResetAll={resetToDefault}
+        onResetAll={() => resetToDefault(tiles.map(t => `tile-${t.id}`))}
         onCancel={cancelEdit}
         onSave={handleSaveLayout}
         onBreakpointChange={setEditingBreakpoint}
