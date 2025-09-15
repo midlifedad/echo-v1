@@ -253,7 +253,37 @@ function LayoutEditorContent() {
     if (!selectedLayout) return;
     
     try {
-      // Add the selected tile to the layout
+      let tileId = tile.id;
+      let isTemplate = tile.isTemplate !== false; // Default to true for backward compatibility
+      
+      // Check if this is an imported tile (not yet in database)
+      if (tile.id.startsWith('imported-')) {
+        // First, create the tile in the database
+        const createResponse = await fetch('/api/tiles', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: tile.type,
+            title: tile.title,
+            config: tile.config,
+            data: tile.data,
+            category: tile.category || 'imported',
+            isTemplate: false,
+            isPublic: false,
+            metadata: tile.metadata,
+          }),
+        });
+        
+        if (!createResponse.ok) {
+          throw new Error('Failed to create tile');
+        }
+        
+        const createdTile = await createResponse.json();
+        tileId = createdTile.id;
+        isTemplate = false; // Imported tiles are not templates
+      }
+      
+      // Add the tile to the layout
       const positions = {
         lg: { x: 0, y: 0, w: 4, h: 3 },
         md: { x: 0, y: 0, w: 4, h: 3 },
@@ -271,9 +301,9 @@ function LayoutEditorContent() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          tileId: tile.id,
+          tileId,
           positions: positionsArray,
-          isTemplate: true, // Tiles from the selector are templates
+          isTemplate,
         }),
       });
       

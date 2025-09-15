@@ -73,6 +73,31 @@ export async function POST(
     if (isTemplate) {
       const instance = await TileInstanceService.createInstanceFromTemplate(tileId, id, positions);
       instanceId = instance.id;
+    } else {
+      // For non-template tiles (like imported tiles), we need to get the tile details first
+      const tileService = await import('@/lib/services/tileService').then(m => m.TileService);
+      const tile = await tileService.getTile(tileId);
+      
+      if (!tile) {
+        return NextResponse.json(
+          { error: 'Tile not found' },
+          { status: 404 }
+        );
+      }
+      
+      // Create an instance directly from the tile data
+      const instance = await TileInstanceService.createCustomInstance({
+        layoutId: id,
+        templateId: null, // No template for imported tiles
+        type: tile.type,
+        title: tile.title,
+        config: tile.config || {},
+        data: tile.data || null,
+        content: tile.content || null,
+        dataSource: tile.dataSource || null,
+        displaySettings: null,
+      });
+      instanceId = instance.id;
     }
     
     await LayoutService.addTileToLayout(id, instanceId, positions);

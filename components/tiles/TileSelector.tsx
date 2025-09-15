@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Filter, Grid3X3, List, Plus } from 'lucide-react';
+import { Search, Filter, Grid3X3, List, Plus, Upload } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -26,6 +26,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Tile } from '@/lib/db/schema';
 import ChartPreview from '@/components/charts/ChartPreview';
+import DataImportFlow from '@/components/data/DataImportFlow';
 
 interface TileSelectorProps {
   isOpen: boolean;
@@ -48,6 +49,7 @@ export default function TileSelector({
   const [activeTab, setActiveTab] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTile, setSelectedTile] = useState<Tile | null>(null);
+  const [showImportFlow, setShowImportFlow] = useState(false);
 
   // Fetch tiles when dialog opens
   useEffect(() => {
@@ -147,6 +149,45 @@ export default function TileSelector({
     }
   };
 
+  const handleImportComplete = (tileData: any) => {
+    // Create a new tile from the imported data
+    const newTile: Tile = {
+      id: `imported-${Date.now()}`,
+      title: tileData.title,
+      type: tileData.type,
+      config: tileData.config,
+      data: tileData.data,
+      isTemplate: false,
+      category: 'imported',
+      usageCount: 0,
+      createdAt: new Date().toISOString(),
+      metadata: tileData.metadata
+    };
+    
+    onSelectTile(newTile);
+    setShowImportFlow(false);
+    onClose();
+  };
+
+  if (showImportFlow) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Import Data</DialogTitle>
+            <DialogDescription>
+              Import data from CSV files or paste from Excel/Google Sheets
+            </DialogDescription>
+          </DialogHeader>
+          <DataImportFlow
+            onComplete={handleImportComplete}
+            onCancel={() => setShowImportFlow(false)}
+          />
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent 
@@ -171,8 +212,29 @@ export default function TileSelector({
               <TabsTrigger value="templates">Templates</TabsTrigger>
               <TabsTrigger value="recent">Recent</TabsTrigger>
               <TabsTrigger value="popular">Popular</TabsTrigger>
+              <TabsTrigger value="import" className="flex items-center gap-2">
+                <Upload className="h-3 w-3" />
+                Import Data
+              </TabsTrigger>
             </TabsList>
 
+            {activeTab === 'import' ? (
+              <TabsContent value="import" className="space-y-4 flex-1">
+                <div className="flex flex-col items-center justify-center h-full">
+                  <Button 
+                    onClick={() => setShowImportFlow(true)}
+                    size="lg"
+                    className="flex items-center gap-2"
+                  >
+                    <Upload className="h-5 w-5" />
+                    Start Import Process
+                  </Button>
+                  <p className="text-muted-foreground mt-4 text-center max-w-md">
+                    Import data from CSV files or paste data from Excel/Google Sheets to create new visualizations
+                  </p>
+                </div>
+              </TabsContent>
+            ) : (
             <TabsContent value={activeTab} className="space-y-4 flex-1">
               {/* Filters and Search */}
               <div className="flex gap-4 items-center">
@@ -282,6 +344,7 @@ export default function TileSelector({
                 )}
               </ScrollArea>
             </TabsContent>
+            )}
           </Tabs>
         </div>
 
