@@ -27,7 +27,7 @@ interface LayoutEditorHeaderProps {
   subtitle?: string;
   isEditMode: boolean;
   showLayoutList: boolean;
-  selectedLayout: any;
+  selectedLayout: { id: string; name: string } | null;
   
   // Edit mode props
   editingBreakpoint?: string;

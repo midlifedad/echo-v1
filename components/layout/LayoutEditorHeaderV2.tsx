@@ -37,17 +37,17 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface LayoutEditorHeaderV2Props {
   // Layout state
-  selectedLayout: any;
+  selectedLayout: { id: string; name: string } | null;
   isEditMode: boolean;
-  
+
   // Edit mode props
   editingBreakpoint?: string;
   customBreakpoints?: Set<string>;
   editAllBreakpoints?: boolean;
   viewportWidth?: number;
-  
+
   // Handlers
-  onSelectLayout: (layout: any) => void;
+  onSelectLayout: (layout: { id: string; name: string } | null) => void;
   onCreateLayout: () => void;
   onManageLayouts: () => void;
   onAddTile: () => void;

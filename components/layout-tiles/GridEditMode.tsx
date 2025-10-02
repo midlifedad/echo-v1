@@ -12,7 +12,7 @@ interface GridEditModeProps {
   className: string;
   layout: Layout[];
   cols: number;
-  tiles: Array<TileData & { inheritanceMode?: string; gridLayout?: any }>;
+  tiles: Array<TileData & { inheritanceMode?: string; gridLayout?: Layout }>;
   onLayoutChange: (layout: Layout[]) => void;
   onExpand: (tile: TileData) => void;
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { memo } from 'react';
-import { Responsive, WidthProvider, Layouts } from 'react-grid-layout';
+import { Responsive, WidthProvider, Layouts, Layout } from 'react-grid-layout';
 import { TileData } from '@/lib/types';
 import { BREAKPOINT_COLUMNS, GRID_CONFIG } from '@/lib/constants';
 import GridItem from './GridItem';
@@ -11,7 +11,7 @@ const ResponsiveGridLayout = WidthProvider(Responsive);
 interface GridViewModeProps {
   className: string;
   layouts: Layouts;
-  tiles: Array<TileData & { inheritanceMode?: string; gridLayout?: any }>;
+  tiles: Array<TileData & { inheritanceMode?: string; gridLayout?: Layout }>;
   onBreakpointChange: (breakpoint: string) => void;
   onExpand: (tile: TileData) => void;
 }
