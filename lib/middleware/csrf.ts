@@ -10,7 +10,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { randomBytes, createHash } from 'crypto';
 
 /**
  * HTTP methods that should be protected against CSRF
@@ -20,18 +19,31 @@ const PROTECTED_METHODS = ['POST', 'PUT', 'DELETE', 'PATCH'];
 
 /**
  * Generate a CSRF token
- * Uses cryptographically secure random bytes
+ * Uses Web Crypto API for Edge Runtime compatibility
  */
 export function generateCSRFToken(): string {
-  return randomBytes(32).toString('base64url');
+  // Use Web Crypto API (supported in Edge Runtime)
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+
+  // Convert to base64url format
+  const base64 = btoa(String.fromCharCode(...array));
+  return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
 
 /**
  * Hash a CSRF token for storage/comparison
- * Prevents timing attacks during validation
+ * Uses Web Crypto API for Edge Runtime compatibility
  */
-export function hashCSRFToken(token: string): string {
-  return createHash('sha256').update(token).digest('base64url');
+export async function hashCSRFToken(token: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(token);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = new Uint8Array(hashBuffer);
+
+  // Convert to base64url format
+  const base64 = btoa(String.fromCharCode(...hashArray));
+  return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
 
 /**
