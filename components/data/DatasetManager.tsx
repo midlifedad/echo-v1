@@ -42,6 +42,7 @@ import { DatasetListItem, DatasetPreview, StorageQuota } from '@/lib/types/datas
 import { datasetStorage } from '@/lib/services/datasetStorage';
 import { csvParser } from '@/lib/services/csvParser';
 import { sanitizeDatasetMetadata, sanitizeUserInput } from '@/lib/utils/domSanitizer';
+import { scanForCSVInjection, getCSVInjectionWarning } from '@/lib/utils/csvSanitizer';
 
 interface DatasetManagerProps {
   onSelectDataset?: (dataset: DatasetPreview) => void;
@@ -133,6 +134,14 @@ export default function DatasetManager({
     try {
       const fullDataset = await datasetStorage.get(dataset.id);
       if (!fullDataset) return;
+
+      // Scan for CSV injection attempts
+      const suspicious = scanForCSVInjection(fullDataset.data);
+      if (suspicious.length > 0) {
+        const warning = getCSVInjectionWarning(suspicious.length);
+        console.warn('CSV Injection Detection:', warning, suspicious);
+        // Note: CSV will be sanitized automatically by csvParser.toCSV
+      }
 
       const csv = csvParser.toCSV({
         data: fullDataset.data.slice(1).map((row, i) => {

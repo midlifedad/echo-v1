@@ -14,6 +14,7 @@ import {
 } from '@/lib/types/dataset';
 import { ParsedData, ParseError } from '@/lib/types/dataImport';
 import { sanitizeCellValue } from '@/lib/utils/securityValidation';
+import { sanitizeCSVCell, scanForCSVInjection, getCSVInjectionWarning } from '@/lib/utils/csvSanitizer';
 import { logger } from '@/lib/utils/logger';
 
 interface ParseOptions {
@@ -266,20 +267,11 @@ class CSVParser {
   }
 
   /**
-   * Escape a field for CSV output
+   * Escape a field for CSV output with CSV injection protection
    */
   private escapeCSVField(value: any, delimiter: string): string {
-    if (value === null || value === undefined) return '';
-    
-    const str = String(value);
-    
-    // Check if escaping is needed
-    if (str.includes(delimiter) || str.includes('"') || str.includes('\n') || str.includes('\r')) {
-      // Escape quotes by doubling them
-      return `"${str.replace(/"/g, '""')}"`;
-    }
-
-    return str;
+    // Use CSV sanitizer to prevent formula injection
+    return sanitizeCSVCell(value);
   }
 
   /**
