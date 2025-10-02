@@ -186,7 +186,7 @@ export default function GridLayoutWrapper({ className }: GridLayoutWrapperProps)
    * Handle layout changes with debouncing to prevent excessive updates
    * Debounced to 150ms to balance responsiveness with performance
    */
-  const handleLayoutChange = useCallback((currentLayout: Layout[], allLayouts: any) => {
+  const handleLayoutChange = useCallback((currentLayout: Layout[], allLayouts: Layouts) => {
     // Clear existing timer
     if (layoutChangeTimer.current) {
       clearTimeout(layoutChangeTimer.current);

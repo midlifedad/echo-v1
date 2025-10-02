@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import type { CellValue } from '@/lib/types/dataset';
 import {
   Table,
   TableBody,
@@ -145,9 +146,10 @@ export default function DatasetManager({
 
       const csv = csvParser.toCSV({
         data: fullDataset.data.slice(1).map((row, i) => {
-          const obj: any = {};
-          fullDataset.data[0].forEach((header: any, j: number) => {
-            obj[header] = row[j];
+          const obj: Record<string, CellValue> = {};
+          fullDataset.data[0].forEach((header: CellValue, j: number) => {
+            const headerKey = String(header);
+            obj[headerKey] = row[j];
           });
           return obj;
         }),

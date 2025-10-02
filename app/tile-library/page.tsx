@@ -165,7 +165,7 @@ export default function TileLibraryPage() {
     }
   };
 
-  const handleSaveTile = async (tileData: any) => {
+  const handleSaveTile = async (tileData: Tile) => {
     // The TileEditorV2 component already handles the API call
     // This callback is just for refreshing the list after save
     await fetchTiles();

@@ -80,7 +80,16 @@ function LayoutEditorContent() {
       reorderTiles(formattedTiles);
       
       // Convert tile positions to grid layout format and apply to LayoutContext
-      const gridLayouts: { [key: string]: any[] } = {
+      const gridLayouts: { [key: string]: Array<{
+        i: string;
+        x: number;
+        y: number;
+        w: number;
+        h: number;
+        minW?: number;
+        minH?: number;
+        static?: boolean;
+      }> } = {
         lg: [],
         md: [],
         sm: [],
@@ -323,7 +332,7 @@ function LayoutEditorContent() {
     setShowTileEditor(true);
   };
 
-  const handleSaveTile = async (tileData: any, layoutId?: string) => {
+  const handleSaveTile = async (tileData: Tile, layoutId?: string) => {
     // If a new tile was created, it should be added to the layout
     if (selectedLayout && tileData && tileData.id) {
       // Add the newly created tile to the layout
@@ -367,7 +376,7 @@ function LayoutEditorContent() {
     
     try {
       // Save positions to database for each tile and breakpoint
-      const savePromises: Promise<any>[] = [];
+      const savePromises: Promise<Response>[] = [];
       const breakpoints = ['lg', 'md', 'sm', 'xs'];
       
       breakpoints.forEach(breakpoint => {

@@ -21,8 +21,9 @@ import type {
   DataProfile,
   ChartRecommendation
 } from '@/lib/types/dataImport';
-import type { Dataset, DatasetPreview } from '@/lib/types/dataset';
+import type { Dataset, DatasetPreview, CellValue } from '@/lib/types/dataset';
 import type { ChartRecommendation as ChartRec } from '@/lib/types/chart-recommendations';
+import type Highcharts from 'highcharts';
 
 interface GeneratedTile {
   title: string;
@@ -91,9 +92,10 @@ export default function DataImportFlow({ onComplete, onCancel, enableAI = false 
         setDataset(fullDataset);
         setParsedData({
           data: fullDataset.data.slice(1).map((row, i) => {
-            const obj: any = {};
-            fullDataset.data[0].forEach((header: any, j: number) => {
-              obj[header] = row[j];
+            const obj: Record<string, CellValue> = {};
+            fullDataset.data[0].forEach((header: CellValue, j: number) => {
+              const headerKey = String(header);
+              obj[headerKey] = row[j];
             });
             return obj;
           }),
@@ -115,10 +117,10 @@ export default function DataImportFlow({ onComplete, onCancel, enableAI = false 
     }
   };
 
-  const handleAIRecommendationSelect = (recommendation: ChartRec, config: any) => {
+  const handleAIRecommendationSelect = (recommendation: ChartRec, config: Highcharts.Options) => {
     setSelectedRecommendation(recommendation);
     setSelectedChart({
-      chartType: recommendation.chartType as any,
+      chartType: recommendation.chartType,
       config,
       confidence: recommendation.confidence,
       reasoning: recommendation.rationale

@@ -73,7 +73,7 @@ function GridLayoutContent({ className }: GridLayoutWrapperProps) {
   // Get active breakpoint and tiles
   const activeBreakpoint = isEditMode ? editingBreakpoint : currentBreakpoint;
   const activeLayout = useMemo(
-    () => computeBreakpointLayouts(activeBreakpoint as any),
+    () => computeBreakpointLayouts(activeBreakpoint as 'lg' | 'md' | 'sm' | 'xs'),
     [computeBreakpointLayouts, activeBreakpoint]
   );
 
