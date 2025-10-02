@@ -395,7 +395,7 @@ export default function DatasetManager({
           <DialogHeader>
             <DialogTitle>Delete Dataset</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete "{selectedDataset?.name ? sanitizeDatasetMetadata(selectedDataset.name) : ''}"? This action cannot be undone.
+              Are you sure you want to delete &quot;{selectedDataset?.name ? sanitizeDatasetMetadata(selectedDataset.name) : ''}&quot;? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

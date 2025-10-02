@@ -50,7 +50,7 @@ export default function DataPreview({
     return Math.round(((totalRows - nullCount) / totalRows) * 100);
   };
   
-  const formatCellValue = (value: any): string => {
+  const formatCellValue = (value: unknown): string => {
     if (value === null || value === undefined) return '';
     if (typeof value === 'boolean') return value ? 'true' : 'false';
     if (typeof value === 'number') return value.toLocaleString();
@@ -84,7 +84,7 @@ export default function DataPreview({
       <div className="space-y-2">
         <h3 className="text-lg font-semibold">Data Preview</h3>
         <p className="text-sm text-muted-foreground">
-          Review your data before proceeding. We'll analyze the columns and suggest the best way to visualize them.
+          Review your data before proceeding. We&apos;ll analyze the columns and suggest the best way to visualize them.
         </p>
       </div>
 

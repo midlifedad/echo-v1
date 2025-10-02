@@ -89,7 +89,7 @@ export default function ColumnMappingPanel({
       <div className="space-y-2">
         <h3 className="text-lg font-semibold">Column Analysis & Chart Selection</h3>
         <p className="text-sm text-muted-foreground">
-          We've analyzed your data and found the best ways to visualize it. Select a chart type to continue.
+          We&apos;ve analyzed your data and found the best ways to visualize it. Select a chart type to continue.
         </p>
       </div>
 

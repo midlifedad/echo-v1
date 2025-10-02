@@ -157,9 +157,13 @@ export function withLayoutErrorBoundary<P extends object>(
   Component: React.ComponentType<P>,
   fallback?: ReactNode
 ) {
-  return (props: P) => (
+  const WrappedComponent = (props: P) => (
     <LayoutErrorBoundary fallback={fallback}>
       <Component {...props} />
     </LayoutErrorBoundary>
   );
+
+  WrappedComponent.displayName = `withLayoutErrorBoundary(${Component.displayName || Component.name || 'Component'})`;
+
+  return WrappedComponent;
 }
