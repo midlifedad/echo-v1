@@ -3,7 +3,10 @@
  * Type definitions for CSV/spreadsheet data import and intelligent mapping
  */
 
-export type DataType = 'string' | 'number' | 'date' | 'boolean' | 'categorical' | 'mixed' | 'unknown';
+import type { DataType, DataColumn, ColumnStatistics, ColumnRole, DataQuality } from './common';
+
+// Re-export common types for backward compatibility
+export type { DataType, DataColumn, ColumnStatistics, ColumnRole, DataQuality };
 
 export type ChartRecommendation = {
   chartType: string;
@@ -23,35 +26,6 @@ export interface ColumnAnalysis {
   suggestions?: ColumnSuggestions;
 }
 
-export interface ColumnStatistics {
-  // For numeric columns
-  min?: number;
-  max?: number;
-  mean?: number;
-  median?: number;
-  stdDev?: number;
-  sum?: number;
-  
-  // For all columns
-  count: number;
-  uniqueCount: number;
-  nullCount: number;
-  emptyCount: number;
-  
-  // For categorical columns
-  mode?: string | number;
-  topValues?: Array<{
-    value: string | number;
-    count: number;
-    percentage: number;
-  }>;
-  
-  // For date columns
-  earliestDate?: Date;
-  latestDate?: Date;
-  dateRange?: number; // in days
-}
-
 export interface ColumnPatterns {
   isTimeSeries: boolean;
   isIdentifier: boolean;
@@ -67,33 +41,12 @@ export interface ColumnPatterns {
   numberFormat?: string;
 }
 
-export interface DataQuality {
-  completeness: number; // 0-1 percentage of non-null values
-  consistency: number; // 0-1 how consistent the data format is
-  validity: number; // 0-1 percentage of valid values
-  uniqueness: number; // 0-1 ratio of unique values
-  outliers: Array<{
-    index: number;
-    value: any;
-    reason: string;
-  }>;
-  issues: string[];
-}
-
 export interface ColumnSuggestions {
   possibleRoles: ColumnRole[];
   recommendedTransformations: DataTransformation[];
   cleaningOperations: CleaningOperation[];
   aggregationOptions: AggregationOption[];
 }
-
-export type ColumnRole = 
-  | 'dimension' // Categorical data for grouping
-  | 'measure' // Numeric data for calculation
-  | 'time' // Time-based data for x-axis
-  | 'label' // Text labels
-  | 'id' // Unique identifier
-  | 'ignore'; // Should be excluded
 
 export interface DataTransformation {
   type: 'parse_date' | 'parse_number' | 'extract' | 'split' | 'combine' | 'calculate' | 'normalize';

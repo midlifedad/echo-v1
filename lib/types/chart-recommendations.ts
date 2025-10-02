@@ -2,7 +2,8 @@
  * Chart recommendation type definitions
  */
 
-import { Dataset } from './dataset';
+import type { Dataset, CellValue } from './dataset';
+import type Highcharts from 'highcharts';
 
 export type ChartType = 
   | 'line' | 'spline' | 'area' | 'areaspline'
@@ -19,7 +20,7 @@ export interface ChartRecommendation {
   chartType: ChartType;
   confidence: number;
   rationale: string;
-  config: any; // Highcharts configuration
+  config: Highcharts.Options;
   insights?: string[];
   pros?: string[];
   cons?: string[];
@@ -43,7 +44,7 @@ export interface InteractivityFeature {
 export interface ChartRecommendationRequest {
   dataset?: Dataset;
   datasetId?: string;
-  data?: any[][];
+  data?: CellValue[][];
   intent?: string;
   preferences?: ChartPreferences;
   context?: VisualizationContext;
@@ -127,7 +128,7 @@ export interface ChartInsight {
   affectedData: {
     columns?: string[];
     rows?: number[];
-    value?: any;
+    value?: CellValue;
   };
   recommendation?: string;
   confidence: number;
@@ -148,7 +149,7 @@ export interface ChartTemplate {
   description: string;
   chartType: ChartType;
   thumbnail?: string;
-  config: any;
+  config: Highcharts.Options;
   dataRequirements: DataRequirement[];
   tags: string[];
   popularity: number;
@@ -167,7 +168,7 @@ export interface ChartExportOptions {
 export interface ChartMCPError {
   code: string;
   message: string;
-  details?: any;
+  details?: unknown;
   fallbackOptions?: ChartRecommendation[];
 }
 

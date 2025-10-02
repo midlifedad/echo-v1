@@ -2,15 +2,10 @@
  * Dataset type definitions
  */
 
-export type DataType = 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'unknown';
+import type { DataType, DataColumn, ColumnStatistics } from './common';
 
-export interface DataColumn {
-  name: string;
-  dataType: DataType;
-  nullable?: boolean;
-  unique?: boolean;
-  index?: number;
-}
+// Re-export common types for backward compatibility
+export type { DataType, DataColumn, ColumnStatistics };
 
 export interface DatasetMetadata {
   source: 'csv' | 'paste' | 'api' | 'manual';
@@ -36,11 +31,16 @@ export interface DatasetStatistics {
   dateColumns?: string[];
 }
 
+/**
+ * Cell value types supported in datasets
+ */
+export type CellValue = string | number | boolean | Date | null;
+
 export interface Dataset {
   id: string;
   name: string;
   description?: string;
-  data: any[][];
+  data: CellValue[][];
   columns: DataColumn[];
   metadata: DatasetMetadata;
   statistics: DatasetStatistics;
@@ -51,7 +51,7 @@ export interface Dataset {
 export interface DatasetPreview {
   id: string;
   name: string;
-  rows: any[][];
+  rows: CellValue[][];
   totalRows: number;
   columns: DataColumn[];
 }
@@ -105,7 +105,7 @@ export interface DataValidationError {
   column?: string;
   type: 'missing_value' | 'type_mismatch' | 'format_error' | 'constraint_violation' | 'other';
   message: string;
-  value?: any;
+  value?: CellValue;
 }
 
 export interface DataValidationWarning {
@@ -113,7 +113,7 @@ export interface DataValidationWarning {
   column?: string;
   type: 'suspicious_value' | 'possible_duplicate' | 'outlier' | 'truncated' | 'other';
   message: string;
-  value?: any;
+  value?: CellValue;
 }
 
 export interface DataProfile {
@@ -128,15 +128,15 @@ export interface ColumnProfile {
   dataType: DataType;
   nullCount: number;
   uniqueCount: number;
-  min?: any;
-  max?: any;
+  min?: CellValue;
+  max?: CellValue;
   mean?: number;
   median?: number;
-  mode?: any;
+  mode?: CellValue;
   standardDeviation?: number;
-  percentiles?: { [key: string]: number };
-  topValues?: { value: any; count: number }[];
-  distribution?: { bucket: string; count: number }[];
+  percentiles?: Record<string, number>;
+  topValues?: Array<{ value: CellValue; count: number }>;
+  distribution?: Array<{ bucket: string; count: number }>;
 }
 
 export interface CorrelationMatrix {

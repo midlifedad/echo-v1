@@ -24,15 +24,28 @@ import type {
 import type { Dataset, DatasetPreview } from '@/lib/types/dataset';
 import type { ChartRecommendation as ChartRec } from '@/lib/types/chart-recommendations';
 
+interface GeneratedTile {
+  title: string;
+  type: string;
+  data: unknown;
+  config: unknown;
+  metadata: {
+    source: ImportMethod;
+    columns: string[];
+    rowCount: number;
+    generatedAt: string;
+  };
+}
+
 interface DataImportFlowProps {
-  onComplete: (tileData: any) => void;
+  onComplete: (tileData: GeneratedTile) => void;
   onCancel: () => void;
   enableAI?: boolean; // Enable AI recommendations step
 }
 
 type ImportStep = 'method' | 'input' | 'preview' | 'mapping' | 'ai-recommendations' | 'saved-datasets' | 'complete';
 
-const STEPS: { id: ImportStep; label: string; icon: any }[] = [
+const STEPS: Array<{ id: ImportStep; label: string; icon: React.ComponentType<{ className?: string }> }> = [
   { id: 'method', label: 'Choose Method', icon: Upload },
   { id: 'input', label: 'Import Data', icon: FileText },
   { id: 'preview', label: 'Preview', icon: FileText },

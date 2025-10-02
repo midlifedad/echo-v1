@@ -16,9 +16,11 @@ import { ChartRecommendation, ChartRecommendationResponse } from '@/lib/types/ch
 import { chartMCPService } from '@/lib/services/chartMCP';
 import HighchartsWrapper from '@/components/charts/HighchartsWrapper';
 
+import type Highcharts from 'highcharts';
+
 interface AIRecommendationsProps {
   dataset: Dataset | DatasetPreview;
-  onSelect: (recommendation: ChartRecommendation, config: any) => void;
+  onSelect: (recommendation: ChartRecommendation, config: Highcharts.Options) => void;
   onCancel: () => void;
   intent?: string;
   preferences?: {
