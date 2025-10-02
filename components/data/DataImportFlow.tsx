@@ -8,23 +8,29 @@ import FileUploadZone from './FileUploadZone';
 import PasteDataArea from './PasteDataArea';
 import DataPreview from './DataPreview';
 import ColumnMappingPanel from './ColumnMappingPanel';
+import AIRecommendations from './AIRecommendations';
+import DatasetManager from './DatasetManager';
 import { ColumnMapper } from '@/lib/services/columnMapper';
 import { csvParser } from '@/lib/services/csvParser';
 import { dataImportService } from '@/lib/services/dataImportService';
-import type { 
-  ImportMethod, 
-  ParsedData, 
-  ColumnAnalysis, 
+import { datasetStorage } from '@/lib/services/datasetStorage';
+import type {
+  ImportMethod,
+  ParsedData,
+  ColumnAnalysis,
   DataProfile,
-  ChartRecommendation 
+  ChartRecommendation
 } from '@/lib/types/dataImport';
+import type { Dataset, DatasetPreview } from '@/lib/types/dataset';
+import type { ChartRecommendation as ChartRec } from '@/lib/types/chart-recommendations';
 
 interface DataImportFlowProps {
   onComplete: (tileData: any) => void;
   onCancel: () => void;
+  enableAI?: boolean; // Enable AI recommendations step
 }
 
-type ImportStep = 'method' | 'input' | 'preview' | 'mapping' | 'complete';
+type ImportStep = 'method' | 'input' | 'preview' | 'mapping' | 'ai-recommendations' | 'saved-datasets' | 'complete';
 
 const STEPS: { id: ImportStep; label: string; icon: any }[] = [
   { id: 'method', label: 'Choose Method', icon: Upload },
@@ -34,13 +40,15 @@ const STEPS: { id: ImportStep; label: string; icon: any }[] = [
   { id: 'complete', label: 'Complete', icon: Check },
 ];
 
-export default function DataImportFlow({ onComplete, onCancel }: DataImportFlowProps) {
+export default function DataImportFlow({ onComplete, onCancel, enableAI = false }: DataImportFlowProps) {
   const [currentStep, setCurrentStep] = useState<ImportStep>('method');
   const [importMethod, setImportMethod] = useState<ImportMethod | null>(null);
   const [rawData, setRawData] = useState<string>('');
   const [parsedData, setParsedData] = useState<ParsedData | null>(null);
   const [dataProfile, setDataProfile] = useState<DataProfile | null>(null);
   const [selectedChart, setSelectedChart] = useState<ChartRecommendation | null>(null);
+  const [dataset, setDataset] = useState<Dataset | null>(null);
+  const [selectedRecommendation, setSelectedRecommendation] = useState<ChartRec | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,9 +61,56 @@ export default function DataImportFlow({ onComplete, onCancel }: DataImportFlowP
   const progressPercentage = ((getStepIndex(currentStep) + 1) / STEPS.length) * 100;
 
   const handleMethodSelect = (method: ImportMethod) => {
-    setImportMethod(method);
-    setCurrentStep('input');
+    if (method === 'saved-datasets') {
+      setCurrentStep('saved-datasets');
+    } else {
+      setImportMethod(method);
+      setCurrentStep('input');
+    }
     setError(null);
+  };
+
+  const handleDatasetSelect = async (selectedDataset: DatasetPreview) => {
+    try {
+      setIsProcessing(true);
+      const fullDataset = await datasetStorage.get(selectedDataset.id);
+      if (fullDataset) {
+        setDataset(fullDataset);
+        setParsedData({
+          data: fullDataset.data.slice(1).map((row, i) => {
+            const obj: any = {};
+            fullDataset.data[0].forEach((header: any, j: number) => {
+              obj[header] = row[j];
+            });
+            return obj;
+          }),
+          errors: [],
+          meta: {
+            delimiter: ',',
+            linebreak: '\n',
+            aborted: false,
+            truncated: false,
+            fields: fullDataset.data[0]
+          }
+        });
+        setCurrentStep(enableAI ? 'ai-recommendations' : 'mapping');
+      }
+    } catch (err) {
+      setError('Failed to load dataset');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleAIRecommendationSelect = (recommendation: ChartRec, config: any) => {
+    setSelectedRecommendation(recommendation);
+    setSelectedChart({
+      chartType: recommendation.chartType as any,
+      config,
+      confidence: recommendation.confidence,
+      reasoning: recommendation.rationale
+    });
+    setCurrentStep('mapping');
   };
 
   const handleFileUpload = async (file: File) => {
@@ -118,25 +173,42 @@ export default function DataImportFlow({ onComplete, onCancel }: DataImportFlowP
 
   const handlePreviewConfirm = async () => {
     if (!parsedData) return;
-    
+
     setIsProcessing(true);
     setError(null);
-    
+
     try {
       // Analyze the data with ColumnMapper
       const profile = columnMapper.analyzeDataset(
         parsedData.meta.fields || [],
         parsedData.data
       );
-      
+
       setDataProfile(profile);
-      
-      // Auto-select the first recommended chart
-      if (profile.chartRecommendations.length > 0) {
-        setSelectedChart(profile.chartRecommendations[0]);
+
+      // Save dataset to storage for AI recommendations if enabled
+      if (enableAI) {
+        const datasetResult = await csvParser.parseToDataset(rawData, {
+          hasHeaders: true
+        });
+        if (datasetResult.success && datasetResult.dataset) {
+          await datasetStorage.save(datasetResult.dataset);
+          setDataset(datasetResult.dataset);
+          setCurrentStep('ai-recommendations');
+        } else {
+          // Fallback to mapping if dataset creation fails
+          if (profile.chartRecommendations.length > 0) {
+            setSelectedChart(profile.chartRecommendations[0]);
+          }
+          setCurrentStep('mapping');
+        }
+      } else {
+        // Auto-select the first recommended chart
+        if (profile.chartRecommendations.length > 0) {
+          setSelectedChart(profile.chartRecommendations[0]);
+        }
+        setCurrentStep('mapping');
       }
-      
-      setCurrentStep('mapping');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to analyze data');
     } finally {
@@ -223,6 +295,23 @@ export default function DataImportFlow({ onComplete, onCancel }: DataImportFlowP
           />
         ) : null;
       
+      case 'ai-recommendations':
+        return dataset ? (
+          <AIRecommendations
+            dataset={dataset}
+            onSelect={handleAIRecommendationSelect}
+            onCancel={handleBack}
+          />
+        ) : null;
+
+      case 'saved-datasets':
+        return (
+          <DatasetManager
+            onSelectDataset={handleDatasetSelect}
+            selectionMode={true}
+          />
+        );
+
       case 'mapping':
         return dataProfile ? (
           <ColumnMappingPanel
@@ -236,7 +325,7 @@ export default function DataImportFlow({ onComplete, onCancel }: DataImportFlowP
             error={error}
           />
         ) : null;
-      
+
       case 'complete':
         return (
           <div className="flex flex-col items-center justify-center py-12 space-y-4">
@@ -249,7 +338,7 @@ export default function DataImportFlow({ onComplete, onCancel }: DataImportFlowP
             </p>
           </div>
         );
-      
+
       default:
         return null;
     }

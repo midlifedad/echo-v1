@@ -3,6 +3,9 @@
  * Handles communication with the Chart MCP server for AI-powered chart generation
  */
 
+import { Dataset, DataColumn } from '@/lib/types/dataset';
+import { ChartRecommendationRequest, ChartRecommendationResponse } from '@/lib/types/chart-recommendations';
+
 export interface ChartMCPRequest {
   intent: {
     description: string;
@@ -263,6 +266,110 @@ class ChartMCPService {
     } catch {
       return false;
     }
+  }
+
+  /**
+   * Generate chart recommendations from a dataset
+   */
+  async recommendFromDataset(
+    dataset: Dataset,
+    request?: Partial<ChartRecommendationRequest>
+  ): Promise<ChartRecommendationResponse> {
+    // Build data profile from dataset
+    const dataProfile = {
+      schema: dataset.columns.map(col => ({
+        name: col.name,
+        type: this.mapDataType(col.dataType)
+      })),
+      rowCount: dataset.statistics.rowCount,
+      samples: dataset.data.slice(1, Math.min(6, dataset.data.length)) // First 5 data rows
+    };
+
+    // Prepare the request
+    const mcpRequest: ChartMCPRequest = {
+      intent: {
+        description: request?.intent || `Create an effective visualization for ${dataset.name}`,
+        mode: 'intent+data' as const
+      },
+      dataProfile,
+      data: dataset.data,
+      preferences: request?.preferences ? {
+        audience: request.preferences.audience as any,
+        impressiveness: request.preferences.impressiveness as any,
+        colorBlindSafe: request.preferences.accessibility
+      } : undefined,
+      constraints: {
+        maxSeries: 10,
+        maxCategories: 50
+      }
+    };
+
+    // Get recommendations
+    const response = await this.generateCharts(mcpRequest);
+
+    // Transform to our format
+    return this.transformResponse(response, dataset);
+  }
+
+  /**
+   * Map our data types to Chart-MCP types
+   */
+  private mapDataType(dataType: string): 'string' | 'number' | 'datetime' | 'boolean' {
+    switch (dataType) {
+      case 'date':
+      case 'datetime':
+        return 'datetime';
+      case 'number':
+        return 'number';
+      case 'boolean':
+        return 'boolean';
+      default:
+        return 'string';
+    }
+  }
+
+  /**
+   * Transform Chart-MCP response to our format
+   */
+  private transformResponse(
+    mcpResponse: ChartMCPResponse,
+    dataset: Dataset
+  ): ChartRecommendationResponse {
+    const transform = (option: ChartOption) => ({
+      id: `chart-${option.index}`,
+      chartType: option.chartType as any,
+      confidence: (option as any).score || 0.8,
+      rationale: option.reason,
+      config: option.config,
+      insights: option.optimized?.improvements
+    });
+
+    return {
+      recommended: transform(mcpResponse.recommended),
+      alternatives: mcpResponse.alternatives.map(transform),
+      dataProfile: {
+        rowCount: dataset.statistics.rowCount,
+        columnCount: dataset.statistics.columnCount,
+        dataTypes: Object.fromEntries(
+          dataset.columns.map(col => [col.name, col.dataType])
+        ),
+        temporalColumns: dataset.statistics.dateColumns || [],
+        numericColumns: dataset.statistics.numericColumns || [],
+        categoricalColumns: dataset.statistics.categoricalColumns || [],
+        nullPercentage: 0,
+        hasTimeSeries: (dataset.statistics.dateColumns?.length || 0) > 0,
+        hasGeographicData: false,
+        suggestedRelationships: []
+      },
+      processingTime: mcpResponse.diagnostics.timings.totalMs
+    };
+  }
+
+  /**
+   * Test connection to Chart-MCP server
+   */
+  async testConnection(): Promise<boolean> {
+    return this.checkHealth();
   }
 }
 
