@@ -115,7 +115,7 @@ export interface SidebarContextType {
 export interface TileContextType {
   tiles: TileData[];
   addTile: (type: TileType) => void;
-  removeTile: (id: string, onCleanup?: (tileId: string) => void) => void;
+  removeTile: (id: string, onCleanup?: (tileId: string) => void) => Promise<void>;
   updateTile: (id: string, updates: Partial<TileData>) => Promise<void>;
   reorderTiles: (tiles: TileData[]) => void;
 }

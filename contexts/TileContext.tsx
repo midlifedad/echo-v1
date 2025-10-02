@@ -110,15 +110,31 @@ export function TileProvider({ children }: { children: React.ReactNode }) {
     saveTiles(updatedTiles);
   };
 
-  const removeTile = (id: string, onCleanup?: (tileId: string) => void) => {
+  const removeTile = async (id: string, onCleanup?: (tileId: string) => void) => {
+    // Optimistic update - update local state immediately for responsive UI
     const updatedTiles = tiles.filter(tile => tile.id !== id)
       .map((tile, index) => ({ ...tile, position: index }));
     setTiles(updatedTiles);
     saveTiles(updatedTiles);
-    
+
     // Call cleanup function if provided (to clean up layout data)
     if (onCleanup) {
       onCleanup(id);
+    }
+
+    // Persist to database
+    try {
+      const response = await fetch(`/api/instances/${id}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        console.error('Failed to delete tile from database');
+      }
+    } catch (error) {
+      console.error('Failed to delete tile:', error);
+      // Note: We keep the optimistic update even on error
+      // Could add error state/toast notification here
     }
   };
 

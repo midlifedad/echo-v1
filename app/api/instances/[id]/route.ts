@@ -4,10 +4,11 @@ import { TileInstanceService } from '@/lib/services/tileInstanceService';
 // GET /api/instances/[id] - Get a single instance
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const instance = await TileInstanceService.getInstance(params.id);
+    const { id } = await params;
+    const instance = await TileInstanceService.getInstance(id);
     
     if (!instance) {
       return NextResponse.json(
@@ -29,12 +30,13 @@ export async function GET(
 // PUT /api/instances/[id] - Update an instance
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
-    
-    const instance = await TileInstanceService.updateInstance(params.id, body);
+
+    const instance = await TileInstanceService.updateInstance(id, body);
     
     if (!instance) {
       return NextResponse.json(
@@ -56,10 +58,11 @@ export async function PUT(
 // DELETE /api/instances/[id] - Delete an instance
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await TileInstanceService.deleteInstance(params.id);
+    const { id } = await params;
+    await TileInstanceService.deleteInstance(id);
     
     return NextResponse.json({ success: true });
   } catch (error) {

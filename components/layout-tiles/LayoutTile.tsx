@@ -56,8 +56,8 @@ export default function LayoutTile({
     console.log('Duplicate tile:', tile.id);
   };
 
-  const handleRemove = () => {
-    removeTile(tile.id, cleanupTileData);
+  const handleRemove = async () => {
+    await removeTile(tile.id, cleanupTileData);
   };
 
   const handleDisplayConfig = (config: any) => {
