@@ -102,8 +102,8 @@ export default function LayoutTile({
     console.log('View details:', tile.id);
   };
 
-  const handleSaveEdit = (updatedTile: any) => {
-    updateTile(tile.id, updatedTile);
+  const handleSaveEdit = async (updatedTile: any) => {
+    await updateTile(tile.id, updatedTile);
     setShowEditor(false);
   };
 

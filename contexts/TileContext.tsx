@@ -122,12 +122,30 @@ export function TileProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const updateTile = (id: string, updates: Partial<TileData>) => {
-    const updatedTiles = tiles.map(tile => 
+  const updateTile = async (id: string, updates: Partial<TileData>) => {
+    // Optimistic update - update local state immediately for responsive UI
+    const updatedTiles = tiles.map(tile =>
       tile.id === id ? { ...tile, ...updates } : tile
     );
     setTiles(updatedTiles);
     saveTiles(updatedTiles);
+
+    // Persist to database
+    try {
+      const response = await fetch(`/api/instances/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+
+      if (!response.ok) {
+        console.error('Failed to persist tile update to database');
+      }
+    } catch (error) {
+      console.error('Failed to persist tile update:', error);
+      // Note: We keep the optimistic update even on error
+      // Could add error state/toast notification here
+    }
   };
 
   const reorderTiles = (reorderedTiles: TileData[]) => {
