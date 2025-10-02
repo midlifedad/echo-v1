@@ -17,7 +17,7 @@ export async function GET(
     // Transform to the format expected by the frontend
     const tilesWithPositions = instancesWithPositions.map(instance => {
       // Format positions for compatibility
-      const positions: any = {};
+      const positions: Record<string, { position: unknown; isVisible: boolean; inheritanceMode: string }> = {};
       if (instance.positions) {
         Object.entries(instance.positions).forEach(([breakpoint, position]) => {
           positions[breakpoint] = {

@@ -32,14 +32,20 @@ export async function GET(request: NextRequest) {
       tiles = await TileService.getTilesByType(type);
     } else {
       // Complex filtering
-      const filters: any = {};
+      const filters: {
+        category?: string;
+        isTemplate?: boolean;
+        isPublic?: boolean;
+        ownerId?: string;
+        search?: string;
+      } = {};
       if (category) filters.category = category;
       if (isTemplate !== null) filters.isTemplate = isTemplate === 'true';
       if (isPublic !== null) filters.isPublic = isPublic === 'true';
       if (ownerId) filters.ownerId = ownerId;
       if (search) filters.search = search;
-      
-      tiles = Object.keys(filters).length > 0 
+
+      tiles = Object.keys(filters).length > 0
         ? await TileService.listTilesWithFilters(filters)
         : await TileService.listTiles();
     }
