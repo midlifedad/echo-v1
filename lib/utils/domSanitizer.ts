@@ -1,9 +1,35 @@
 /**
  * DOM Sanitization Utility
  * Protects against XSS attacks by sanitizing user-generated content
+ *
+ * Client-side only implementation to avoid Next.js SSR issues
+ * with isomorphic-dompurify's JSDOM stylesheet loading
  */
 
-import DOMPurify from 'isomorphic-dompurify';
+'use client';
+
+/**
+ * Basic HTML escaping for SSR fallback
+ * Used when DOMPurify is not available (server-side rendering)
+ */
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/**
+ * Lazy load DOMPurify only on client side
+ */
+let DOMPurify: typeof import('isomorphic-dompurify').default | null = null;
+if (typeof window !== 'undefined') {
+  import('isomorphic-dompurify').then((module) => {
+    DOMPurify = module.default;
+  });
+}
 
 /**
  * Sanitize HTML string to prevent XSS attacks
@@ -13,8 +39,13 @@ import DOMPurify from 'isomorphic-dompurify';
  */
 export function sanitizeHtml(
   dirty: string,
-  options?: DOMPurify.Config
+  options?: import('isomorphic-dompurify').Config
 ): string {
+  if (!DOMPurify) {
+    // SSR fallback or before DOMPurify loads - basic HTML escaping
+    return escapeHtml(dirty);
+  }
+
   return DOMPurify.sanitize(dirty, {
     ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'p', 'br', 'span', 'div'],
     ALLOWED_ATTR: ['class', 'style'],
@@ -29,6 +60,11 @@ export function sanitizeHtml(
  * @returns Plain text with all HTML removed
  */
 export function sanitizeText(text: string): string {
+  if (!DOMPurify) {
+    // SSR fallback or before DOMPurify loads - basic HTML escaping
+    return escapeHtml(text);
+  }
+
   return DOMPurify.sanitize(text, {
     ALLOWED_TAGS: [],
     ALLOWED_ATTR: []
@@ -63,6 +99,11 @@ export function sanitizeUserInput(value: unknown): string {
  * @returns Sanitized content
  */
 export function sanitizeChartContent(content: string): string {
+  if (!DOMPurify) {
+    // SSR fallback or before DOMPurify loads - basic HTML escaping
+    return escapeHtml(content);
+  }
+
   return DOMPurify.sanitize(content, {
     ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'br'],
     ALLOWED_ATTR: []
