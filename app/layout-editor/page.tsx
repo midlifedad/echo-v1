@@ -76,6 +76,9 @@ function LayoutEditorContent() {
         position: 0, // Will be determined by grid position
         config: tile.config,
         data: tile.data,
+        content: tile.content,
+        displaySettings: tile.displaySettings,
+        isLocked: tile.displaySettings?.locked || false,
       }));
       reorderTiles(formattedTiles);
       
