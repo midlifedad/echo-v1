@@ -41,6 +41,7 @@ import {
 import { DatasetListItem, DatasetPreview, StorageQuota } from '@/lib/types/dataset';
 import { datasetStorage } from '@/lib/services/datasetStorage';
 import { csvParser } from '@/lib/services/csvParser';
+import { sanitizeDatasetMetadata, sanitizeUserInput } from '@/lib/utils/domSanitizer';
 
 interface DatasetManagerProps {
   onSelectDataset?: (dataset: DatasetPreview) => void;
@@ -271,10 +272,10 @@ export default function DatasetManager({
                         <div className="flex items-center gap-2">
                           <FileText className="h-4 w-4 text-muted-foreground" />
                           <div>
-                            <p>{dataset.name}</p>
+                            <p>{sanitizeDatasetMetadata(dataset.name)}</p>
                             {dataset.description && (
                               <p className="text-xs text-muted-foreground">
-                                {dataset.description}
+                                {sanitizeDatasetMetadata(dataset.description)}
                               </p>
                             )}
                           </div>
@@ -330,7 +331,7 @@ export default function DatasetManager({
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
         <DialogContent className="max-w-4xl max-h-[80vh]">
           <DialogHeader>
-            <DialogTitle>{previewData?.name}</DialogTitle>
+            <DialogTitle>{previewData?.name ? sanitizeDatasetMetadata(previewData.name) : ''}</DialogTitle>
             <DialogDescription>
               Preview of first 10 rows • Total: {previewData?.totalRows.toLocaleString()} rows
             </DialogDescription>
@@ -343,7 +344,7 @@ export default function DatasetManager({
                     {previewData.columns.map((col, i) => (
                       <TableHead key={i}>
                         <div>
-                          <p>{col.name}</p>
+                          <p>{sanitizeDatasetMetadata(col.name)}</p>
                           <Badge variant="outline" className="text-xs">
                             {col.dataType}
                           </Badge>
@@ -357,7 +358,7 @@ export default function DatasetManager({
                     <TableRow key={i}>
                       {row.map((cell, j) => (
                         <TableCell key={j}>
-                          {cell !== null && cell !== undefined ? String(cell) : '-'}
+                          {cell !== null && cell !== undefined ? sanitizeUserInput(cell) : '-'}
                         </TableCell>
                       ))}
                     </TableRow>
@@ -385,7 +386,7 @@ export default function DatasetManager({
           <DialogHeader>
             <DialogTitle>Delete Dataset</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete "{selectedDataset?.name}"? This action cannot be undone.
+              Are you sure you want to delete "{selectedDataset?.name ? sanitizeDatasetMetadata(selectedDataset.name) : ''}"? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

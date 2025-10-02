@@ -12,6 +12,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { sanitizeUserInput, sanitizeText } from '@/lib/utils/domSanitizer';
 import type { ParsedData } from '@/lib/types/dataImport';
 
 interface DataPreviewProps {
@@ -54,7 +55,7 @@ export default function DataPreview({
     if (typeof value === 'boolean') return value ? 'true' : 'false';
     if (typeof value === 'number') return value.toLocaleString();
     if (value instanceof Date) return value.toLocaleDateString();
-    return String(value);
+    return sanitizeUserInput(value);
   };
   
   const getDataType = (header: string): string => {
@@ -127,7 +128,7 @@ export default function DataPreview({
                 key={header}
                 className="flex items-center space-x-2 bg-muted/50 rounded-md px-3 py-1.5"
               >
-                <span className="text-sm font-medium">{header}</span>
+                <span className="text-sm font-medium">{sanitizeText(header)}</span>
                 <Badge variant="outline" className="text-xs">
                   {dataType}
                 </Badge>
@@ -155,7 +156,7 @@ export default function DataPreview({
                 <TableHead className="w-12 font-mono text-xs">#</TableHead>
                 {headers.map((header) => (
                   <TableHead key={header} className="min-w-[120px]">
-                    {header}
+                    {sanitizeText(header)}
                   </TableHead>
                 ))}
               </TableRow>

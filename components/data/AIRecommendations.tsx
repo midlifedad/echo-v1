@@ -15,6 +15,7 @@ import { Dataset, DatasetPreview } from '@/lib/types/dataset';
 import { ChartRecommendation, ChartRecommendationResponse } from '@/lib/types/chart-recommendations';
 import { chartMCPService } from '@/lib/services/chartMCP';
 import HighchartsWrapper from '@/components/charts/HighchartsWrapper';
+import { sanitizeChartContent } from '@/lib/utils/domSanitizer';
 
 import type Highcharts from 'highcharts';
 
@@ -170,7 +171,7 @@ export default function AIRecommendations({
             </span>
           </div>
         </div>
-        <CardDescription>{chart.rationale}</CardDescription>
+        <CardDescription>{sanitizeChartContent(chart.rationale)}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="h-64 w-full bg-muted rounded-lg flex items-center justify-center">
@@ -188,7 +189,7 @@ export default function AIRecommendations({
               {chart.insights.slice(0, 3).map((insight, i) => (
                 <li key={i} className="flex items-start gap-2">
                   <TrendingUp className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                  {insight}
+                  {sanitizeChartContent(insight)}
                 </li>
               ))}
             </ul>

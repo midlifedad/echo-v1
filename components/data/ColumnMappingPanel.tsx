@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { 
-  ArrowLeft, 
-  ArrowRight, 
-  AlertCircle, 
-  CheckCircle, 
+import {
+  ArrowLeft,
+  ArrowRight,
+  AlertCircle,
+  CheckCircle,
   TrendingUp,
   BarChart3,
   PieChart,
@@ -17,11 +17,12 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Progress } from '@/components/ui/progress';
-import type { 
-  DataProfile, 
-  ParsedData, 
+import { sanitizeText } from '@/lib/utils/domSanitizer';
+import type {
+  DataProfile,
+  ParsedData,
   ChartRecommendation,
-  ColumnAnalysis 
+  ColumnAnalysis
 } from '@/lib/types/dataImport';
 
 interface ColumnMappingPanelProps {
@@ -215,7 +216,7 @@ export default function ColumnMappingPanel({
                       <span className="text-sm font-mono bg-muted px-1.5 py-0.5 rounded">
                         {getDataTypeIcon(column.dataType)}
                       </span>
-                      <span className="text-sm font-medium">{column.name}</span>
+                      <span className="text-sm font-medium">{sanitizeText(column.name)}</span>
                     </div>
                     <Badge variant="outline" className="text-xs">
                       {column.dataType}
