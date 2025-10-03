@@ -260,21 +260,26 @@ interface TemplateService {
   read(id: string): Promise<Template>;
   update(id: string, changes: Partial<Template>): Promise<Template>;
   delete(id: string): Promise<void>;
-  
+
   // Library Operations
   list(filter?: TemplateFilter): Promise<Template[]>;
   search(query: string): Promise<Template[]>;
   getCategories(): Promise<Category[]>;
-  
+
   // Favorites
   addToFavorites(templateId: string, userId: string): Promise<void>;
   removeFromFavorites(templateId: string, userId: string): Promise<void>;
-  
+
   // Usage tracking
   incrementUsage(templateId: string): Promise<void>;
   getUsageStats(templateId: string): Promise<UsageStats>;
+
+  // NEW: Create from instance
+  createTemplateFromInstance(instanceId: string): Promise<Template>;
 }
 ```
+
+**Implementation**: `lib/services/tileTemplateService.ts`
 
 ### Instance Service Interface
 ```typescript
@@ -284,24 +289,33 @@ interface InstanceService {
   read(id: string): Promise<Instance>;
   update(id: string, changes: Partial<Instance>): Promise<Instance>;
   delete(id: string): Promise<void>;
-  
+
   // Template Operations
   createFromTemplate(templateId: string, layoutId: string): Promise<Instance>;
+  createCustomInstance(data: CustomInstanceInput): Promise<Instance>;
   syncWithTemplate(instanceId: string): Promise<Instance>;
   saveAsTemplate(instanceId: string, templateData: TemplateInput): Promise<Template>;
-  
+
   // Layout Operations
   getByLayout(layoutId: string): Promise<Instance[]>;
+  getInstancesForLayout(layoutId: string): Promise<InstanceWithPositions[]>;
   moveToLayout(instanceId: string, targetLayoutId: string): Promise<Instance>;
-  duplicate(instanceId: string, targetLayoutId?: string): Promise<Instance>;
-  
+  copyInstance(instanceId: string, targetLayoutId: string): Promise<Instance>;
+
+  // Position Management
+  updatePositions(layoutId: string, positions: PositionUpdate[]): Promise<void>;
+  updateDisplaySettings(instanceId: string, settings: DisplaySettings): Promise<Instance>;
+
   // Resolution
   resolve(instanceId: string): Promise<ResolvedInstance>;
-  
+  getModifiedInstances(layoutId: string): Promise<Instance[]>;
+
   // Validation
   validate(instance: InstanceInput): ValidationResult;
 }
 ```
+
+**Implementation**: `lib/services/tileInstanceService.ts`
 
 ## Rendering Architecture
 
@@ -329,6 +343,128 @@ interface RenderContext {
 4. **Error Boundary**: Catch and handle rendering errors
 5. **Output Generation**: Produce final rendered output
 
+## Additional Services
+
+### Chart-MCP Service (NEW)
+AI-powered chart generation service.
+
+```typescript
+interface ChartMCPService {
+  // Chart Generation
+  generateCharts(options: GenerateOptions): Promise<ChartOption[]>;
+  generateChartsWithProgress(
+    options: GenerateOptions,
+    onProgress: ProgressCallback
+  ): Promise<{ charts: ChartOption[]; events: ProgressEvent[] }>;
+
+  // Recommendations
+  recommendFromDataset(datasetId: string): Promise<Recommendation[]>;
+
+  // Health Check
+  checkHealth(): Promise<{ available: boolean; version: string }>;
+}
+```
+
+**Implementation**: `lib/services/chartMCP.ts`
+
+**Features**:
+- WebSocket connection for real-time progress
+- REST API fallback
+- 6-stage pipeline with progress events
+- 15-minute response cache
+- Intent-based generation
+
+### Data Import Service (NEW)
+Data transformation and tile generation from imported data.
+
+```typescript
+interface DataImportService {
+  // Tile Generation from Data
+  generateTileFromData(
+    datasetId: string,
+    chartType: string,
+    options?: GenerateOptions
+  ): Promise<TileConfig>;
+
+  // Chart-specific transformers
+  transformToLineData(dataset: Dataset, options: TransformOptions): ChartData;
+  transformToBarData(dataset: Dataset, options: TransformOptions): ChartData;
+  transformToPieData(dataset: Dataset, options: TransformOptions): ChartData;
+  transformToScatterData(dataset: Dataset, options: TransformOptions): ChartData;
+  transformToAreaData(dataset: Dataset, options: TransformOptions): ChartData;
+}
+```
+
+**Implementation**: `lib/services/dataImportService.ts`
+
+**Features**:
+- Automatic column mapping
+- Data aggregation
+- Smart title generation
+- Type-specific transformers
+
+### Dataset Storage Service (NEW)
+Dataset persistence and management.
+
+```typescript
+interface DatasetStorageService {
+  // Storage Operations
+  saveDataset(dataset: DatasetInput): Promise<string>;
+  getDataset(datasetId: string): Promise<Dataset>;
+  listDatasets(options?: ListOptions): Promise<DatasetListItem[]>;
+  deleteDataset(datasetId: string): Promise<void>;
+
+  // Quota Management
+  getQuotaUsage(): Promise<QuotaInfo>;
+  cleanupOldDatasets(keepCount: number): Promise<void>;
+
+  // Sampling
+  getSample(datasetId: string, options: SampleOptions): Promise<DataSample>;
+}
+```
+
+**Implementation**: `lib/services/datasetStorage.ts`
+
+**Features**:
+- IndexedDB storage (client)
+- Server storage (persistent)
+- Compression (lz-string)
+- Quota management
+
+### CSV Parser Service (NEW)
+CSV file parsing and validation.
+
+```typescript
+interface CSVParserService {
+  // Parsing
+  parse(file: File, options?: ParseOptions): Promise<ParseResult>;
+  parseText(text: string, options?: ParseOptions): Promise<ParseResult>;
+
+  // Auto-detection
+  detectDelimiter(text: string): string;
+  validateStructure(data: any[][]): ValidationResult;
+}
+```
+
+**Implementation**: `lib/services/csvParser.ts`
+
+### Column Mapper Service (NEW)
+Column type detection and data profiling.
+
+```typescript
+interface ColumnMapperService {
+  // Type Detection
+  detectColumnTypes(data: any[][]): ColumnTypes;
+  profileColumn(column: any[]): ColumnProfile;
+
+  // Data Analysis
+  analyzeDataQuality(data: any[][]): DataQualityMetrics;
+  detectCorrelations(data: any[][], types: ColumnTypes): CorrelationMatrix;
+}
+```
+
+**Implementation**: `lib/services/columnMapper.ts`
+
 ## Extension Patterns
 
 ### Adding New Tile Types
@@ -346,22 +482,40 @@ const newTileSchema = {
 };
 ```
 
-2. **Create Renderer**
+2. **Update Database Schema**
 ```typescript
-class CustomTileRenderer implements TileRenderer {
-  render(tile: Tile, context: RenderContext) {
-    // Rendering logic
-  }
+// In lib/db/schema.ts
+// Add new type to tile type enum if needed
+```
+
+3. **Create Renderer Component**
+```typescript
+// components/tiles/CustomTile.tsx
+export function CustomTile({ config, data }: TileProps) {
+  // Rendering logic
+  return <div>...</div>;
 }
 ```
 
-3. **Register Type**
+4. **Add to Tile Registry**
 ```typescript
-registry.register({
-  type: 'custom',
-  schema: newTileSchema,
-  renderer: new CustomTileRenderer()
-});
+// lib/tileRegistry.ts
+const tileTypes = {
+  ...existingTypes,
+  custom: {
+    component: CustomTile,
+    schema: newTileSchema,
+    defaultConfig: { /* defaults */ }
+  }
+};
+```
+
+5. **Add Data Transformer (if needed)**
+```typescript
+// lib/services/dataImportService.ts
+transformToCustomData(dataset: Dataset, options: TransformOptions): ChartData {
+  // Transform logic
+}
 ```
 
 ## Performance Optimization

@@ -78,6 +78,20 @@ RESTful API contracts for system interaction.
 - Template system
 - WebSocket events
 
+#### [chart-mcp-api.md](03-api/chart-mcp-api.md)
+- Chart-MCP integration endpoints
+- AI-powered chart generation (REST + WebSocket)
+- Real-time progress updates
+- Chart recommendations from datasets
+- Caching and rate limiting
+
+#### [datasets-api.md](03-api/datasets-api.md)
+- Data import endpoints
+- CSV file upload and paste data
+- Dataset storage and management
+- Column statistics and profiling
+- Storage quota management
+
 ## Key Concepts
 
 ### Template/Instance Architecture
@@ -157,23 +171,29 @@ The migration script (`lib/db/migrate-to-template-instance.ts`) handles all nece
 
 ## Implementation Status
 
-### ✅ Completed
-- **Database Schema** - New table structure with template/instance pattern
-- **TypeScript Types** - Complete type definitions for new structure  
+### ✅ Completed (100%)
+- **Database Schema** - SQLite with Drizzle ORM, template/instance pattern
+- **TypeScript Types** - Complete type system (6 type files)
 - **Migration Script** - Safe migration from old to new schema
 - **Template API** - Full CRUD operations for templates
 - **Instance API** - Instance management endpoints
+- **Service Layer** - 9 comprehensive services (Templates, Instances, Layouts, Chart-MCP, DataImport, etc.)
+- **UI Components** - React components for all core features
+- **Chart-MCP Integration** - WebSocket + REST API for AI chart generation
+- **Data Import System** - CSV upload, paste data, column mapping, dataset storage
+- **API Endpoints** - 19+ REST endpoints fully implemented
+- **Documentation** - Complete technical documentation
 
 ### 🔄 In Progress
-- **Service Layer** - Updating TileService and LayoutService
-- **UI Components** - Refactoring for new structure
-- **Documentation** - Updating user-facing docs
+- Template marketplace/gallery
+- User authentication and authorization
+- Collaborative editing (multi-user)
 
 ### 📋 Planned Features
-- Template gallery/marketplace
-- Instance synchronization with templates
-- Bulk operations
-- Version control for templates
+- Template versioning and rollback
+- Advanced data connectors
+- Real-time collaboration
+- Mobile app
 
 ## Implementation Checklist
 
@@ -269,12 +289,64 @@ Before rebuilding, consider:
 - Will layouts be shared between users?
 - What performance targets do you have?
 
+### 🎯 04-features/
+Feature-specific guides and tutorials.
+
+#### [ai-chart-generation.md](04-features/ai-chart-generation.md)
+- Chart-MCP integration guide
+- AI-powered chart generation workflows
+- Intent-based and data-driven generation
+- Real-time progress updates (6-stage pipeline)
+- Configuration and preferences
+- Error handling and troubleshooting
+- Code examples and best practices
+
+#### [data-import.md](04-features/data-import.md)
+- Complete data import guide
+- CSV upload and paste data workflows
+- Column type detection and mapping
+- Data profiling and quality assessment
+- Storage (IndexedDB + server)
+- Chart recommendations from data
+- Multi-step wizard UI
+- Best practices and optimization
+
+## Quick Links
+
+### Getting Started
+- **[../QUICKSTART.md](../QUICKSTART.md)** - Get up and running in minutes
+- **[../FEATURES.md](../FEATURES.md)** - Feature list and implementation status
+- **[../CLAUDE.md](../CLAUDE.md)** - Complete developer guide
+
+### Core Architecture
+- **[01-schemas/database.md](01-schemas/database.md)** - Database schema
+- **[02-architecture/tile-system.md](02-architecture/tile-system.md)** - Tile system architecture
+- **[02-architecture/layout-system.md](02-architecture/layout-system.md)** - Layout system
+- **[02-architecture/data-flow.md](02-architecture/data-flow.md)** - Data flow patterns
+
+### API Documentation
+- **[03-api/templates-api.md](03-api/templates-api.md)** - Templates API
+- **[03-api/instances-api.md](03-api/instances-api.md)** - Instances API
+- **[03-api/layouts-api.md](03-api/layouts-api.md)** - Layouts API
+- **[03-api/chart-mcp-api.md](03-api/chart-mcp-api.md)** - Chart-MCP API
+- **[03-api/datasets-api.md](03-api/datasets-api.md)** - Datasets API
+
+### Feature Guides
+- **[04-features/ai-chart-generation.md](04-features/ai-chart-generation.md)** - AI chart generation
+- **[04-features/data-import.md](04-features/data-import.md)** - Data import
+
 ## Related Documentation
 
 - **[../CLAUDE.md](../CLAUDE.md)** - Project-specific implementation notes
+- **[../QUICKSTART.md](../QUICKSTART.md)** - Quick start guide
+- **[../FEATURES.md](../FEATURES.md)** - Feature list and status
 - **[02-architecture/tile-system.md](02-architecture/tile-system.md)** - Complete tile system architecture with template/instance pattern
 - **[01-schemas/tiles.md](01-schemas/tiles.md)** - Template and instance schema definitions
 
 ---
 
-*This documentation represents the core system design. Implementation details may vary based on chosen technologies and specific requirements.*
+**Documentation Version**: 3.0.0
+**Last Updated**: 2025-10-03
+**Status**: Active Development
+
+*This documentation represents the core system design and current implementation. All features marked as ✅ Completed are fully implemented and tested.*
