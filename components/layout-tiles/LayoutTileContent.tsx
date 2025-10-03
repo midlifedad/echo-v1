@@ -15,6 +15,17 @@ interface TileContentProps {
 }
 
 export default function LayoutTileContent({ tile, onChartReady }: TileContentProps) {
+  // Debug logging for tile rendering
+  console.log('[LayoutTileContent] Rendering tile:', {
+    id: tile.id,
+    type: tile.type,
+    title: tile.title,
+    hasConfig: !!tile.config,
+    hasData: !!tile.data,
+    config: tile.config,
+    data: tile.data
+  });
+
   // Get padding classes based on display settings
   const getPaddingClass = () => {
     const padding = tile.displaySettings?.padding;

@@ -26,6 +26,7 @@ const STAGES: Array<{ name: string; label: string; estimatedMs: number }> = [
   { name: 'compiler', label: 'Compiling Charts', estimatedMs: 10000 },
   { name: 'renderer', label: 'Rendering Previews', estimatedMs: 3000 },
   { name: 'ranker', label: 'Ranking Results', estimatedMs: 7000 },
+  { name: 'beautifier', label: 'Beautifying Charts', estimatedMs: 5000 },
 ];
 
 export function AIGenerationProgress({ className }: AIGenerationProgressProps) {
@@ -35,24 +36,121 @@ export function AIGenerationProgress({ className }: AIGenerationProgressProps) {
   const [currentStage, setCurrentStage] = useState<string | null>(null);
   const [totalTime, setTotalTime] = useState(0);
   const [startTime, setStartTime] = useState<number | null>(null);
+  const [mockProgressIntervals, setMockProgressIntervals] = useState<Map<string, NodeJS.Timeout>>(new Map());
+  const [stageStartTimes, setStageStartTimes] = useState<Map<string, number>>(new Map());
+  const [elapsedTime, setElapsedTime] = useState<Map<string, number>>(new Map());
+
+  // Start mock progress simulation for a stage
+  const startMockProgress = (stageName: string) => {
+    const stageConfig = STAGES.find(s => s.name === stageName);
+    if (!stageConfig) return;
+
+    console.log(`[AIGenerationProgress] 🎭 Starting mock progress for ${stageName}`);
+
+    // Clear any existing interval for this stage
+    const existingInterval = mockProgressIntervals.get(stageName);
+    if (existingInterval) clearInterval(existingInterval);
+
+    let progress = 0;
+    const updateInterval = 200; // Update every 200ms
+    const totalUpdates = stageConfig.estimatedMs / updateInterval;
+    const incrementPerUpdate = 100 / totalUpdates;
+
+    const interval = setInterval(() => {
+      progress += incrementPerUpdate;
+      if (progress >= 100) {
+        progress = 100;
+        clearInterval(interval);
+        setMockProgressIntervals(prev => {
+          const next = new Map(prev);
+          next.delete(stageName);
+          return next;
+        });
+      }
+
+      setStages(prev => {
+        const next = new Map(prev);
+        const stage = next.get(stageName);
+        if (stage && stage.status === 'running') {
+          stage.progress = {
+            current: Math.floor(progress),
+            total: 100,
+          };
+        }
+        return next;
+      });
+    }, updateInterval);
+
+    setMockProgressIntervals(prev => {
+      const next = new Map(prev);
+      next.set(stageName, interval);
+      return next;
+    });
+  };
+
+  // Stop mock progress for a stage
+  const stopMockProgress = (stageName: string) => {
+    const interval = mockProgressIntervals.get(stageName);
+    if (interval) {
+      console.log(`[AIGenerationProgress] 🛑 Stopping mock progress for ${stageName}`);
+      clearInterval(interval);
+      setMockProgressIntervals(prev => {
+        const next = new Map(prev);
+        next.delete(stageName);
+        return next;
+      });
+    }
+  };
 
   const handleStageEvent = (event: StageEvent) => {
+    // Debug logging
+    console.log('[AIGenerationProgress] Received event:', {
+      type: event.type,
+      stage: event.stage,
+      data: event.data,
+      metadata: event.metadata,
+      timestamp: new Date(event.timestamp).toISOString()
+    });
+
     if (event.type === 'stage:start') {
-      if (!startTime) setStartTime(Date.now());
-      
+      console.log(`[AIGenerationProgress] Starting stage: ${event.stage}`);
+      const now = Date.now();
+      if (!startTime) setStartTime(now);
+
+      // Track stage start time for elapsed display
+      setStageStartTimes(prev => {
+        const next = new Map(prev);
+        next.set(event.stage, now);
+        return next;
+      });
+
       setStages(prev => {
         const next = new Map(prev);
         const stage = next.get(event.stage);
         if (stage) {
-          stage.status = 'running';
-          if (event.data?.total) {
-            stage.progress = { current: 0, total: event.data.total };
+          // IMPORTANT: Create new object for immutable update
+          const updatedStage = {
+            ...stage,
+            status: 'running' as const,
+            progress: event.data?.total
+              ? { current: 0, total: event.data.total }
+              : { current: 0, total: 100 }
+          };
+          next.set(event.stage, updatedStage);
+
+          // Start mock progress only if no server progress data
+          if (!event.data?.total) {
+            startMockProgress(event.stage);
           }
+        } else {
+          console.warn(`[AIGenerationProgress] Unknown stage: ${event.stage}`);
         }
         return next;
       });
       setCurrentStage(event.stage);
     } else if (event.type === 'stage:progress') {
+      // Real progress from server, stop mock and use real data
+      stopMockProgress(event.stage);
       setStages(prev => {
         const next = new Map(prev);
         const stage = next.get(event.stage);
@@ -65,16 +163,36 @@ export function AIGenerationProgress({ className }: AIGenerationProgressProps) {
         return next;
       });
     } else if (event.type === 'stage:complete') {
+      const duration = event.metadata?.duration;
+      console.log(`[AIGenerationProgress] 🏁 Stage complete: ${event.stage}`, {
+        durationMs: duration,
+        durationSec: duration !== undefined ? (duration / 1000).toFixed(1) + 's' : 'undefined',
+        hasMetadata: !!event.metadata,
+        fullEvent: event
+      });
+      stopMockProgress(event.stage);
       setStages(prev => {
         const next = new Map(prev);
         const stage = next.get(event.stage);
         if (stage) {
-          stage.status = 'complete';
-          stage.duration = event.metadata?.duration;
+          // IMPORTANT: Create new object for immutable update
+          const updatedStage = {
+            ...stage,
+            status: 'complete' as const,
+            duration: duration,
+            progress: stage.progress ? {
+              ...stage.progress,
+              current: stage.progress.total
+            } : undefined
+          };
+          next.set(event.stage, updatedStage);
+          console.log(`[AIGenerationProgress] ✅ Updated stage ${event.stage}:`, updatedStage);
         }
         return next;
       });
     } else if (event.type === 'stage:error') {
+      console.error(`[AIGenerationProgress] Stage error: ${event.stage}`, event.data?.error);
+      stopMockProgress(event.stage);
       setStages(prev => {
         const next = new Map(prev);
         const stage = next.get(event.stage);
@@ -85,9 +203,27 @@ export function AIGenerationProgress({ className }: AIGenerationProgressProps) {
         return next;
       });
     } else if (event.type === 'pipeline:complete') {
-      if (startTime) {
-        setTotalTime(Date.now() - startTime);
-      }
+      console.log('[AIGenerationProgress] 🎉 Pipeline complete!', event);
+      // Clear all mock progress intervals
+      mockProgressIntervals.forEach((interval, stageName) => {
+        clearInterval(interval);
+      });
+      setMockProgressIntervals(new Map());
+
+      // Get total time from MCP diagnostics (most reliable source)
+      const totalDuration = event.data?.diagnostics?.timings?.totalMs || 0;
+
+      setTotalTime(totalDuration);
+      console.log(`[AIGenerationProgress] 📊 Total time from MCP:`, {
+        totalMs: totalDuration,
+        totalSec: (totalDuration / 1000).toFixed(1) + 's',
+        diagnostics: event.data?.diagnostics,
+        stageDurationsFromState: Array.from(stages.values()).map(s => ({
+          name: s.name,
+          duration: s.duration,
+          durationSec: s.duration !== undefined ? (s.duration / 1000).toFixed(1) + 's' : 'N/A'
+        }))
+      });
       setCurrentStage(null);
     }
   };
@@ -100,6 +236,35 @@ export function AIGenerationProgress({ className }: AIGenerationProgressProps) {
       delete (window as any).__aiGenerationProgress;
     };
   }, [startTime]);
+
+  // Real-time elapsed time updater for running stages
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = Date.now();
+      setElapsedTime(prev => {
+        const next = new Map(prev);
+        stageStartTimes.forEach((startTime, stageName) => {
+          const stage = stages.get(stageName);
+          if (stage?.status === 'running') {
+            next.set(stageName, now - startTime);
+          }
+        });
+        return next;
+      });
+    }, 100); // Update every 100ms for smooth display
+
+    return () => clearInterval(interval);
+  }, [stageStartTimes, stages]);
+
+  // Cleanup: Clear all intervals on unmount
+  useEffect(() => {
+    return () => {
+      console.log('[AIGenerationProgress] 🧹 Cleaning up mock progress intervals');
+      mockProgressIntervals.forEach((interval) => {
+        clearInterval(interval);
+      });
+    };
+  }, [mockProgressIntervals]);
 
   const getStageIcon = (status: StageInfo['status']) => {
     switch (status) {
@@ -131,11 +296,15 @@ export function AIGenerationProgress({ className }: AIGenerationProgressProps) {
               <div className="flex-1">
                 <div className="flex items-center justify-between">
                   <span className="font-medium text-sm">{stage.label}</span>
-                  {stage.duration && (
+                  {stage.status === 'running' && elapsedTime.get(stage.name) !== undefined ? (
+                    <span className="text-xs text-primary font-medium animate-pulse">
+                      {((elapsedTime.get(stage.name) || 0) / 1000).toFixed(1)}s
+                    </span>
+                  ) : stage.duration !== undefined ? (
                     <span className="text-xs text-muted-foreground">
                       {(stage.duration / 1000).toFixed(1)}s
                     </span>
-                  )}
+                  ) : null}
                 </div>
                 
                 {stage.progress && stage.status === 'running' && (

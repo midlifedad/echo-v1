@@ -34,9 +34,9 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
     "default-src 'self'",
     "script-src 'self' 'unsafe-eval' 'unsafe-inline'", // unsafe-inline needed for Next.js
     "style-src 'self' 'unsafe-inline'", // unsafe-inline needed for styled-components
-    "img-src 'self' data: blob: https:",
+    "img-src 'self' data: blob: https: http://localhost:4000",
     "font-src 'self' data:",
-    "connect-src 'self'",
+    "connect-src 'self' http://localhost:4000 ws://localhost:4000", // Allow Chart MCP server
     "frame-ancestors 'none'",
   ].join('; ');
 

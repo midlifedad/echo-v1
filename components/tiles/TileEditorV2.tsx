@@ -38,6 +38,7 @@ import {
 } from 'lucide-react';
 import { AIChartEditor } from './AIChartEditor';
 import { ChartDataEditor } from './ChartDataEditor';
+import ChartWrapper from '@/components/charts/ChartWrapper';
 import { ChartOptionsEditorV2 } from './ChartOptionsEditorV2';
 import type { Tile, CreateTileRequest, UpdateTileRequest } from '@/lib/types/database';
 import type { TileType } from '@/lib/types';
@@ -155,7 +156,18 @@ export function TileEditorV2({
   
   const [formData, setFormData] = useState<any>(getInitialFormData());
 
+  // Debug: Track showAIEditor changes
   useEffect(() => {
+    console.log('[TileEditorV2] 🔍 showAIEditor changed to:', showAIEditor);
+  }, [showAIEditor]);
+
+  // Debug: Track dialog open state
+  useEffect(() => {
+    console.log('[TileEditorV2] 🔍 dialogOpen changed to:', dialogOpen);
+  }, [dialogOpen]);
+
+  useEffect(() => {
+    console.log('[TileEditorV2] 🔍 Initialization useEffect - tile:', !!tile, 'dialogOpen:', dialogOpen);
     if (tile) {
       const data = getInitialFormData();
       setFormData(data);
@@ -169,12 +181,15 @@ export function TileEditorV2({
   }, [tile, dialogOpen]);
 
   const handleTypeSelect = (type: TileType) => {
+    console.log('[TileEditorV2] 🎯 handleTypeSelect called with type:', type);
     setSelectedType(type);
-    
+
     if (isAIGenerated(type)) {
+      console.log('[TileEditorV2] 🤖 AI type selected, showing AI editor');
       setShowAIEditor(true);
       setActiveTab('content');
     } else {
+      console.log('[TileEditorV2] 📊 Manual type selected, updating form data');
       setFormData((prev: any) => ({
         ...prev,
         type,
@@ -188,44 +203,100 @@ export function TileEditorV2({
   };
 
   const handleAIChartComplete = (chartConfig: any, metadata: any) => {
-    // Extract chart type from the config
-    const chartType = chartConfig.chart?.type || 'line';
-    const title = chartConfig.title?.text || metadata.prompt || 'AI Generated Chart';
-    
-    // Extract series data and categories from the Highcharts config
-    const series = chartConfig.series || [];
-    const categories = chartConfig.xAxis?.categories || [];
-    
-    // Build the data structure for the Data tab
-    const chartData: any = {
-      categories: categories,
-      series: series.map((s: any) => ({
-        name: s.name || 'Series',
-        data: s.data || [],
-        type: s.type || chartType,
-      })),
-    };
-    
-    // Update form data with AI-generated config and extracted data
-    setFormData((prev: any) => ({
-      ...prev,
-      type: chartType,
-      title: title,
-      description: `AI generated from: ${metadata.prompt}`,
-      config: {
+    try {
+      console.log('[TileEditorV2] ========== AI CHART COMPLETE START ==========');
+      console.log('[TileEditorV2] Received config:', {
+        chartConfig,
+        metadata,
+        hasChart: !!chartConfig?.chart,
+        hasSeries: !!chartConfig?.series,
+        hasXAxis: !!chartConfig?.xAxis,
+        seriesCount: chartConfig?.series?.length || 0,
+        currentShowAIEditor: showAIEditor,
+        currentSelectedType: selectedType
+      });
+
+      // Validate the config
+      if (!chartConfig || typeof chartConfig !== 'object') {
+        console.error('[TileEditorV2] ❌ Invalid chart config received:', chartConfig);
+        return;
+      }
+
+      // Ensure required structure exists
+      if (!chartConfig.chart) {
+        console.warn('[TileEditorV2] ⚠️ Missing chart.type, adding default');
+        chartConfig.chart = { type: 'line' };
+      }
+
+      // Extract chart type from the config with fallback
+      const chartType = chartConfig.chart?.type || 'line';
+      const title = chartConfig.title?.text || metadata?.prompt || 'AI Generated Chart';
+
+      // Extract series data and categories from the Highcharts config
+      const series = chartConfig.series || [];
+      const categories = chartConfig.xAxis?.categories || [];
+
+      console.log('[TileEditorV2] ✅ Extracted data:', {
+        chartType,
+        title,
+        seriesCount: series.length,
+        categoriesCount: categories.length,
+        series,
+        categories
+      });
+
+      // Build the data structure for the Data tab
+      const chartData: any = {
+        categories: categories,
+        series: series.map((s: any) => ({
+          name: s.name || 'Series',
+          data: s.data || [],
+          type: s.type || chartType,
+        })),
+      };
+
+      // Update form data with AI-generated config and extracted data
+      const newFormData = {
+        ...formData,
         type: chartType,
         title: title,
-        subtitle: chartConfig.subtitle?.text,
-        options: chartConfig,
-      },
-      data: chartData,
-      aiMetadata: metadata,
-    }));
-    
-    setAiMetadata(metadata);
-    setShowAIEditor(false);
-    setSelectedType(chartType as TileType);
-    setActiveTab('data');
+        description: `AI generated from: ${metadata?.prompt || 'AI chart generation'}`,
+        config: {
+          type: chartType,
+          title: title,
+          subtitle: chartConfig.subtitle?.text,
+          options: chartConfig,
+        },
+        data: chartData,
+        aiMetadata: metadata,
+      };
+
+      console.log('[TileEditorV2] 📝 Setting form data:', newFormData);
+
+      // Update state in correct order
+      console.log('[TileEditorV2] 🔄 Updating state - step 1: setFormData');
+      setFormData(newFormData);
+
+      console.log('[TileEditorV2] 🔄 Updating state - step 2: setAiMetadata');
+      setAiMetadata(metadata);
+
+      console.log('[TileEditorV2] 🔄 Updating state - step 3: setSelectedType to', chartType);
+      setSelectedType(chartType as TileType);
+
+      console.log('[TileEditorV2] 🔄 Updating state - step 4: setActiveTab to data');
+      setActiveTab('data');
+
+      console.log('[TileEditorV2] 🔄 Updating state - step 5: setShowAIEditor(false) - HIDING AI EDITOR');
+      setShowAIEditor(false);
+
+      console.log('[TileEditorV2] ========== AI CHART COMPLETE SUCCESS ==========');
+      console.log('[TileEditorV2] showAIEditor should now be false, main form should be visible');
+    } catch (error) {
+      console.error('[TileEditorV2] ❌❌❌ ERROR in handleAIChartComplete:', error);
+      console.error('[TileEditorV2] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+      console.error('[TileEditorV2] This error should NOT close the dialog');
+      // Don't throw - keep dialog open so user can try again
+    }
   };
 
   const handleDataUpdate = (data: any) => {
@@ -467,7 +538,27 @@ export function TileEditorV2({
                     <span>AI Generated Content</span>
                   </div>
                 )}
-                
+
+                {/* Chart Preview for AI-generated charts */}
+                {aiMetadata && formData.config?.options && (
+                  <div className="mb-6 space-y-2">
+                    <Label className="text-sm font-medium">Chart Preview</Label>
+                    <div className="border rounded-lg p-4 bg-muted/20">
+                      <div className="h-[300px]">
+                        <ChartWrapper
+                          type={selectedType as any}
+                          config={formData.config.options}
+                          data={formData.data}
+                          className="h-full"
+                        />
+                      </div>
+                      <div className="mt-3 text-xs text-muted-foreground">
+                        Generated from: "{aiMetadata.prompt}"
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Basic Info */}
                 <div className="space-y-4 mb-6">
                   <div className="grid gap-2">

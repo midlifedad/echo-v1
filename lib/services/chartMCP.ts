@@ -79,7 +79,7 @@ export interface ChartMCPResponse {
 
 export interface StageEvent {
   type: 'stage:start' | 'stage:progress' | 'stage:complete' | 'stage:error' | 'pipeline:complete';
-  stage: 'planner' | 'compiler' | 'renderer' | 'ranker' | 'pipeline';
+  stage: 'planner' | 'compiler' | 'renderer' | 'ranker' | 'beautifier' | 'optimizer' | 'pipeline';
   timestamp: number;
   data?: any;
   metadata?: {
@@ -148,58 +148,100 @@ class ChartMCPService {
    */
   async generateChartsWithProgress(
     request: ChartMCPRequest,
-    onProgress: StageEventHandler
+    onProgress: StageEventHandler,
+    skipCache: boolean = true  // Skip cache by default for AI tile creation
   ): Promise<ChartMCPResponse> {
     return new Promise((resolve, reject) => {
       try {
-        // Check cache first
+        // Check cache first (unless explicitly skipped)
         const cacheKey = this.getCacheKey(request);
         const cached = this.requestCache.get(cacheKey);
-        if (cached) {
-          console.log('Returning cached chart response');
+        if (cached && !skipCache) {
+          console.log('[ChartMCP] 📦 Returning cached chart response');
           resolve(cached);
           return;
+        }
+
+        if (skipCache && cached) {
+          console.log('[ChartMCP] ⏭️  Skipping cache, forcing fresh generation');
         }
 
         // Establish WebSocket connection
         this.ws = new WebSocket(this.wsUrl);
         
         this.ws.onopen = () => {
-          console.log('WebSocket connected to Chart MCP server');
-          
+          console.log('[ChartMCP] ✅ WebSocket connected to Chart MCP server');
+          console.log('[ChartMCP] 📤 Sending visualization request:', {
+            type: 'visualize',
+            intent: request.intent,
+            mode: request.intent.mode,
+            skipCache,
+            preferences: request.preferences,
+            constraints: request.constraints
+          });
+
           // Send the visualization request
+          const startTime = Date.now();
           this.ws?.send(JSON.stringify({
             type: 'visualize',
             request,
           }));
+
+          console.log('[ChartMCP] ⏱️  Request sent, waiting for MCP pipeline (~40s expected)...');
         };
 
         this.ws.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
-            
+
+            // Debug log all incoming messages
+            console.log('[ChartMCP] WebSocket message received:', {
+              type: data.type,
+              stage: data.stage,
+              hasData: !!data.data,
+              timestamp: data.timestamp
+            });
+
             // Call the progress handler
             onProgress(data);
-            
+
             // Handle pipeline completion
             if (data.type === 'pipeline:complete') {
+              const totalTime = data.data?.diagnostics?.timings?.totalMs || 0;
+              console.log('[ChartMCP] 🎉 Pipeline complete!', {
+                totalTimeMs: totalTime,
+                totalTimeSec: (totalTime / 1000).toFixed(1) + 's',
+                hasRecommended: !!data.data?.recommended,
+                alternativesCount: data.data?.alternatives?.length || 0,
+                timings: data.data?.diagnostics?.timings
+              });
+
               const response = data.data as ChartMCPResponse;
-              
-              // Cache the response
-              this.requestCache.set(cacheKey, response);
-              setTimeout(() => this.requestCache.delete(cacheKey), this.cacheTimeout);
-              
+
+              // Cache the response (only if not skipCache)
+              if (!skipCache) {
+                this.requestCache.set(cacheKey, response);
+                setTimeout(() => this.requestCache.delete(cacheKey), this.cacheTimeout);
+                console.log('[ChartMCP] 💾 Cached response for future use');
+              } else {
+                console.log('[ChartMCP] 🚫 Skipping cache storage (skipCache=true)');
+              }
+
               // Close WebSocket
               this.closeWebSocket();
-              
+
               resolve(response);
             } else if (data.type === 'stage:error') {
+              console.error('[ChartMCP] Stage error:', {
+                stage: data.stage,
+                error: data.data?.error
+              });
               const error = new Error(`Stage ${data.stage} failed: ${data.data?.error}`);
               this.closeWebSocket();
               reject(error);
             }
           } catch (error) {
-            console.error('Error parsing WebSocket message:', error);
+            console.error('[ChartMCP] Error parsing WebSocket message:', error);
             reject(error);
           }
         };
@@ -252,7 +294,18 @@ class ChartMCPService {
    * Get full image URL from relative path
    */
   getImageUrl(relativePath: string): string {
-    return `${this.baseUrl}${relativePath}`;
+    // Handle paths that already start with a slash
+    const cleanPath = relativePath.startsWith('/') ? relativePath : `/${relativePath}`;
+    const fullUrl = `${this.baseUrl}${cleanPath}`;
+
+    console.log('[ChartMCP] getImageUrl:', {
+      relativePath,
+      cleanPath,
+      baseUrl: this.baseUrl,
+      fullUrl
+    });
+
+    return fullUrl;
   }
 
   /**

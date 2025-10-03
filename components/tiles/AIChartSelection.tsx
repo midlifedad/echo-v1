@@ -67,11 +67,37 @@ export function AIChartSelection({ response, onSelect, className }: AIChartSelec
   };
   
   const allOptions = buildOptions();
-  
-  const handleSelect = (option: ChartOption & { isOptimized?: boolean }, optionIdx: number) => {
+
+  // Handle clicking a chart card - just highlight it, don't call onSelect yet
+  const handleCardClick = (option: ChartOption & { isOptimized?: boolean }) => {
+    console.log('[AIChartSelection] 🖱️ Chart card clicked:', {
+      index: option.index,
+      isOptimized: option.isOptimized || false,
+      chartType: option.chartType
+    });
     setSelectedIndex(option.index);
     setSelectedOptimized(option.isOptimized || false);
-    onSelect(option);
+  };
+
+  // Handle the "Use Selected Chart" button - this calls onSelect
+  const handleConfirmSelection = () => {
+    console.log('[AIChartSelection] ✅ Use Selected Chart button clicked');
+    const selected = allOptions.find(o =>
+      o.index === selectedIndex &&
+      (o.isOptimized || false) === selectedOptimized
+    );
+
+    if (selected) {
+      console.log('[AIChartSelection] 📤 Calling onSelect with chart:', {
+        index: selected.index,
+        chartType: selected.chartType,
+        isOptimized: selected.isOptimized,
+        hasConfig: !!selected.config
+      });
+      onSelect(selected);
+    } else {
+      console.error('[AIChartSelection] ❌ No chart found matching selection');
+    }
   };
 
   const getChartIcon = (type: string) => {
@@ -80,7 +106,9 @@ export function AIChartSelection({ response, onSelect, className }: AIChartSelec
   };
 
   const getRankingInfo = (index: number) => {
-    return response.ranking.find(r => r.index === index);
+    const ranking = response.ranking.find(r => r.index === index);
+    console.log('[AIChartSelection] 📊 Ranking info for index', index, ':', ranking);
+    return ranking;
   };
 
   return (
@@ -113,7 +141,7 @@ export function AIChartSelection({ response, onSelect, className }: AIChartSelec
                   isSelected && "ring-2 ring-primary ring-offset-2",
                   !isRecommended && !isOptimized && !isSelected && "border-border hover:border-muted-foreground"
                 )}
-                onClick={() => handleSelect(option, optionIdx)}
+                onClick={() => handleCardClick(option)}
               >
                 {/* Recommended Badge */}
                 {isRecommended && (
@@ -165,8 +193,16 @@ export function AIChartSelection({ response, onSelect, className }: AIChartSelec
                       <div className="flex items-center gap-2">
                         {getChartIcon(option.chartType)}
                         <span className="font-medium capitalize">{option.chartType} Chart</span>
-                        {ranking && (
-                          <Badge variant="outline" className="ml-auto">
+                        {ranking && ranking.score !== undefined && (
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "ml-auto",
+                              ranking.score >= 0.8 && "bg-green-50 border-green-200 text-green-700",
+                              ranking.score >= 0.6 && ranking.score < 0.8 && "bg-blue-50 border-blue-200 text-blue-700",
+                              ranking.score < 0.6 && "bg-yellow-50 border-yellow-200 text-yellow-700"
+                            )}
+                          >
                             Score: {(ranking.score * 100).toFixed(0)}%
                           </Badge>
                         )}
@@ -199,15 +235,11 @@ export function AIChartSelection({ response, onSelect, className }: AIChartSelec
       {selectedIndex !== null && (
         <div className="pt-4 border-t">
           <Button
-            onClick={() => {
-              const selected = allOptions.find(o => 
-                o.index === selectedIndex && 
-                (o.isOptimized || false) === selectedOptimized
-              );
-              if (selected) onSelect(selected);
-            }}
+            onClick={handleConfirmSelection}
             className="w-full"
+            size="lg"
           >
+            <Check className="h-4 w-4 mr-2" />
             Use Selected Chart
           </Button>
         </div>

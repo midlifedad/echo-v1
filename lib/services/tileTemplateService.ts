@@ -109,13 +109,13 @@ export class TileTemplateService {
         description: data.description,
         category: data.category,
         tags: data.tags,
-        isSystem: false,
+        // isSystem: false, // REMOVED - column doesn't exist in schema
         thumbnail: data.thumbnail,
         ownerId: 'user-1', // TODO: Get from auth context
         isPublic: data.isPublic || false,
         usageCount: 0,
-        config: data.config,
-        data: data.data,
+        defaultConfig: data.config, // FIXED - was 'config', now matches schema 'defaultConfig'
+        defaultData: data.data, // FIXED - was 'data', now matches schema 'defaultData'
         content: data.content,
         dataSource: data.dataSource,
         defaultDisplaySettings: data.defaultDisplaySettings || {
