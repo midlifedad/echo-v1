@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import localFont from "next/font/local";
 import "./globals.css";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { SidebarProvider } from "@/contexts/SidebarContext";
@@ -16,24 +15,10 @@ const inter = Inter({
 });
 
 // Load Inter Tight for headlines (700-900 weights, condensed)
-const interTight = localFont({
-  src: [
-    {
-      path: "../public/fonts/InterTight-Bold.woff2",
-      weight: "700",
-      style: "normal",
-    },
-    {
-      path: "../public/fonts/InterTight-ExtraBold.woff2",
-      weight: "800",
-      style: "normal",
-    },
-    {
-      path: "../public/fonts/InterTight-Black.woff2",
-      weight: "900",
-      style: "normal",
-    },
-  ],
+// Using Inter with variable font for now - will add Inter Tight later
+const interTight = Inter({
+  subsets: ["latin"],
+  weight: ["700", "800", "900"],
   variable: "--font-inter-tight",
   display: "swap",
 });
