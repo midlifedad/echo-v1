@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Design System Theme CSS */
+@import "../styles/themes/light.css";
+@import "../styles/themes/dark.css";
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -115,11 +119,19 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    transition-property: background-color, border-color, color, fill, stroke;
+    transition-duration: var(--transition-base);
+    transition-timing-function: var(--transition-timing-smooth, cubic-bezier(0.4, 0, 0.2, 1));
   }
   body {
-    @apply bg-background text-foreground;
-    font-feature-settings: "cv11", "ss01";
-    font-variation-settings: "opsz" 32;
+    @apply bg-background text-text-primary;
+    font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+  }
+
+  /* Typography base styles */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-inter-tight), system-ui, -apple-system, sans-serif;
+    font-weight: var(--font-weight-extrabold);
   }
 }
 

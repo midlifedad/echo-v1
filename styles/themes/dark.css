@@ -1,0 +1,114 @@
+/**
+ * Dark Theme CSS Custom Properties
+ *
+ * Generated from dark theme design tokens.
+ * Applied to [data-theme="dark"]
+ * Colors optimized for dark backgrounds with WCAG AA compliance.
+ */
+
+[data-theme='dark'] {
+  /* Primary Colors - Reversed scale for dark mode */
+  --color-primary-50: #5c3700;
+  --color-primary-100: #8f5700;
+  --color-primary-200: #b76e00;
+  --color-primary-300: #d68910;
+  --color-primary-400: #f5a623;
+  --color-primary-500: #ffb84d;
+  --color-primary-600: #ffc700;
+  --color-primary-700: #ffd84d;
+  --color-primary-800: #ffe68a;
+  --color-primary-900: #fff3c6;
+  --color-primary-950: #fffbeb;
+
+  /* Secondary Colors */
+  --color-secondary-50: #4d1809;
+  --color-secondary-100: #7a2412;
+  --color-secondary-200: #9d2b15;
+  --color-secondary-300: #c1381a;
+  --color-secondary-400: #e54d2e;
+  --color-secondary-500: #ff6b35;
+  --color-secondary-600: #ff8c42;
+  --color-secondary-700: #ffa67a;
+  --color-secondary-800: #ffcaaa;
+  --color-secondary-900: #ffe6d5;
+  --color-secondary-950: #fff4ed;
+
+  /* Background Colors - Dark mode specific */
+  --color-background-default: #1a1a1a;
+  --color-background-surface: #2a2a2a;
+  --color-background-elevated: #3a3a3a;
+
+  /* Text Colors - Inverted for dark mode */
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #e0e0e0;
+  --color-text-disabled: #757575;
+  --color-text-inverse: #000000;
+
+  /* Border Colors - Adjusted for dark mode */
+  --color-border-default: #424242;
+  --color-border-subtle: #333333;
+  --color-border-strong: #616161;
+
+  /* Error Colors - Reversed for dark mode */
+  --color-error-50: #450a0a;
+  --color-error-100: #7f1d1d;
+  --color-error-200: #991b1b;
+  --color-error-300: #b91c1c;
+  --color-error-400: #dc2626;
+  --color-error-500: #ef4444;
+  --color-error-600: #f87171;
+  --color-error-700: #fca5a5;
+  --color-error-800: #fecaca;
+  --color-error-900: #fee2e2;
+  --color-error-950: #fef2f2;
+
+  /* Warning Colors - Reversed for dark mode */
+  --color-warning-50: #451a03;
+  --color-warning-100: #78350f;
+  --color-warning-200: #92400e;
+  --color-warning-300: #b45309;
+  --color-warning-400: #d97706;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #fbbf24;
+  --color-warning-700: #fcd34d;
+  --color-warning-800: #fde68a;
+  --color-warning-900: #fef3c7;
+  --color-warning-950: #fffbeb;
+
+  /* Success Colors - Reversed for dark mode */
+  --color-success-50: #052e16;
+  --color-success-100: #14532d;
+  --color-success-200: #166534;
+  --color-success-300: #15803d;
+  --color-success-400: #16a34a;
+  --color-success-500: #22c55e;
+  --color-success-600: #4ade80;
+  --color-success-700: #86efac;
+  --color-success-800: #bbf7d0;
+  --color-success-900: #dcfce7;
+  --color-success-950: #f0fdf4;
+
+  /* Info Colors - Reversed for dark mode */
+  --color-info-50: #172554;
+  --color-info-100: #1e3a8a;
+  --color-info-200: #1e40af;
+  --color-info-300: #1d4ed8;
+  --color-info-400: #2563eb;
+  --color-info-500: #3b82f6;
+  --color-info-600: #60a5fa;
+  --color-info-700: #93c5fd;
+  --color-info-800: #bfdbfe;
+  --color-info-900: #dbeafe;
+  --color-info-950: #eff6ff;
+
+  /* Typography, Spacing, Borders, Shadows, and Transitions inherit from light theme */
+  /* These values remain the same across themes */
+
+  /* Shadows - Adjusted opacity for dark mode */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.3);
+}

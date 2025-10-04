@@ -1,0 +1,233 @@
+/* Amber Theme - Warm, professional color palette inspired by reference design */
+
+.amber-theme {
+  /* Background Colors */
+  --amber-background: #F5F1E8;
+  --amber-background-alt: #FDFBF7;
+
+  /* Tile Colors */
+  --amber-tile-bg: #F5A623;
+  --amber-tile-bg-gradient-start: #F5A623;
+  --amber-tile-bg-gradient-end: #FFB84D;
+  --amber-tile-hover: #FFB84D;
+
+  /* Text Colors */
+  --amber-text-primary: #1A1A1A;
+  --amber-text-secondary: #4A4A4A;
+  --amber-text-muted: #6B6B6B;
+  --amber-text-on-amber: #1A1A1A;
+
+  /* Sidebar Colors */
+  --amber-sidebar-bg: #FAF8F4;
+  --amber-sidebar-hover: #F5F1E8;
+  --amber-sidebar-active: #F5A623;
+  --amber-sidebar-text: #2A2A2A;
+  --amber-sidebar-text-muted: #6B6B6B;
+  --amber-sidebar-border: #E8E4DB;
+
+  /* Accent Colors */
+  --amber-accent-orange: #FF8C42;
+  --amber-accent-deep: #D68910;
+  --amber-accent-light: #FFCC80;
+
+  /* Chart Colors */
+  --amber-chart-1: #1A1A1A;
+  --amber-chart-2: #FF8C42;
+  --amber-chart-3: #FFB84D;
+  --amber-chart-4: #4A9B8E;
+  --amber-chart-5: #2A2A2A;
+
+  /* Border & Shadows */
+  --amber-border: #E8E4DB;
+  --amber-border-light: #F0EDE6;
+  --amber-shadow-sm: 0 2px 8px rgba(245, 166, 35, 0.1);
+  --amber-shadow-md: 0 4px 16px rgba(245, 166, 35, 0.15);
+  --amber-shadow-lg: 0 8px 32px rgba(245, 166, 35, 0.2);
+
+  /* Tile Specific */
+  --amber-tile-radius: 20px;
+  --amber-tile-padding: 24px;
+
+  /* Typography Scale */
+  --amber-font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --amber-font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --amber-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Font Weights */
+  --amber-font-weight-normal: 400;
+  --amber-font-weight-medium: 500;
+  --amber-font-weight-semibold: 600;
+  --amber-font-weight-bold: 700;
+  --amber-font-weight-black: 900;
+}
+
+/* Apply amber theme styles */
+.amber-theme {
+  background: #F5F1E8 !important;
+  color: #1A1A1A !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+}
+
+/* Target actual layout tiles and cards in the application */
+.amber-theme .react-grid-item,
+.amber-theme [class*="tile-"],
+.amber-theme [class*="card"],
+.amber-theme .border {
+  background: linear-gradient(135deg, #F5A623 0%, #FFB84D 100%) !important;
+  border: none !important;
+  border-radius: 20px !important;
+  box-shadow: 0 4px 16px rgba(245, 166, 35, 0.15) !important;
+  color: #1A1A1A !important;
+}
+
+/* Layout list cards */
+.amber-theme [class*="cursor-pointer"] > div,
+.amber-theme .space-y-4 > div {
+  background: linear-gradient(135deg, #F5A623 0%, #FFB84D 100%) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 4px 16px rgba(245, 166, 35, 0.15) !important;
+}
+
+/* Ensure text is readable on orange background */
+.amber-theme .react-grid-item *,
+.amber-theme [class*="tile-"] *,
+.amber-theme [class*="card"] * {
+  color: #1A1A1A !important;
+}
+
+/* Chart backgrounds should be transparent to show orange */
+.amber-theme .highcharts-container,
+.amber-theme .highcharts-root {
+  background: transparent !important;
+}
+
+.amber-theme .highcharts-background {
+  fill: transparent !important;
+}
+
+/* Tile styling for amber theme */
+.amber-theme .amber-tile {
+  background: linear-gradient(135deg, var(--amber-tile-bg-gradient-start) 0%, var(--amber-tile-bg-gradient-end) 100%);
+  border-radius: var(--amber-tile-radius);
+  box-shadow: var(--amber-shadow-md);
+  padding: var(--amber-tile-padding);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.amber-theme .amber-tile:hover {
+  box-shadow: var(--amber-shadow-lg);
+  transform: translateY(-2px);
+}
+
+/* Title styling */
+.amber-theme .amber-tile-title {
+  font-family: var(--amber-font-display);
+  font-weight: var(--amber-font-weight-bold);
+  color: var(--amber-text-on-amber);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  margin-bottom: 12px;
+}
+
+.amber-theme .amber-tile-value {
+  font-family: var(--amber-font-display);
+  font-weight: var(--amber-font-weight-black);
+  color: var(--amber-text-on-amber);
+  font-size: 2rem;
+  line-height: 1;
+  margin-bottom: 16px;
+}
+
+/* Sidebar styling */
+.amber-theme .amber-sidebar {
+  background: var(--amber-sidebar-bg);
+  border-right: 1px solid var(--amber-sidebar-border);
+}
+
+.amber-theme .amber-sidebar-item {
+  color: var(--amber-sidebar-text);
+  transition: all 0.2s ease;
+  border-radius: 8px;
+  padding: 10px 16px;
+  margin: 4px 8px;
+}
+
+.amber-theme .amber-sidebar-item:hover {
+  background: var(--amber-sidebar-hover);
+}
+
+.amber-theme .amber-sidebar-item.active {
+  background: var(--amber-sidebar-active);
+  color: var(--amber-text-on-amber);
+  font-weight: var(--amber-font-weight-semibold);
+}
+
+/* Chart container styling */
+.amber-theme .amber-chart-container {
+  background: transparent;
+  border-radius: 12px;
+}
+
+/* Header styling */
+.amber-theme .amber-header {
+  background: var(--amber-background-alt);
+  border-bottom: 1px solid var(--amber-border);
+  font-family: var(--amber-font-display);
+}
+
+.amber-theme .amber-header-title {
+  font-weight: var(--amber-font-weight-black);
+  font-size: 2rem;
+  color: var(--amber-text-primary);
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+}
+
+/* Button styling */
+.amber-theme .amber-button {
+  background: var(--amber-accent-orange);
+  color: white;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-weight: var(--amber-font-weight-semibold);
+  transition: all 0.2s ease;
+}
+
+.amber-theme .amber-button:hover {
+  background: var(--amber-accent-deep);
+  transform: translateY(-1px);
+  box-shadow: var(--amber-shadow-md);
+}
+
+/* Metric display */
+.amber-theme .amber-metric {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.amber-theme .amber-metric-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .amber-theme .amber-tile {
+    padding: 16px;
+  }
+
+  .amber-theme .amber-tile-title {
+    font-size: 0.75rem;
+  }
+
+  .amber-theme .amber-tile-value {
+    font-size: 1.5rem;
+  }
+}
