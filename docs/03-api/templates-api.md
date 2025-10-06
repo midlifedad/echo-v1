@@ -91,7 +91,7 @@ Create a new template in the library.
 
 **Endpoint:** `POST /api/templates`
 
-**Request Body:**
+**Request Body (Image Tile):**
 ```json
 {
   "type": "image",
@@ -118,17 +118,55 @@ Create a new template in the library.
 }
 ```
 
+**Request Body (Chart Tile):**
+```json
+{
+  "type": "line",
+  "title": "Revenue Trend",
+  "name": "Revenue Chart Template",
+  "description": "Monthly revenue visualization",
+  "category": "analytics",
+  "tags": ["chart", "revenue"],
+  "isPublic": true,
+  "config": {
+    "type": "line",
+    "title": "Revenue Trend",
+    "options": {
+      "chart": {"type": "line"}
+    }
+  },
+  "data": {
+    "categories": ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+    "series": [{
+      "name": "Revenue",
+      "data": [45000, 52000, 48000, 61000, 58000, 67000]
+    }]
+  },
+  "defaultDisplaySettings": {
+    "showBorder": true,
+    "expandable": true,
+    "showTitle": true,
+    "titlePosition": "top"
+  }
+}
+```
+
 **Response:**
 ```json
 {
   "id": "template-new-001",
-  "type": "image",
-  "title": "Company Logo",
+  "type": "line",
+  "title": "Revenue Trend",
   "usageCount": 0,
   ...
   "createdAt": "2024-01-03T00:00:00Z"
 }
 ```
+
+**⚠️ Note:**
+- API field `data` maps to database field `defaultData`
+- Chart templates SHOULD include `data` to prevent random mock data generation
+- Without `data`, tile library previews will show different random values on each page refresh
 
 ### Update Template
 Update an existing template.

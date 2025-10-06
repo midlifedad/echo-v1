@@ -38,12 +38,14 @@
   --color-background-default: var(--color-background-default);
   --color-background-surface: var(--color-background-surface);
   --color-background-elevated: var(--color-background-elevated);
+  --color-background-sidebar: var(--color-background-sidebar);
 
   /* Design System Text Colors */
   --color-text-primary: var(--color-text-primary);
   --color-text-secondary: var(--color-text-secondary);
   --color-text-disabled: var(--color-text-disabled);
   --color-text-inverse: var(--color-text-inverse);
+  --color-text-onSidebar: var(--color-text-onSidebar);
 
   /* Design System Border Colors */
   --color-border-default: var(--color-border-default);

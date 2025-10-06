@@ -173,10 +173,14 @@ Data → Transformation → Configuration → Visualization
 ## Data Management
 
 ### Static Data
-- Stored directly in tile record
+- Stored directly in tile record (`data` field for templates, `defaultData` in database)
 - Immediate availability
 - No external dependencies
 - Version controlled with tile
+- **⚠️ Best Practice:** Chart templates SHOULD populate the `data` field with representative static data
+  - Ensures consistent previews in tile library
+  - Prevents random data generation on every render
+  - **Fallback Behavior:** If `data` is `null`, ChartWrapper generates random mock data using `Math.random()`, causing charts to change on every page refresh
 
 ### Dynamic Data
 ```typescript

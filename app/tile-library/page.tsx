@@ -198,7 +198,7 @@ export default function TileLibraryPage() {
           {/* Filters and Search */}
           <div className="flex gap-4 items-center">
             <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-black" />
               <Input
                 placeholder="Search tiles..."
                 value={searchTerm}
@@ -222,18 +222,20 @@ export default function TileLibraryPage() {
               </SelectContent>
             </Select>
 
-            <div className="flex gap-1 border rounded-md">
+            <div className="flex gap-1 border-[1.5px] border-border-tile rounded-md p-1 bg-background-surface">
               <Button
-                variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+                variant={viewMode === 'grid' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('grid')}
+                className={viewMode === 'grid' ? 'bg-background-default' : ''}
               >
                 <Grid3X3 className="h-4 w-4" />
               </Button>
               <Button
-                variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+                variant={viewMode === 'list' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('list')}
+                className={viewMode === 'list' ? 'bg-background-default' : ''}
               >
                 <List className="h-4 w-4" />
               </Button>

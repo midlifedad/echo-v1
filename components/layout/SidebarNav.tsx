@@ -48,18 +48,18 @@ export default function SidebarNav() {
             className={cn(
               'flex items-center gap-3 px-3 py-2.5 rounded-lg',
               'text-sm font-medium transition-all duration-200',
-              'hover:bg-primary/5 group',
-              isActive 
-                ? 'bg-primary/10 text-primary' 
-                : 'text-primary hover:text-primary/80'
+              'hover:bg-black/10 group',
+              isActive
+                ? 'bg-black/15 text-black'
+                : 'text-black hover:text-black'
             )}
           >
-            <Icon 
-              size={18} 
+            <Icon
+              size={18}
               className={cn(
                 'flex-shrink-0 transition-colors',
-                'text-primary'
-              )} 
+                isActive ? 'text-secondary-600' : 'text-secondary-500'
+              )}
             />
             
             {showText && (
@@ -70,7 +70,7 @@ export default function SidebarNav() {
             
             {/* Active indicator dot when collapsed */}
             {isActive && (isCollapsed && !isHovered) && (
-              <div className="w-1.5 h-1.5 bg-primary rounded-full ml-auto" />
+              <div className="w-1.5 h-1.5 bg-secondary-600 rounded-full ml-auto" />
             )}
           </Link>
         );

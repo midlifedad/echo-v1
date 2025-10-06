@@ -13,6 +13,7 @@ if (typeof window !== 'undefined') {
   Promise.resolve()
     .then(() => import('highcharts/modules/exporting'))
     .then(() => import('highcharts/highcharts-more')) // Required for gauge, bubble, etc.
+    .then(() => import('highcharts/highcharts-3d')) // Required for 3D charts (must load before pyramid3d, cylinder, etc.)
     // Basic chart types
     .then(() => import('highcharts/modules/solid-gauge'))
     .then(() => import('highcharts/modules/heatmap'))
@@ -28,7 +29,7 @@ if (typeof window !== 'undefined') {
     .then(() => import('highcharts/modules/sunburst'))
     // Specialized charts
     .then(() => import('highcharts/modules/funnel'))
-    .then(() => import('highcharts/modules/pyramid3d'))
+    .then(() => import('highcharts/modules/pyramid3d')) // Requires highcharts-3d
     .then(() => import('highcharts/modules/bullet'))
     .then(() => import('highcharts/modules/wordcloud'))
     .then(() => import('highcharts/modules/venn'))
@@ -45,7 +46,7 @@ if (typeof window !== 'undefined') {
     .then(() => import('highcharts/modules/lollipop'))
     .then(() => import('highcharts/modules/item-series'))
     .then(() => import('highcharts/modules/pictorial'))
-    .then(() => import('highcharts/modules/cylinder'));
+    .then(() => import('highcharts/modules/cylinder')); // Requires highcharts-3d
 }
 
 interface HighchartsWrapperProps {

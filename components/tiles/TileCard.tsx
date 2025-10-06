@@ -1,10 +1,9 @@
-import { MoreVertical, Edit, Copy, Trash, Heart, Star } from 'lucide-react';
+import { MoreVertical, Edit, Copy, Trash, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -99,10 +98,10 @@ export default function TileCard({
   }
 
   return (
-    <Card className="group hover:shadow-lg transition-shadow !gap-0 !py-0 flex flex-col min-h-[320px]">
-      <CardHeader className="px-4 pt-4 pb-2">
+    <Card className="group hover:shadow-lg transition-shadow flex flex-col min-h-[240px]">
+      <CardHeader className="px-4 pt-3 pb-1">
         <div className="flex items-start justify-between">
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             <CardTitle className="text-base">
               {tile.name || tile.title}
             </CardTitle>
@@ -114,8 +113,8 @@ export default function TileCard({
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 size="icon"
                 className="opacity-0 group-hover:opacity-100 transition-opacity"
               >
@@ -144,8 +143,8 @@ export default function TileCard({
           </DropdownMenu>
         </div>
       </CardHeader>
-      
-      <CardContent className="flex-1 p-3 overflow-hidden min-h-0 flex">
+
+      <CardContent className="flex-1 p-2 overflow-hidden min-h-0 flex">
         <div className="flex-1 flex">
           <ChartPreview
             type={tile.type}
@@ -166,27 +165,6 @@ export default function TileCard({
           />
         </div>
       </CardContent>
-      
-      <CardFooter className="px-4 pb-3 pt-0">
-        <div className="flex gap-1 flex-wrap">
-          {tile.category && (
-            <Badge variant="secondary" className="text-xs">
-              {tile.category}
-            </Badge>
-          )}
-          {tile.isTemplate && (
-            <Badge variant="outline" className="text-xs">
-              Template
-            </Badge>
-          )}
-          {tile.usageCount > 0 && (
-            <Badge variant="outline" className="text-xs">
-              <Star className="h-3 w-3 mr-1" />
-              {tile.usageCount}
-            </Badge>
-          )}
-        </div>
-      </CardFooter>
     </Card>
   );
 }

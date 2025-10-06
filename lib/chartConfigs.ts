@@ -29,16 +29,16 @@ export function getChartOptions(type: ChartType, config: ChartConfig, data: Reco
         {
           condition: { maxWidth: 200 },
           chartOptions: {
-            legend: { 
+            legend: {
               enabled: false  // Hide legend on very small tiles
             },
             xAxis: {
-              labels: { 
+              labels: {
                 style: { fontSize: '8px' }
               }
             } as Highcharts.XAxisOptions,
             yAxis: {
-              labels: { 
+              labels: {
                 style: { fontSize: '8px' }
               }
             } as Highcharts.YAxisOptions,
@@ -50,16 +50,16 @@ export function getChartOptions(type: ChartType, config: ChartConfig, data: Reco
         {
           condition: { maxWidth: 300 },
           chartOptions: {
-            legend: { 
-              itemStyle: { fontSize: '8px' }
+            legend: {
+              enabled: false  // Hide legend on small tiles
             },
             xAxis: {
-              labels: { 
+              labels: {
                 style: { fontSize: '9px' }
               }
             } as Highcharts.XAxisOptions,
             yAxis: {
-              labels: { 
+              labels: {
                 style: { fontSize: '9px' }
               }
             } as Highcharts.YAxisOptions,
@@ -69,18 +69,18 @@ export function getChartOptions(type: ChartType, config: ChartConfig, data: Reco
           }
         },
         {
-          condition: { maxWidth: 400 },
+          condition: { maxWidth: 500 },
           chartOptions: {
-            legend: { 
-              itemStyle: { fontSize: '9px' }
+            legend: {
+              enabled: false  // Hide legend on medium tiles (tile library size)
             },
             xAxis: {
-              labels: { 
+              labels: {
                 style: { fontSize: '10px' }
               }
             } as Highcharts.XAxisOptions,
             yAxis: {
-              labels: { 
+              labels: {
                 style: { fontSize: '10px' }
               }
             } as Highcharts.YAxisOptions,
@@ -108,7 +108,7 @@ export function getChartOptions(type: ChartType, config: ChartConfig, data: Reco
       itemStyle: {
         fontSize: '10px',
         fontWeight: '400',
-        color: '#666666'
+        color: '#000000'
       },
       itemMarginHorizontal: 5,
       itemMarginVertical: 2
@@ -161,17 +161,18 @@ export function getChartOptions(type: ChartType, config: ChartConfig, data: Reco
         xAxis: {
           categories: data.categories,
           gridLineWidth: 0,
-          tickColor: '#e0e0e0',
-          lineColor: '#e0e0e0',
+          tickColor: '#000000',
+          lineColor: '#000000',
           labels: {
-            style: { fontSize: '11px', color: '#a0aec0' }
+            style: { fontSize: '11px', color: '#000000' }
           }
         },
         yAxis: {
           title: { text: undefined },
-          gridLineColor: '#f0f0f0',
+          gridLineColor: '#000000',
+          gridLineWidth: 1,
           labels: {
-            style: { fontSize: '11px', color: '#a0aec0' }
+            style: { fontSize: '11px', color: '#000000' }
           }
         },
         series: data.series,
@@ -181,8 +182,7 @@ export function getChartOptions(type: ChartType, config: ChartConfig, data: Reco
             lineWidth: 3,
             marker: {
               radius: 4,
-              fillColor: '#ffffff',
-              lineWidth: 2,
+              lineWidth: 0,
               states: {
                 hover: { radius: 6 }
               }
@@ -192,8 +192,7 @@ export function getChartOptions(type: ChartType, config: ChartConfig, data: Reco
             lineWidth: 3,
             marker: {
               radius: 4,
-              fillColor: '#ffffff',
-              lineWidth: 2
+              lineWidth: 0
             }
           }
         }
@@ -210,14 +209,15 @@ export function getChartOptions(type: ChartType, config: ChartConfig, data: Reco
           categories: data.categories,
           gridLineWidth: 0,
           labels: {
-            style: { fontSize: '11px', color: '#a0aec0' }
+            style: { fontSize: '11px', color: '#000000' }
           }
         },
         yAxis: {
           title: { text: undefined },
-          gridLineColor: '#f0f0f0',
+          gridLineColor: '#000000',
+          tickAmount: 6,
           labels: {
-            style: { fontSize: '11px', color: '#a0aec0' }
+            style: { fontSize: '11px', color: '#000000' }
           }
         },
         series: data.series,
@@ -242,14 +242,14 @@ export function getChartOptions(type: ChartType, config: ChartConfig, data: Reco
           categories: data.categories,
           gridLineWidth: 0,
           labels: {
-            style: { fontSize: '11px', color: '#a0aec0' }
+            style: { fontSize: '11px', color: '#000000' }
           }
         },
         yAxis: {
           title: { text: undefined },
-          gridLineColor: '#f0f0f0',
+          gridLineColor: '#000000',
           labels: {
-            style: { fontSize: '11px', color: '#a0aec0' }
+            style: { fontSize: '11px', color: '#000000' }
           }
         },
         series: data.series,
@@ -258,12 +258,14 @@ export function getChartOptions(type: ChartType, config: ChartConfig, data: Reco
           column: {
             borderRadius: 3,
             pointPadding: 0.1,
-            groupPadding: 0.15
+            groupPadding: 0.15,
+            borderWidth: 0
           },
           bar: {
             borderRadius: 3,
             pointPadding: 0.1,
-            groupPadding: 0.15
+            groupPadding: 0.15,
+            borderWidth: 0
           }
         }
       };
@@ -271,6 +273,11 @@ export function getChartOptions(type: ChartType, config: ChartConfig, data: Reco
     case 'pie':
       return {
         ...baseOptions,
+        chart: {
+          ...baseOptions.chart,
+          spacingTop: 5,
+          spacingBottom: 5
+        },
         responsive: {
           rules: [
             {
@@ -280,36 +287,6 @@ export function getChartOptions(type: ChartType, config: ChartConfig, data: Reco
                   pie: {
                     dataLabels: {
                       enabled: false  // Hide labels on very small pies
-                    }
-                  }
-                }
-              }
-            },
-            {
-              condition: { maxWidth: 300 },
-              chartOptions: {
-                plotOptions: {
-                  pie: {
-                    dataLabels: {
-                      style: {
-                        fontSize: '8px'
-                      },
-                      distance: 2
-                    }
-                  }
-                }
-              }
-            },
-            {
-              condition: { maxWidth: 400 },
-              chartOptions: {
-                plotOptions: {
-                  pie: {
-                    dataLabels: {
-                      style: {
-                        fontSize: '9px'
-                      },
-                      distance: 3
                     }
                   }
                 }
@@ -327,14 +304,19 @@ export function getChartOptions(type: ChartType, config: ChartConfig, data: Reco
           pie: {
             innerSize: 0,
             size: '85%',
+            borderColor: '#000000',
+            borderWidth: 1,
             dataLabels: {
               enabled: true,
               format: '{point.name}: {point.percentage:.1f}%',
               style: {
                 fontSize: '10px',
-                color: '#666666'
+                color: '#000000',
+                textOutline: 'none'
               },
-              distance: 5
+              distance: 15,
+              connectorWidth: 1,
+              connectorColor: '#000000'
             }
           }
         }
@@ -352,34 +334,6 @@ export function getChartOptions(type: ChartType, config: ChartConfig, data: Reco
                   pie: {
                     dataLabels: {
                       enabled: false  // Hide labels on very small donuts
-                    }
-                  }
-                }
-              }
-            },
-            {
-              condition: { maxWidth: 300 },
-              chartOptions: {
-                plotOptions: {
-                  pie: {
-                    dataLabels: {
-                      style: {
-                        fontSize: '8px'
-                      }
-                    }
-                  }
-                }
-              }
-            },
-            {
-              condition: { maxWidth: 400 },
-              chartOptions: {
-                plotOptions: {
-                  pie: {
-                    dataLabels: {
-                      style: {
-                        fontSize: '9px'
-                      }
                     }
                   }
                 }
@@ -402,7 +356,7 @@ export function getChartOptions(type: ChartType, config: ChartConfig, data: Reco
               format: '{point.name}: {point.percentage:.1f}%',
               style: {
                 fontSize: '10px',
-                color: '#666666'
+                color: '#000000'
               }
             }
           }
@@ -418,16 +372,18 @@ export function getChartOptions(type: ChartType, config: ChartConfig, data: Reco
         },
         xAxis: {
           title: { text: undefined },
-          gridLineColor: '#f0f0f0',
+          gridLineColor: '#000000',
+          tickAmount: 6,
           labels: {
-            style: { fontSize: '11px', color: '#a0aec0' }
+            style: { fontSize: '11px', color: '#000000' }
           }
         },
         yAxis: {
           title: { text: undefined },
-          gridLineColor: '#f0f0f0',
+          gridLineColor: '#000000',
+          tickAmount: 6,
           labels: {
-            style: { fontSize: '11px', color: '#a0aec0' }
+            style: { fontSize: '11px', color: '#000000' }
           }
         },
         series: data.series,
@@ -435,7 +391,7 @@ export function getChartOptions(type: ChartType, config: ChartConfig, data: Reco
           ...baseOptions.plotOptions,
           scatter: {
             marker: {
-              radius: 4,
+              radius: 6,
               states: {
                 hover: {
                   enabled: true,
@@ -452,10 +408,12 @@ export function getChartOptions(type: ChartType, config: ChartConfig, data: Reco
         ...baseOptions,
         chart: {
           ...baseOptions.chart,
-          type: 'solidgauge'
+          type: 'solidgauge',
+          spacingTop: 0,
+          spacingBottom: 10
         },
         pane: {
-          center: ['50%', '70%'],
+          center: ['50%', '55%'],
           size: '100%',
           startAngle: -90,
           endAngle: 90,
@@ -484,7 +442,7 @@ export function getChartOptions(type: ChartType, config: ChartConfig, data: Reco
           },
           labels: {
             y: 16,
-            style: { fontSize: '11px', color: '#a0aec0' }
+            style: { fontSize: '11px', color: '#000000' }
           }
         } as Highcharts.YAxisOptions,
         series: data.series,
@@ -492,7 +450,7 @@ export function getChartOptions(type: ChartType, config: ChartConfig, data: Reco
           ...baseOptions.plotOptions,
           solidgauge: {
             dataLabels: {
-              y: 5,
+              y: 0,
               borderWidth: 0,
               useHTML: true,
               format: '<div style="text-align:center"><span style="font-size:20px;color:#2f2f2f">{y}%</span></div>'
@@ -507,13 +465,13 @@ export function getChartOptions(type: ChartType, config: ChartConfig, data: Reco
         xAxis: {
           categories: data.categories || [],
           labels: {
-            style: { fontSize: '11px', color: '#a0aec0' }
+            style: { fontSize: '11px', color: '#000000' }
           }
         },
         yAxis: {
           title: { text: undefined },
           labels: {
-            style: { fontSize: '11px', color: '#a0aec0' }
+            style: { fontSize: '11px', color: '#000000' }
           }
         },
         series: data.series || []

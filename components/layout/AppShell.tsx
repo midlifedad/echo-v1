@@ -18,10 +18,10 @@ export default function AppShell({ children }: AppShellProps) {
     : '250px'; // Perfect spacing for expanded sidebar
   
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background-default">
       <Sidebar />
-      
-      <main 
+
+      <main
         className={cn(
           'transition-all duration-400 ease-smooth',
           'py-6 pr-6'

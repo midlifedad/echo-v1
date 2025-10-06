@@ -113,9 +113,9 @@ const config: Config = {
         },
       },
       fontFamily: {
-        display: ["var(--font-inter-tight)", "system-ui", "sans-serif"],
-        headline: ["var(--font-inter-tight)", "system-ui", "sans-serif"],
-        body: ["var(--font-inter)", "system-ui", "sans-serif"],
+        display: ["var(--font-bebas-neue)", "system-ui", "sans-serif"],
+        headline: ["var(--font-bebas-neue)", "system-ui", "sans-serif"],
+        body: ["var(--font-work-sans)", "system-ui", "sans-serif"],
         mono: ["ui-monospace", "SFMono-Regular", "Monaco", "Consolas", "monospace"],
       },
       fontSize: {

@@ -168,9 +168,18 @@ interface ChartTileConfig {
         "categories": ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
       }
     }
+  },
+  "data": {
+    "categories": ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+    "series": [{
+      "name": "Revenue",
+      "data": [45000, 52000, 48000, 61000, 58000, 67000]
+    }]
   }
 }
 ```
+
+**⚠️ Important:** Chart templates SHOULD include static `data` for consistent library previews. If `data` is `null`, the system will generate random mock data using `Math.random()`, causing inconsistent chart previews on every page refresh.
 
 ## Supporting Schemas
 

@@ -23,9 +23,9 @@ export default function PageHeader({ title, subtitle, onAddTile, actions }: Page
   return (
     <div className="flex items-center justify-between mb-6">
       <div>
-        <h1 className="text-2xl font-semibold text-foreground">{title}</h1>
+        <h1 className="text-2xl font-semibold text-text-primary">{title}</h1>
         {subtitle && (
-          <p className="text-muted-foreground mt-1">{subtitle}</p>
+          <p className="text-text-secondary mt-1">{subtitle}</p>
         )}
       </div>
       
@@ -34,8 +34,8 @@ export default function PageHeader({ title, subtitle, onAddTile, actions }: Page
         {onAddTile && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button 
-              className="bg-primary hover:bg-primary/90 text-white gap-2"
+            <Button
+              className="bg-primary-500 hover:bg-primary-600 text-text-inverse gap-2"
               size="sm"
             >
               <Plus size={16} />

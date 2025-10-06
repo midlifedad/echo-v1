@@ -1,25 +1,24 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Work_Sans, Bebas_Neue } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { SidebarProvider } from "@/contexts/SidebarContext";
 import { TileProvider } from "@/contexts/TileContext";
 import AppShell from "@/components/layout/AppShell";
 
-// Load Inter font for body text (400-700 weights)
-const inter = Inter({
+// Load Work Sans for body text - geometric, bold, statement font
+const workSans = Work_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-inter",
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-work-sans",
   display: "swap",
 });
 
-// Load Inter Tight for headlines (700-900 weights, condensed)
-// Using Inter with variable font for now - will add Inter Tight later
-const interTight = Inter({
+// Load Bebas Neue for headlines - ultra bold, condensed display font
+const bebasNeue = Bebas_Neue({
   subsets: ["latin"],
-  weight: ["700", "800", "900"],
-  variable: "--font-inter-tight",
+  weight: ["400"], // Bebas Neue only has one weight but it's very bold
+  variable: "--font-bebas-neue",
   display: "swap",
 });
 
@@ -49,7 +48,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${inter.variable} ${interTight.variable} font-body`}>
+      <body className={`${workSans.variable} ${bebasNeue.variable} font-body`}>
         <ThemeProvider defaultTheme="light" enablePersistence>
           <SidebarProvider>
             <TileProvider>

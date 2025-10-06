@@ -44,7 +44,7 @@ export const primary: ColorScale = {
 };
 
 /**
- * Secondary color scale - Orange/Coral tones
+ * Secondary color scale - Orange/Red tones
  */
 export const secondary: ColorScale = {
   50: { hex: '#FFF4ED', rgb: { r: 255, g: 244, b: 237 }, hsl: { h: 23, s: 100, l: 96 } },
@@ -52,7 +52,7 @@ export const secondary: ColorScale = {
   200: { hex: '#FFCAAA', rgb: { r: 255, g: 202, b: 170 }, hsl: { h: 23, s: 100, l: 83 } },
   300: { hex: '#FFA67A', rgb: { r: 255, g: 166, b: 122 }, hsl: { h: 20, s: 100, l: 74 } },
   400: { hex: '#FF8C42', rgb: { r: 255, g: 140, b: 66 }, hsl: { h: 24, s: 100, l: 63 } },
-  500: { hex: '#FF6B35', rgb: { r: 255, g: 107, b: 53 }, hsl: { h: 16, s: 100, l: 60 } },
+  500: { hex: '#F93D14', rgb: { r: 249, g: 61, b: 20 }, hsl: { h: 11, s: 95, l: 53 } },
   600: { hex: '#E54D2E', rgb: { r: 229, g: 77, b: 46 }, hsl: { h: 10, s: 79, l: 54 } },
   700: { hex: '#C1381A', rgb: { r: 193, g: 56, b: 26 }, hsl: { h: 11, s: 76, l: 43 } },
   800: { hex: '#9D2B15', rgb: { r: 157, g: 43, b: 21 }, hsl: { h: 10, s: 76, l: 35 } },
@@ -64,9 +64,10 @@ export const secondary: ColorScale = {
  * Background colors for light theme
  */
 export const background = {
-  default: { hex: '#FFF8E1', rgb: { r: 255, g: 248, b: 225 }, hsl: { h: 46, s: 100, l: 94 } },
-  surface: { hex: '#FFF3E0', rgb: { r: 255, g: 243, b: 224 }, hsl: { h: 37, s: 100, l: 94 } },
+  default: { hex: '#FCC210', rgb: { r: 252, g: 194, b: 16 }, hsl: { h: 45, s: 97, l: 53 } },
+  surface: { hex: '#F2C259', rgb: { r: 242, g: 194, b: 89 }, hsl: { h: 41, s: 85, l: 65 } },
   elevated: { hex: '#FFFFFF', rgb: { r: 255, g: 255, b: 255 }, hsl: { h: 0, s: 0, l: 100 } },
+  sidebar: { hex: '#F2C259', rgb: { r: 242, g: 194, b: 89 }, hsl: { h: 41, s: 85, l: 65 } }, // Bold yellow for sidebar
 };
 
 /**
@@ -76,7 +77,8 @@ export const text = {
   primary: { hex: '#000000', rgb: { r: 0, g: 0, b: 0 }, hsl: { h: 0, s: 0, l: 0 } },
   secondary: { hex: '#424242', rgb: { r: 66, g: 66, b: 66 }, hsl: { h: 0, s: 0, l: 26 } },
   disabled: { hex: '#9E9E9E', rgb: { r: 158, g: 158, b: 158 }, hsl: { h: 0, s: 0, l: 62 } },
-  inverse: { hex: '#FFFFFF', rgb: { r: 255, g: 255, b: 255 }, hsl: { h: 0, s: 0, l: 100 } },
+  inverse: { hex: '#000000', rgb: { r: 0, g: 0, b: 0 }, hsl: { h: 0, s: 0, l: 0 } }, // Changed from white to black
+  onSidebar: { hex: '#000000', rgb: { r: 0, g: 0, b: 0 }, hsl: { h: 0, s: 0, l: 0 } }, // Black text on yellow sidebar
 };
 
 /**
