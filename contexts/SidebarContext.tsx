@@ -17,7 +17,10 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
     if (saved) {
       const state = JSON.parse(saved);
       setIsCollapsed(state.isCollapsed || false);
-      setSelectedClient(state.selectedClient || CLIENTS[0]);
+      // Find client by ID to get latest data from CLIENTS
+      const savedClientId = state.selectedClient?.id;
+      const matchedClient = CLIENTS.find(c => c.id === savedClientId);
+      setSelectedClient(matchedClient || CLIENTS[0]);
     }
   }, []);
 

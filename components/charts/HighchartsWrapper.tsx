@@ -13,7 +13,11 @@ if (typeof window !== 'undefined') {
   Promise.resolve()
     .then(() => import('highcharts/modules/exporting'))
     .then(() => import('highcharts/highcharts-more')) // Required for gauge, bubble, etc.
-    .then(() => import('highcharts/highcharts-3d')) // Required for 3D charts (must load before pyramid3d, cylinder, etc.)
+    .then(() => import('highcharts/highcharts-3d')) // Required for 3D charts - MUST load before cylinder, funnel3d, pyramid3d
+    // 3D chart modules - CRITICAL: Must load in this specific order due to dependencies
+    .then(() => import('highcharts/modules/cylinder')) // Requires highcharts-3d
+    .then(() => import('highcharts/modules/funnel3d')) // Requires highcharts-3d, cylinder
+    .then(() => import('highcharts/modules/pyramid3d')) // Requires highcharts-3d, cylinder, funnel3d
     // Basic chart types
     .then(() => import('highcharts/modules/solid-gauge'))
     .then(() => import('highcharts/modules/heatmap'))
@@ -28,8 +32,7 @@ if (typeof window !== 'undefined') {
     // Hierarchical charts
     .then(() => import('highcharts/modules/sunburst'))
     // Specialized charts
-    .then(() => import('highcharts/modules/funnel'))
-    .then(() => import('highcharts/modules/pyramid3d')) // Requires highcharts-3d
+    .then(() => import('highcharts/modules/funnel')) // 2D funnel (separate from funnel3d)
     .then(() => import('highcharts/modules/bullet'))
     .then(() => import('highcharts/modules/wordcloud'))
     .then(() => import('highcharts/modules/venn'))
@@ -40,13 +43,13 @@ if (typeof window !== 'undefined') {
     .then(() => import('highcharts/modules/variwide'))
     .then(() => import('highcharts/modules/variable-pie'))
     .then(() => import('highcharts/modules/vector'))
-    .then(() => import('highcharts/modules/windbarb'))
+    .then(() => import('highcharts/modules/datagrouping')) // Required for windbarb
+    .then(() => import('highcharts/modules/windbarb')) // Requires datagrouping
     .then(() => import('highcharts/modules/xrange'))
     .then(() => import('highcharts/modules/dumbbell'))
     .then(() => import('highcharts/modules/lollipop'))
     .then(() => import('highcharts/modules/item-series'))
-    .then(() => import('highcharts/modules/pictorial'))
-    .then(() => import('highcharts/modules/cylinder')); // Requires highcharts-3d
+    .then(() => import('highcharts/modules/pictorial'));
 }
 
 interface HighchartsWrapperProps {

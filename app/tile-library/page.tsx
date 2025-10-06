@@ -187,28 +187,29 @@ export default function TileLibraryPage() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList>
-          <TabsTrigger value="all">All Tiles</TabsTrigger>
-          <TabsTrigger value="templates">Templates</TabsTrigger>
-          <TabsTrigger value="my-tiles">My Tiles</TabsTrigger>
-          <TabsTrigger value="favorites">Favorites</TabsTrigger>
-        </TabsList>
+        {/* Single line with tabs left, filters right */}
+        <div className="flex items-center justify-between gap-4">
+          <TabsList>
+            <TabsTrigger value="all">All Tiles</TabsTrigger>
+            <TabsTrigger value="templates">Templates</TabsTrigger>
+            <TabsTrigger value="my-tiles">My Tiles</TabsTrigger>
+            <TabsTrigger value="favorites">Favorites</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value={activeTab} className="space-y-4">
-          {/* Filters and Search */}
-          <div className="flex gap-4 items-center">
-            <div className="relative flex-1 max-w-sm">
+          {/* Filters and Search - compacted */}
+          <div className="flex gap-3 items-center">
+            <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-black" />
               <Input
                 placeholder="Search tiles..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 w-[280px]"
               />
             </div>
 
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[160px]">
                 <Filter className="h-4 w-4 mr-2" />
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
@@ -241,15 +242,18 @@ export default function TileLibraryPage() {
               </Button>
             </div>
           </div>
+        </div>
+
+        <TabsContent value={activeTab} className="space-y-4">
 
           {/* Tiles Grid/List */}
           {isLoading ? (
             <div className="flex justify-center items-center h-64">
-              <div className="text-muted-foreground">Loading tiles...</div>
+              <div className="text-black">Loading tiles...</div>
             </div>
           ) : filteredTiles.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 text-center">
-              <div className="text-muted-foreground mb-4">No tiles found</div>
+              <div className="text-black mb-4">No tiles found</div>
               <Button onClick={handleCreateTile} variant="outline">
                 <Plus className="h-4 w-4 mr-2" />
                 Create your first tile

@@ -5,7 +5,7 @@ export const CLIENTS: Client[] = [
   {
     id: 'panda-express',
     name: 'Panda Express',
-    logo: '/logos/panda-express.png',
+    logo: '/panda-express.png',
     color: '#e31837'
   },
   {
