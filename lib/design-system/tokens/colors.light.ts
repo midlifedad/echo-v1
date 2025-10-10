@@ -67,7 +67,7 @@ export const background = {
   default: { hex: '#FCC210', rgb: { r: 252, g: 194, b: 16 }, hsl: { h: 45, s: 97, l: 53 } },
   surface: { hex: '#F2C259', rgb: { r: 242, g: 194, b: 89 }, hsl: { h: 41, s: 85, l: 65 } },
   elevated: { hex: '#FFFFFF', rgb: { r: 255, g: 255, b: 255 }, hsl: { h: 0, s: 0, l: 100 } },
-  sidebar: { hex: '#F2C259', rgb: { r: 242, g: 194, b: 89 }, hsl: { h: 41, s: 85, l: 65 } }, // Bold yellow for sidebar
+  sidebar: { hex: '#000000', rgb: { r: 0, g: 0, b: 0 }, hsl: { h: 0, s: 0, l: 0 } }, // Black sidebar background
 };
 
 /**
@@ -78,7 +78,7 @@ export const text = {
   secondary: { hex: '#424242', rgb: { r: 66, g: 66, b: 66 }, hsl: { h: 0, s: 0, l: 26 } },
   disabled: { hex: '#9E9E9E', rgb: { r: 158, g: 158, b: 158 }, hsl: { h: 0, s: 0, l: 62 } },
   inverse: { hex: '#000000', rgb: { r: 0, g: 0, b: 0 }, hsl: { h: 0, s: 0, l: 0 } }, // Changed from white to black
-  onSidebar: { hex: '#000000', rgb: { r: 0, g: 0, b: 0 }, hsl: { h: 0, s: 0, l: 0 } }, // Black text on yellow sidebar
+  onSidebar: { hex: '#FCC210', rgb: { r: 252, g: 194, b: 16 }, hsl: { h: 45, s: 97, l: 53 } }, // Yellow text on black sidebar
 };
 
 /**

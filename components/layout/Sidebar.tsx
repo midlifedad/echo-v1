@@ -17,9 +17,9 @@ export default function Sidebar() {
     <div
       className={cn(
         'fixed left-3 top-3 bottom-3 z-50',
-        'bg-background-surface rounded-xl',
+        'bg-background-sidebar rounded-xl',
         'transition-all duration-400 ease-smooth',
-        'border border-black',
+        'border border-text-onSidebar',
         sidebarWidth
       )}
       style={{ boxShadow: '0 0 30px rgba(0,0,0,0.15), 0 2px 10px rgba(0,0,0,0.1)' }}
@@ -38,13 +38,6 @@ export default function Sidebar() {
         {/* Navigation */}
         <div className="flex-1 overflow-y-auto">
           <SidebarNav />
-        </div>
-
-        {/* Footer space for future expansion */}
-        <div className="p-3">
-          <Separator className={cn(
-            (isCollapsed && !isHovered) && 'opacity-0'
-          )} />
         </div>
       </div>
     </div>

@@ -23,7 +23,7 @@ export default function PageHeader({ title, subtitle, onAddTile, actions }: Page
   return (
     <div className="flex items-center justify-between mb-6">
       <div>
-        <h1 className="text-2xl font-semibold text-text-primary">{title}</h1>
+        <h1 className="text-5xl font-headline font-extrabold text-text-primary uppercase tracking-tighter">{title}</h1>
         {subtitle && (
           <p className="text-text-secondary mt-1">{subtitle}</p>
         )}

@@ -47,11 +47,11 @@ export default function SidebarNav() {
             onClick={() => setActiveSection(item.id)}
             className={cn(
               'flex items-center gap-3 px-3 py-2.5 rounded-lg',
-              'text-sm font-medium transition-all duration-200',
-              'hover:bg-black/10 group',
+              'text-sm font-headline font-extrabold uppercase tracking-tight transition-all duration-200',
+              'hover:bg-text-onSidebar/10 group',
               isActive
-                ? 'bg-black/15 text-black'
-                : 'text-black hover:text-black'
+                ? 'bg-text-onSidebar/15 text-text-onSidebar'
+                : 'text-text-onSidebar hover:text-text-onSidebar'
             )}
           >
             <Icon

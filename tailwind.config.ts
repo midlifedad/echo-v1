@@ -54,6 +54,7 @@ const config: Config = {
           DEFAULT: "var(--color-border-default)",
           subtle: "var(--color-border-subtle)",
           strong: "var(--color-border-strong)",
+          tile: "var(--color-border-tile)",
         },
         error: {
           50: "var(--color-error-50)",
@@ -132,6 +133,7 @@ const config: Config = {
         label: ["var(--font-size-label)", { lineHeight: "var(--line-height-label)", letterSpacing: "var(--letter-spacing-label)" }],
         caption: ["var(--font-size-caption)", { lineHeight: "var(--line-height-caption)", letterSpacing: "var(--letter-spacing-caption)" }],
         overline: ["var(--font-size-overline)", { lineHeight: "var(--line-height-overline)", letterSpacing: "var(--letter-spacing-overline)" }],
+        "page-header": ["var(--font-size-page-header)", { lineHeight: "var(--line-height-page-header)", letterSpacing: "var(--letter-spacing-page-header)" }],
       },
       fontWeight: {
         thin: "var(--font-weight-thin)",
@@ -144,19 +146,11 @@ const config: Config = {
         black: "var(--font-weight-black)",
       },
       spacing: {
-        xs: "var(--spacing-xs)",
-        sm: "var(--spacing-sm)",
-        md: "var(--spacing-md)",
-        lg: "var(--spacing-lg)",
-        xl: "var(--spacing-xl)",
-        "2xl": "var(--spacing-2xl)",
-        "3xl": "var(--spacing-3xl)",
-        "4xl": "var(--spacing-4xl)",
         // Legacy sidebar/tile spacing (to be migrated)
         "sidebar-expanded": "280px",
         "sidebar-collapsed": "64px",
-        "sidebar-offset": "var(--spacing-sm)",
-        "tile-gap": "var(--spacing-md)",
+        "sidebar-offset": "0.75rem",
+        "tile-gap": "1rem",
       },
       borderRadius: {
         none: "var(--radius-none)",
@@ -169,6 +163,14 @@ const config: Config = {
         // Legacy values
         tile: "var(--radius-md)",
         card: "var(--radius-lg)",
+      },
+      borderWidth: {
+        DEFAULT: '1px',
+        0: '0',
+        2: '2px',
+        4: '4px',
+        8: '8px',
+        tile: 'var(--border-width-tile)',
       },
       boxShadow: {
         none: "var(--shadow-none)",

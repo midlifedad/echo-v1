@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { SidebarProvider } from "@/contexts/SidebarContext";
 import { TileProvider } from "@/contexts/TileContext";
 import AppShell from "@/components/layout/AppShell";
+import { BirdsAnimation } from "@/components/BirdsAnimation";
 
 // Load Work Sans for body text - geometric, bold, statement font
 const workSans = Work_Sans({
@@ -55,6 +56,7 @@ export default function RootLayout({
               <AppShell>
                 {children}
               </AppShell>
+              <BirdsAnimation />
             </TileProvider>
           </SidebarProvider>
         </ThemeProvider>

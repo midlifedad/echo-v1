@@ -13,9 +13,9 @@ export default function AppShell({ children }: AppShellProps) {
   const { isCollapsed, isHovered } = useSidebar();
   
   // Calculate margins based on sidebar state
-  const marginLeft = isCollapsed && !isHovered 
-    ? '120px'  // Better spacing for collapsed sidebar
-    : '250px'; // Perfect spacing for expanded sidebar
+  const marginLeft = isCollapsed && !isHovered
+    ? '76px'   // Collapsed sidebar spacing
+    : '288px'; // Expanded sidebar spacing
   
   return (
     <div className="min-h-screen bg-background-default">

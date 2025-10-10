@@ -51,6 +51,10 @@
   --color-border-default: var(--color-border-default);
   --color-border-subtle: var(--color-border-subtle);
   --color-border-strong: var(--color-border-strong);
+  --color-border-tile: var(--color-border-tile);
+
+  /* Border Widths */
+  --border-width-tile: 1.5px;
 
   /* Design System Semantic Colors */
   --color-error-50: var(--color-error-50);
@@ -100,6 +104,11 @@
   --color-info-800: var(--color-info-800);
   --color-info-900: var(--color-info-900);
   --color-info-950: var(--color-info-950);
+
+  /* Design System Typography Tokens */
+  --font-size-page-header: var(--font-size-page-header);
+  --line-height-page-header: var(--line-height-page-header);
+  --letter-spacing-page-header: var(--letter-spacing-page-header);
 
   /* Legacy shadcn colors (for backward compatibility) */
   --color-background: var(--background);
@@ -268,6 +277,20 @@
   
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     background-color: hsl(var(--border) / 0.8);
+  }
+
+  /* Birds animation */
+  .birds-fly-animation {
+    animation: flyAcross 10s linear forwards;
+  }
+
+  @keyframes flyAcross {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(calc(-100vw - 400px));
+    }
   }
 }
 
