@@ -12,6 +12,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { sanitizeUserInput, sanitizeText } from '@/lib/utils/domSanitizer';
 import type { ParsedData } from '@/lib/types/dataImport';
 
 interface DataPreviewProps {
@@ -49,12 +50,12 @@ export default function DataPreview({
     return Math.round(((totalRows - nullCount) / totalRows) * 100);
   };
   
-  const formatCellValue = (value: any): string => {
+  const formatCellValue = (value: unknown): string => {
     if (value === null || value === undefined) return '';
     if (typeof value === 'boolean') return value ? 'true' : 'false';
     if (typeof value === 'number') return value.toLocaleString();
     if (value instanceof Date) return value.toLocaleDateString();
-    return String(value);
+    return sanitizeUserInput(value);
   };
   
   const getDataType = (header: string): string => {
@@ -83,7 +84,7 @@ export default function DataPreview({
       <div className="space-y-2">
         <h3 className="text-lg font-semibold">Data Preview</h3>
         <p className="text-sm text-muted-foreground">
-          Review your data before proceeding. We'll analyze the columns and suggest the best way to visualize them.
+          Review your data before proceeding. We&apos;ll analyze the columns and suggest the best way to visualize them.
         </p>
       </div>
 
@@ -127,7 +128,7 @@ export default function DataPreview({
                 key={header}
                 className="flex items-center space-x-2 bg-muted/50 rounded-md px-3 py-1.5"
               >
-                <span className="text-sm font-medium">{header}</span>
+                <span className="text-sm font-medium">{sanitizeText(header)}</span>
                 <Badge variant="outline" className="text-xs">
                   {dataType}
                 </Badge>
@@ -155,7 +156,7 @@ export default function DataPreview({
                 <TableHead className="w-12 font-mono text-xs">#</TableHead>
                 {headers.map((header) => (
                   <TableHead key={header} className="min-w-[120px]">
-                    {header}
+                    {sanitizeText(header)}
                   </TableHead>
                 ))}
               </TableRow>

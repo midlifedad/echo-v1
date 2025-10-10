@@ -1,0 +1,85 @@
+/* Grid Layout Styles for react-grid-layout */
+
+.grid-layout-wrapper.edit-mode {
+  background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+  position: relative;
+}
+
+/* Grid items */
+.react-grid-item {
+  transition: all 200ms ease;
+  border-radius: 8px;
+}
+
+/* Add extra padding to grid items in edit mode to account for resize handles */
+.edit-mode .react-grid-item {
+  padding: 3px;
+}
+
+/* Dragging state */
+.react-grid-item.react-draggable-dragging {
+  cursor: grabbing !important;
+  opacity: 0.8;
+  z-index: 100;
+  transform: scale(1.02);
+  box-shadow: 0 12px 24px rgba(110, 69, 226, 0.25);
+}
+
+
+/* Placeholder when dragging */
+.react-grid-item.react-grid-placeholder {
+  background: rgba(110, 69, 226, 0.15);
+  border: 2px dashed #6e45e2;
+  border-radius: 8px;
+  opacity: 1;
+}
+
+/* Hover effect in edit mode */
+.edit-mode .react-grid-item:hover {
+  box-shadow: 0 4px 12px rgba(110, 69, 226, 0.15);
+}
+
+/* Disable pointer events during resize */
+.react-grid-item.resizing .grid-item-content {
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Ensure grid item content fills the space */
+.grid-item-content {
+  height: 100%;
+  width: 100%;
+}
+
+/* Inheritance status indicators */
+.grid-item-inherited {
+  border: 2px dashed rgba(110, 69, 226, 0.3);
+}
+
+.grid-item-custom {
+  border: 2px solid #6e45e2;
+}
+
+.grid-item-locked {
+  position: relative;
+  border: 2px solid rgb(239 68 68);
+}
+
+/* Breakpoint selector styling */
+.breakpoint-tab-active {
+  background: #6e45e2;
+  color: white;
+}
+
+/* Viewport indicator gradient */
+.viewport-slider {
+  background: linear-gradient(
+    to right,
+    #ff6b6b 0%,          /* xs */
+    #4ecdc4 480px,       /* sm */
+    #45b7d1 768px,       /* md */
+    #6e45e2 996px        /* lg */
+  );
+}

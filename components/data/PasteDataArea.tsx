@@ -54,7 +54,7 @@ export default function PasteDataArea({
         <h3 className="text-lg font-semibold">Paste Your Data</h3>
         <p className="text-sm text-muted-foreground">
           Copy data from Excel, Google Sheets, or any spreadsheet and paste it below.
-          We'll automatically detect the format and structure.
+          We&apos;ll automatically detect the format and structure.
         </p>
       </div>
 

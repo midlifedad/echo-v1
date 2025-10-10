@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Layout Storage</title>
+</head>
+<body>
+    <h1>Clearing Layout Storage...</h1>
+    <script>
+        // Clear all dashboard-related localStorage
+        const keysToRemove = [
+            'dashboard-grid-layouts',
+            'dashboard-tiles',
+            'dashboard-layout-inheritance',
+            'dashboard-custom-layouts',
+            'dashboard-locked-tiles',
+            'dashboard-locked-positions',
+            'dashboard_responsive_mode',
+            'dashboard_custom_breakpoints'
+        ];
+        
+        keysToRemove.forEach(key => {
+            if (localStorage.getItem(key)) {
+                localStorage.removeItem(key);
+                console.log('Removed:', key);
+            }
+        });
+        
+        document.body.innerHTML = '<h1>Storage Cleared!</h1><p>You can now close this tab and refresh your dashboard.</p>';
+    </script>
+</body>
+</html>

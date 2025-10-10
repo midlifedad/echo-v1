@@ -13,13 +13,34 @@ export interface NavItem {
   isActive?: boolean;
 }
 
+export interface GridLayout {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  minW?: number;
+  minH?: number;
+  maxW?: number;
+  maxH?: number;
+  static?: boolean;
+}
+
 export interface TileData {
   id: string;
-  type: ChartType;
+  type: TileType;
   title: string;
   position: number;
   config: ChartConfig;
   data?: Record<string, unknown>;
+  content?: TileContent;
+  gridLayout?: GridLayout;
+  isLocked?: boolean;
+  displaySettings?: {
+    showTitle?: boolean;
+    titlePosition?: 'top' | 'bottom';
+    border?: 'none' | 'default';
+    padding?: 'none' | 'small' | 'medium' | 'large';
+  };
 }
 
 export interface ChartConfig {
@@ -46,6 +67,40 @@ export type ChartType =
   | 'spline'
   | 'areaspline';
 
+// Extended tile types including non-chart tiles
+export type TileType = ChartType | 'text' | 'image' | 'smart' | 'ai-generated';
+
+// Content types for different tile types
+export interface TextTileStyle {
+  textAlign?: 'left' | 'center' | 'right' | 'justify';
+  verticalAlign?: 'top' | 'middle' | 'bottom';
+  fontSize?: 'small' | 'medium' | 'large' | 'xlarge';
+  textColor?: 'default' | 'muted' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger';
+  hasBackground?: boolean;
+  backgroundColor?: 'muted' | 'primary-light' | 'secondary-light' | 'accent';
+  lineHeight?: number;
+  padding?: 'none' | 'small' | 'medium' | 'large';
+}
+
+export interface TextTileContent {
+  richText: string;
+  format: 'html' | 'markdown';
+  style?: TextTileStyle;
+}
+
+export interface ImageTileContent {
+  imageUrl: string;
+  caption?: string;
+  alt?: string;
+}
+
+export interface SmartTileContent {
+  // Structure TBD - placeholder for future implementation
+  smartData?: Record<string, any>;
+}
+
+export type TileContent = TextTileContent | ImageTileContent | SmartTileContent;
+
 export interface SidebarContextType {
   isCollapsed: boolean;
   isHovered: boolean;
@@ -59,8 +114,54 @@ export interface SidebarContextType {
 
 export interface TileContextType {
   tiles: TileData[];
-  addTile: (type: ChartType) => void;
-  removeTile: (id: string) => void;
-  updateTile: (id: string, updates: Partial<TileData>) => void;
+  addTile: (type: TileType) => void;
+  removeTile: (id: string, onCleanup?: (tileId: string) => void) => Promise<void>;
+  updateTile: (id: string, updates: Partial<TileData>) => Promise<void>;
   reorderTiles: (tiles: TileData[]) => void;
+}
+
+// Layout system types
+export type Breakpoint = 'lg' | 'md' | 'sm';
+
+export interface LayoutItem {
+  i: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  minW?: number;
+  minH?: number;
+  maxW?: number;
+  maxH?: number;
+  static?: boolean;
+}
+
+export interface Layouts {
+  [breakpoint: string]: LayoutItem[];
+}
+
+export interface LayoutContextType {
+  isEditMode: boolean;
+  setEditMode: (enabled: boolean) => void;
+  layouts: Layouts;
+  setLayouts: (layouts: Layouts) => void;
+  currentBreakpoint: string;
+  setCurrentBreakpoint: (breakpoint: string) => void;
+  editingBreakpoint: string;
+  setEditingBreakpoint: (breakpoint: string) => void;
+  useResponsiveLayout: boolean;
+  setUseResponsiveLayout: (responsive: boolean) => void;
+  customBreakpoints: Set<string>;
+  markBreakpointAsCustom: (breakpoint: string) => void;
+  editAllBreakpoints: boolean;
+  setEditAllBreakpoints: (enabled: boolean) => void;
+  simulatedViewport?: number;
+  setSimulatedViewport: (width: number | undefined) => void;
+  getBreakpointLayout: (breakpoint: Breakpoint) => LayoutItem[];
+  scaleLayout: (layout: LayoutItem, fromBreakpoint: string, toBreakpoint: string) => LayoutItem;
+  saveLayouts: () => void;
+  cancelEdit: () => void;
+  resetToDefault: (tileIds?: string[]) => void;
+  resetBreakpoint: (breakpoint: string) => void;
+  cleanupTileData: (tileId: string) => void;
 }

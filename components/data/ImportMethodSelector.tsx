@@ -49,7 +49,7 @@ export default function ImportMethodSelector({ onSelect, onCancel }: ImportMetho
       <div className="text-center space-y-2">
         <h2 className="text-2xl font-semibold">Import Your Data</h2>
         <p className="text-muted-foreground">
-          Choose how you'd like to import your data. We'll help you transform it into beautiful visualizations.
+          Choose how you&apos;d like to import your data. We&apos;ll help you transform it into beautiful visualizations.
         </p>
       </div>
       

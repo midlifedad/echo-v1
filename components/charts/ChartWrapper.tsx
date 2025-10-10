@@ -31,30 +31,42 @@ export default function ChartWrapper({
       try {
         setIsLoading(true);
         setError(null);
-        
+
+        console.log('[ChartWrapper] Loading chart:', {
+          type,
+          hasProvidedData: !!data,
+          hasConfig: !!config,
+          config,
+          data
+        });
+
         // Use provided data or generate mock data
         const dataToUse = data || generateMockData(type);
-        
+
+        console.log('[ChartWrapper] Data to use:', dataToUse);
+
         // Simulate loading delay for realism
         await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 500));
-        
+
         setChartData(dataToUse);
+        console.log('[ChartWrapper] Chart data loaded successfully');
       } catch (err) {
-        setError('Failed to load chart data');
-        console.error('Chart data loading error:', err);
+        const errorMessage = 'Failed to load chart data';
+        setError(errorMessage);
+        console.error('[ChartWrapper] Chart data loading error:', err);
       } finally {
         setIsLoading(false);
       }
     };
 
     loadChartData();
-  }, [type, data]);
+  }, [type, data, config]);
 
   if (isLoading) {
     return (
       <div className={cn(
         'h-full w-full flex items-center justify-center',
-        'bg-gray-50 rounded animate-pulse',
+        'rounded animate-pulse',
         className
       )}>
         <div className="text-center">

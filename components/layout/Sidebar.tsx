@@ -17,9 +17,9 @@ export default function Sidebar() {
     <div
       className={cn(
         'fixed left-3 top-3 bottom-3 z-50',
-        'bg-white rounded-xl',
+        'bg-background-surface rounded-xl',
         'transition-all duration-400 ease-smooth',
-        'border border-border/20',
+        'border border-black',
         sidebarWidth
       )}
       style={{ boxShadow: '0 0 30px rgba(0,0,0,0.15), 0 2px 10px rgba(0,0,0,0.1)' }}

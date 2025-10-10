@@ -9,8 +9,47 @@ import { getChartOptions } from '@/lib/chartConfigs';
 // For Highcharts v12+, modules auto-initialize when imported
 // Use dynamic import to avoid SSR issues
 if (typeof window !== 'undefined') {
-  // Just import the module, it will auto-attach to Highcharts
-  import('highcharts/modules/exporting');
+  // Import ALL chart type modules so AI can generate any chart type
+  Promise.resolve()
+    .then(() => import('highcharts/modules/exporting'))
+    .then(() => import('highcharts/highcharts-more')) // Required for gauge, bubble, etc.
+    .then(() => import('highcharts/highcharts-3d')) // Required for 3D charts - MUST load before cylinder, funnel3d, pyramid3d
+    // 3D chart modules - CRITICAL: Must load in this specific order due to dependencies
+    .then(() => import('highcharts/modules/cylinder')) // Requires highcharts-3d
+    .then(() => import('highcharts/modules/funnel3d')) // Requires highcharts-3d, cylinder
+    .then(() => import('highcharts/modules/pyramid3d')) // Requires highcharts-3d, cylinder, funnel3d
+    // Basic chart types
+    .then(() => import('highcharts/modules/solid-gauge'))
+    .then(() => import('highcharts/modules/heatmap'))
+    .then(() => import('highcharts/modules/treemap'))
+    .then(() => import('highcharts/modules/treegraph'))
+    // Flow & relationship charts
+    .then(() => import('highcharts/modules/sankey'))
+    .then(() => import('highcharts/modules/dependency-wheel'))
+    .then(() => import('highcharts/modules/organization'))
+    .then(() => import('highcharts/modules/networkgraph'))
+    .then(() => import('highcharts/modules/arc-diagram'))
+    // Hierarchical charts
+    .then(() => import('highcharts/modules/sunburst'))
+    // Specialized charts
+    .then(() => import('highcharts/modules/funnel')) // 2D funnel (separate from funnel3d)
+    .then(() => import('highcharts/modules/bullet'))
+    .then(() => import('highcharts/modules/wordcloud'))
+    .then(() => import('highcharts/modules/venn'))
+    .then(() => import('highcharts/modules/timeline'))
+    .then(() => import('highcharts/modules/histogram-bellcurve'))
+    .then(() => import('highcharts/modules/pareto'))
+    .then(() => import('highcharts/modules/streamgraph'))
+    .then(() => import('highcharts/modules/variwide'))
+    .then(() => import('highcharts/modules/variable-pie'))
+    .then(() => import('highcharts/modules/vector'))
+    .then(() => import('highcharts/modules/datagrouping')) // Required for windbarb
+    .then(() => import('highcharts/modules/windbarb')) // Requires datagrouping
+    .then(() => import('highcharts/modules/xrange'))
+    .then(() => import('highcharts/modules/dumbbell'))
+    .then(() => import('highcharts/modules/lollipop'))
+    .then(() => import('highcharts/modules/item-series'))
+    .then(() => import('highcharts/modules/pictorial'));
 }
 
 interface HighchartsWrapperProps {
